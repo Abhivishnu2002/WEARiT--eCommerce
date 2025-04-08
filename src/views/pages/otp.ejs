@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTP Verification</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    /* Page layout */
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #ffffff;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    /* Typography */
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    
+    /* OTP input boxes */
+    .otp-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .otp-input {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .otp-input:first-child {
+      border: 2px solid #000;
+    }
+    
+    .otp-input:focus {
+      outline: none;
+      border: 2px solid #000;
+    }
+    
+    /* Timer and resend */
+    .timer {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    
+    .resend-container {
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .resend-link {
+      color: #000;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    
+    /* Verify button */
+    .verify-btn {
+      background-color: #000;
+      color: white;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .verify-btn:hover {
+      background-color: #333;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .otp-container {
+        gap: 6px;
+      }
+      
+      .otp-input {
+        width: 45px;
+        height: 45px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Verify OTP</h1>
+    <p>We've sent an email with an activation code to your phone test@gmail.com</p>
+    
+    <div class="otp-container">
+      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 0)">
+      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 1)">
+      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 2)">
+      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 3)">
+      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 4)">
+    </div>
+    
+    <div class="timer">Send code again 00:20</div>
+    
+    <div class="resend-container">
+      I didn't receive a code <span class="resend-link">Resend</span>
+    </div>
+    
+    <button class="verify-btn">Verify</button>
+  </div>
+
+  <script>
+    function moveToNext(field, index) {
+      // Allow only numbers
+      field.value = field.value.replace(/[^0-9]/g, '');
+      
+      // Get all input fields
+      let inputs = document.querySelectorAll('.otp-input');
+      
+      // Move to next field if current field is filled
+      if (field.value !== '' && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+      
+      // Add active border to current field, remove from others
+      inputs.forEach(input => {
+        input.style.border = '1px solid #ddd';
+      });
+      
+      if (field.value === '') {
+        field.style.border = '2px solid #000';
+      } else if (index < inputs.length - 1) {
+        inputs[index + 1].style.border = '2px solid #000';
+      }
+    }
+    
+    // Initialize the first input with focus
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstInput = document.querySelector('.otp-input');
+      if (firstInput) {
+        firstInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>

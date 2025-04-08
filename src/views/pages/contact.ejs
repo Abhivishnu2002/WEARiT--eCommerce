@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Contact Us</title>
+        <!-- Bootstrap 5 CSS -->
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <!-- Bootstrap Icons -->
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                background-color: #f8f9fa;
+                color: #212529;
+            }
+            .contact-card {
+                background-color: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                padding: 2rem;
+                height: 100%;
+            }
+            .contact-icon {
+                background-color: #212529;
+                color: white;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 1rem;
+            }
+            .divider {
+                height: 1px;
+                background-color: #e9ecef;
+                margin: 2rem 0;
+            }
+            .form-control {
+                padding: 0.8rem;
+                background-color: #f8f9fa;
+                border: 1px solid #ced4da;
+            }
+            .form-control:focus {
+                box-shadow: 0 0 0 0.25rem rgba(33, 37, 41, 0.1);
+                border-color: #212529;
+            }
+            .btn-dark {
+                padding: 0.8rem 2rem;
+                font-weight: 500;
+            }
+            .breadcrumb-item + .breadcrumb-item::before {
+                color: #6c757d;
+            }
+            .breadcrumb-item a {
+                color: #6c757d;
+                text-decoration: none;
+            }
+            .breadcrumb-item.active {
+                color: #212529;
+            }
+            textarea.form-control {
+                min-height: 150px;
+            }
+        </style>
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <div class="container py-5">
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Contact
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="row g-4">
+                <!-- Left Column - Contact Information -->
+                <div class="col-md-5">
+                    <div class="contact-card">
+                        <!-- Call To Us Section -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="contact-icon">
+                                <i class="bi bi-telephone"></i>
+                            </div>
+                            <h5 class="mb-0">Call To Us</h5>
+                        </div>
+                        <p class="text-muted mb-2">
+                            We are available 24/7, 7 days a week.
+                        </p>
+                        <p class="mb-0 fw-bold">Phone: +88016111122222</p>
+
+                        <div class="divider"></div>
+
+                        <!-- Write To Us Section -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="contact-icon">
+                                <i class="bi bi-envelope"></i>
+                            </div>
+                            <h5 class="mb-0">Write To US</h5>
+                        </div>
+                        <p class="text-muted mb-3">
+                            Fill out our form and we will contact you within 24
+                            hours.
+                        </p>
+                        <p class="mb-1">
+                            Emails:
+                            <a
+                                href="mailto:customer@exclusive.com"
+                                class="text-decoration-none"
+                                >customer@exclusive.com</a
+                            >
+                        </p>
+                        <p class="mb-0">
+                            Emails:
+                            <a
+                                href="mailto:support@exclusive.com"
+                                class="text-decoration-none"
+                                >support@exclusive.com</a
+                            >
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Column - Contact Form -->
+                <div class="col-md-7">
+                    <div class="contact-card">
+                        <form
+                            id="contactForm"
+                            class="needs-validation"
+                            novalidate
+                        >
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="name"
+                                        placeholder="Your Name *"
+                                        required
+                                    />
+                                    <div class="invalid-feedback">
+                                        Please provide your name.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <input
+                                        type="email"
+                                        class="form-control"
+                                        id="email"
+                                        placeholder="Your Email *"
+                                        required
+                                    />
+                                    <div class="invalid-feedback">
+                                        Please provide a valid email.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <input
+                                        type="tel"
+                                        class="form-control"
+                                        id="phone"
+                                        placeholder="Your Phone *"
+                                        required
+                                    />
+                                    <div class="invalid-feedback">
+                                        Please provide your phone number.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <textarea
+                                    class="form-control"
+                                    id="message"
+                                    placeholder="Your Message"
+                                    rows="5"
+                                ></textarea>
+                            </div>
+                            <div class="text-end">
+                                <button
+                                    type="submit"
+                                    class="btn btn-dark btn-lg"
+                                >
+                                    Send Message
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <%- include('../partials/footer') %>
+        <!-- Bootstrap 5 JS Bundle with Popper -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Form validation script
+            (function () {
+                "use strict";
+
+                var forms = document.querySelectorAll(".needs-validation");
+
+                Array.prototype.slice.call(forms).forEach(function (form) {
+                    form.addEventListener(
+                        "submit",
+                        function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+
+                            form.classList.add("was-validated");
+                        },
+                        false
+                    );
+                });
+            })();
+        </script>
+    </body>
+</html>
