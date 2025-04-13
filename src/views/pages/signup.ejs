@@ -156,6 +156,13 @@
     <body>
         <div class="container">
             <h1>Sign up</h1>
+            <input
+                type="hidden"
+                id="message"
+                value="<%=  %>"
+                name="message"
+                disabled
+            />
             <form>
                 <div class="form-group">
                     <label for="fullname">Full name</label>
@@ -163,6 +170,7 @@
                         <input
                             type="text"
                             id="fullname"
+                            name="fullname"
                             placeholder="Label (required)"
                         />
                     </div>
@@ -173,6 +181,7 @@
                         <input
                             type="email"
                             id="email"
+                            name="email"
                             placeholder="Label (required)"
                         />
                     </div>
@@ -183,6 +192,7 @@
                         <input
                             type="tel"
                             id="mobile"
+                            name="mobile"
                             placeholder="Label (required)"
                         />
                     </div>
@@ -193,6 +203,7 @@
                         <input
                             type="password"
                             id="password"
+                            name="password"
                             class="password-field"
                             placeholder="Label (required)"
                         />
@@ -218,6 +229,7 @@
                         <input
                             type="password"
                             id="confirm-password"
+                            name="confirmPassword"
                             class="password-field"
                             placeholder="Label (required)"
                         />
@@ -242,13 +254,15 @@
                     <p class="referral-text">
                         Anyone has referred You? Claim the reward
                     </p>
-                    <button type="button" class="referral-btn">
-                        REFFERAL CODE
-                    </button>
+                    <a href="/referral">
+                        <button type="button" class="referral-btn">
+                            REFFERAL CODE
+                        </button>
+                    </a>
                 </div>
 
                 <div class="account-section">
-                    <p>Already have an account? <a href="#">Log in</a></p>
+                    <p>Already have an account? <a href="/login">Log in</a></p>
                 </div>
 
                 <button type="submit" class="signup-btn">Sign Up</button>
@@ -280,5 +294,11 @@
                 </button>
             </form>
         </div>
+        <script>
+            const message = document.getElementById("message").value;
+            if (message) {
+                Swal.fire(message);
+            }
+        </script>
     </body>
 </html>

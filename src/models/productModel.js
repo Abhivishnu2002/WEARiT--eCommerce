@@ -1,25 +1,84 @@
 const mongoose = require('mongoose');
 
-const variantSchema = new mongoose.Schema({
-  size: Number,
-  regularPrice: Number,
-  salePrice: Number,
-  quantity: Number
-}, { _id: false });
-
 const productSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: String,
-  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-  brand: String,
-  offer: Number,
-  images: [String],  // paths/URLs of images
-  rating: Number,
-  count: Number,
-  isActive: { type: Boolean, default: true },
-  variants: [variantSchema],
-}, {
-  timestamps: true
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  discountPrice: {
+    type: Number,
+    min: 0
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['Formals', 'Casuals', 'Premium']
+  },
+  brand: {
+    type: String
+  },
+  images: [{
+    type: String,
+    required: true
+  }],
+  stock: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  ratings: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5
+    },
+    review: String,
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  highlights: [String],
+  specifications: [{
+    name: String,
+    value: String
+  }],
+  isActive:{
+    type: Boolean,
+    default: true
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  isListed: {
+    type: Boolean,
+    default: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-module.exports = mongoose.model("Product", productSchema);
+const Product = mongoose.model("Product", productSchema);
+
+module.exports = Product;
