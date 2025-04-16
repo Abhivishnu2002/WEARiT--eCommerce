@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Customer Details</title>
+        <!-- Bootstrap CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <!-- SweetAlert2 CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css"
+        />
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f8f9fa;
+                overflow-x: hidden;
+            }
+
+            /* Sidebar styles */
+            .sidebar {
+                width: 220px;
+                background-color: #ffffff;
+                height: 100vh;
+                position: fixed;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                z-index: 1030;
+                transition: all 0.3s ease;
+            }
+
+            .main-content {
+                margin-left: 220px;
+                padding: 20px;
+                background-color: #f8f9fa;
+                transition: all 0.3s ease;
+                width: calc(100% - 220px);
+            }
+
+            .logo {
+                font-weight: 800;
+                font-size: 24px;
+                padding: 20px;
+            }
+
+            .nav-item {
+                margin-bottom: 5px;
+            }
+
+            .nav-link {
+                color: #6c757d;
+                padding: 12px 20px;
+                border-radius: 5px;
+                margin: 0 10px;
+                display: flex;
+                align-items: center;
+            }
+
+            .nav-link i {
+                margin-right: 10px;
+                width: 20px;
+            }
+
+            .nav-link:hover,
+            .nav-link.active {
+                background-color: #f8f9fa;
+                color: #000;
+            }
+
+            .nav-link.active {
+                font-weight: 600;
+            }
+
+            /* Bottom buttons */
+            .bottom-buttons {
+                position: absolute;
+                bottom: 20px;
+                width: 100%;
+                padding: 0 20px;
+            }
+
+            .btn-account {
+                width: 100%;
+                margin-bottom: 10px;
+                border: 1px solid #dee2e6;
+                background-color: transparent;
+                color: #212529;
+            }
+
+            .btn-logout {
+                width: 100%;
+                background-color: #212529;
+                color: #fff;
+            }
+
+            /* Customer profile styles */
+            .profile-header {
+                background-color: #212529;
+                height: 100px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+            }
+
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background-color: #e9ecef;
+                border: 5px solid #fff;
+                margin-top: -60px;
+                margin-bottom: 10px;
+                object-fit: cover;
+            }
+
+            .profile-card {
+                background-color: #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            }
+
+            .profile-name {
+                font-weight: 600;
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .profile-info {
+                padding: 20px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            .info-label {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+
+            .info-label i {
+                width: 30px;
+                height: 30px;
+                background-color: #f0f0f0;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 15px;
+                color: #6c757d;
+            }
+
+            .info-title {
+                font-weight: 500;
+                margin-bottom: 0;
+            }
+
+            .info-value {
+                color: #6c757d;
+                margin-left: 45px;
+                margin-top: 5px;
+                margin-bottom: 0;
+            }
+
+            /* Summary cards */
+            .summary-card {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                height: 100%;
+            }
+
+            .summary-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+
+            .balance-icon {
+                background-color: #e7f4ee;
+                color: #0d894f;
+            }
+
+            .orders-icon {
+                background-color: #fae1cf;
+                color: #e46a11;
+            }
+
+            .summary-label {
+                color: #6c757d;
+                font-size: 14px;
+                margin-bottom: 5px;
+            }
+
+            .summary-value {
+                font-weight: 600;
+                font-size: 24px;
+            }
+
+            /* Transaction history */
+            .transaction-card {
+                background-color: #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                margin-top: 20px;
+            }
+
+            .transaction-header {
+                padding: 20px;
+                border-bottom: 1px solid #f0f0f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .transaction-title {
+                font-weight: 600;
+                font-size: 18px;
+                margin-bottom: 0;
+            }
+
+            .transaction-table th {
+                font-weight: 500;
+                color: #6c757d;
+                padding: 15px 20px;
+            }
+
+            .transaction-table td {
+                padding: 15px 20px;
+                vertical-align: middle;
+            }
+
+            .order-id {
+                color: #5c59e8;
+                font-weight: 500;
+            }
+
+            .product-img {
+                width: 50px;
+                height: 50px;
+                border-radius: 8px;
+                background-color: #f0f0f0;
+                margin-right: 15px;
+                object-fit: cover;
+            }
+
+            .product-info {
+                display: flex;
+                align-items: center;
+            }
+
+            .product-name {
+                font-weight: 500;
+                margin-bottom: 0;
+            }
+
+            .product-variant {
+                color: #6c757d;
+                font-size: 12px;
+                margin-bottom: 0;
+            }
+
+            /* Status badges */
+            .status-badge {
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            .status-processing {
+                background-color: #fae1cf;
+                color: #e46a11;
+            }
+
+            .status-shipped {
+                background-color: #e8f8fd;
+                color: #13b2e4;
+            }
+
+            .status-delivered {
+                background-color: #e7f4ee;
+                color: #0d894f;
+            }
+
+            .status-cancelled {
+                background-color: #ffe8e8;
+                color: #dc3545;
+            }
+
+            /* User profile */
+            .user-profile {
+                display: flex;
+                align-items: center;
+                padding: 10px;
+                background-color: transparent;
+                border-radius: 10px;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                margin-right: 10px;
+                object-fit: cover;
+            }
+
+            .user-info {
+                line-height: 1.2;
+            }
+
+            .user-name {
+                font-weight: 600;
+                margin-bottom: 0;
+            }
+
+            .user-role {
+                color: #6c757d;
+                font-size: 12px;
+            }
+
+            /* Mobile navbar */
+            .mobile-nav {
+                display: none;
+                background-color: #ffffff;
+                padding: 15px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                width: 100%;
+            }
+
+            .mobile-nav .logo {
+                padding: 0;
+            }
+
+            /* Responsive styles */
+            @media (max-width: 991.98px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    z-index: 1050;
+                }
+
+                .sidebar.show {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                    padding: 15px;
+                    width: 100%;
+                }
+
+                .mobile-nav {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .bottom-buttons {
+                    position: static;
+                    padding: 20px;
+                }
+
+                .sidebar-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    z-index: 1040;
+                    display: none;
+                }
+
+                .sidebar-overlay.show {
+                    display: block;
+                }
+
+                .header-section {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .header-section .btn {
+                    margin-top: 10px;
+                    width: 100%;
+                }
+            }
+
+            @media (max-width: 767.98px) {
+                .breadcrumb-section {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .user-profile {
+                    margin-bottom: 15px;
+                }
+
+                .profile-avatar {
+                    width: 100px;
+                    height: 100px;
+                    margin-top: -50px;
+                }
+
+                .transaction-table th,
+                .transaction-table td {
+                    padding: 10px;
+                    font-size: 14px;
+                }
+
+                .product-img {
+                    width: 40px;
+                    height: 40px;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .table-responsive {
+                    border: none;
+                }
+
+                .transaction-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .transaction-header .btn {
+                    margin-top: 10px;
+                    width: 100%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Mobile Navigation -->
+        <div class="mobile-nav d-lg-none">
+            <div class="logo">WEARiT</div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <img
+                        src="<%= admin.profileImage || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-CzWLpMp95jvKXjnFM6cS4gWAWSGCH2.png' %>"
+                        alt="Admin Avatar"
+                        class="user-avatar dropdown-toggle"
+                        data-bs-toggle="dropdown"
+                    />
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/admin/account"
+                                >Profile</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="dropdown-item"
+                                href="/admin/changepassword"
+                                >Change Password</a
+                            >
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <a class="dropdown-item" href="/admin/logout"
+                                >Logout</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <button class="btn btn-light" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <div class="d-flex w-100">
+            <!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                <div class="logo d-none d-lg-block">WEARiT</div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/products">
+                            <i class="fas fa-box"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/orders">
+                            <i class="fas fa-list"></i> Order List
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/customer">
+                            <i class="fas fa-user"></i> Customer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/sales">
+                            <i class="fas fa-chart-line"></i> Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/category">
+                            <i class="fas fa-th-large"></i> Category
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/coupons">
+                            <i class="fas fa-tags"></i> Coupons
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/banner">
+                            <i class="fas fa-image"></i> Banner
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="bottom-buttons">
+                    <a href="/admin/account" class="btn btn-account">Account</a>
+                    <a href="/admin/logout" class="btn btn-logout">Logout</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <% if (locals.success_msg && success_msg.length > 0) { %>
+                <div
+                    class="alert alert-success alert-dismissible fade show"
+                    role="alert"
+                >
+                    <%= success_msg %>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
+                <% } %> <% if (locals.error_msg && error_msg.length > 0) { %>
+                <div
+                    class="alert alert-danger alert-dismissible fade show"
+                    role="alert"
+                >
+                    <%= error_msg %>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
+                <% } %>
+
+                <!-- Page Header -->
+                <div
+                    class="d-flex justify-content-between align-items-start mb-4 header-section"
+                >
+                    <div>
+                        <h2 class="mb-2">Customer Details</h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a
+                                        href="/admin/dashboard"
+                                        class="text-decoration-none"
+                                        >Dashboard</a
+                                    >
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a
+                                        href="/admin/customer"
+                                        class="text-decoration-none"
+                                        >Customer List</a
+                                    >
+                                </li>
+                                <li
+                                    class="breadcrumb-item active"
+                                    aria-current="page"
+                                >
+                                    Customer Details
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <% if (customer.isBlocked) { %>
+                    <form
+                        action="/admin/customer/<%= customer._id %>/unblock"
+                        method="POST"
+                        class="d-inline"
+                    >
+                        <button
+                            type="submit"
+                            class="btn btn-success"
+                            id="unblockBtn"
+                        >
+                            Unblock Customer
+                        </button>
+                    </form>
+                    <% } else { %>
+                    <form
+                        action="/admin/customer/<%= customer._id %>/block"
+                        method="POST"
+                        class="d-inline"
+                    >
+                        <button
+                            type="submit"
+                            class="btn btn-danger"
+                            id="blockBtn"
+                        >
+                            Block Customer
+                        </button>
+                    </form>
+                    <% } %>
+                </div>
+
+                <div class="row">
+                    <!-- Customer Profile -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="profile-card">
+                            <div class="profile-header"></div>
+                            <div class="d-flex flex-column align-items-center">
+                                <img
+                                    src="<%= customer.profileImage || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-CzWLpMp95jvKXjnFM6cS4gWAWSGCH2.png' %>"
+                                    alt="<%= customer.name %>"
+                                    class="profile-avatar"
+                                />
+                                <h3 class="profile-name">
+                                    <%= customer.name %>
+                                </h3>
+                            </div>
+
+                            <div class="profile-info">
+                                <div class="info-label">
+                                    <i class="fas fa-user"></i>
+                                    <p class="info-title">User Name</p>
+                                </div>
+                                <p class="info-value"><%= customer.name %></p>
+
+                                <div class="info-label">
+                                    <i class="fas fa-envelope"></i>
+                                    <p class="info-title">Email</p>
+                                </div>
+                                <p class="info-value"><%= customer.email %></p>
+
+                                <div class="info-label">
+                                    <i class="fas fa-phone"></i>
+                                    <p class="info-title">Phone Number</p>
+                                </div>
+                                <p class="info-value">
+                                    <%= customer.phone || 'Not provided' %>
+                                </p>
+
+                                <div class="info-label">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <p class="info-title">Delivery Address</p>
+                                </div>
+                                <% if (customer.address &&
+                                customer.address.length > 0) { %>
+                                <p class="info-value">
+                                    <%= customer.address[0].street %>, <%=
+                                    customer.address[0].city %>, <%=
+                                    customer.address[0].state %>, <%=
+                                    customer.address[0].zipCode %>, <%=
+                                    customer.address[0].country %>
+                                </p>
+                                <% } else { %>
+                                <p class="info-value">No address provided</p>
+                                <% } %>
+
+                                <div class="info-label">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <p class="info-title">Joined On</p>
+                                </div>
+                                <p class="info-value">
+                                    <%= new
+                                    Date(customer.createdAt).toLocaleDateString('en-US',
+                                    { year: 'numeric', month: 'long', day:
+                                    'numeric' }) %>
+                                </p>
+
+                                <% if (latestOrder) { %>
+                                <div class="info-label">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    <p class="info-title">Latest Transaction</p>
+                                </div>
+                                <p class="info-value">
+                                    <%= new
+                                    Date(latestOrder.createdAt).toLocaleDateString('en-US',
+                                    { year: 'numeric', month: 'long', day:
+                                    'numeric' }) %>
+                                </p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards and Transaction History -->
+                    <div class="col-lg-8">
+                        <!-- Summary Cards -->
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="summary-card">
+                                    <div class="summary-icon balance-icon">
+                                        <i class="fas fa-wallet"></i>
+                                    </div>
+                                    <p class="summary-label">Total Spent</p>
+                                    <h3 class="summary-value">
+                                        ₹ <%= totalSpent.toFixed(2) %>
+                                    </h3>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="summary-card">
+                                    <div class="summary-icon orders-icon">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </div>
+                                    <p class="summary-label">Total Orders</p>
+                                    <h3 class="summary-value">
+                                        <%= totalOrders %>
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transaction History -->
+                        <div class="transaction-card">
+                            <div class="transaction-header">
+                                <h3 class="transaction-title">
+                                    Transaction History
+                                </h3>
+                                <div class="d-flex">
+                                    <a
+                                        href="/admin/customer/<%= customer._id %>/orders"
+                                        class="btn btn-dark"
+                                    >
+                                        View All Orders
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table transaction-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Product</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (orders && orders.length > 0) { %>
+                                        <% orders.forEach(order => { %>
+                                        <tr>
+                                            <td class="order-id">
+                                                <a
+                                                    href="/admin/orders/<%= order._id %>"
+                                                    class="text-decoration-none"
+                                                >
+                                                    #<%= order.orderNumber %>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div class="product-info">
+                                                    <% if (order.items &&
+                                                    order.items.length > 0 &&
+                                                    order.items[0].product &&
+                                                    order.items[0].product.images
+                                                    &&
+                                                    order.items[0].product.images.length
+                                                    > 0) { %>
+                                                    <img
+                                                        src="<%= order.items[0].product.images[0] %>"
+                                                        alt="<%= order.items[0].product.name %>"
+                                                        class="product-img"
+                                                    />
+                                                    <% } else { %>
+                                                    <div
+                                                        class="product-img"
+                                                    ></div>
+                                                    <% } %>
+                                                    <div>
+                                                        <p class="product-name">
+                                                            <%= order.items &&
+                                                            order.items.length >
+                                                            0 &&
+                                                            order.items[0].product
+                                                            ?
+                                                            order.items[0].product.name
+                                                            : 'Product' %>
+                                                        </p>
+                                                        <% if (order.items &&
+                                                        order.items.length > 1)
+                                                        { %>
+                                                        <p
+                                                            class="product-variant"
+                                                        >
+                                                            +<%=
+                                                            order.items.length -
+                                                            1 %> other products
+                                                        </p>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                ₹<%=
+                                                order.totalAmount.toFixed(2) %>
+                                            </td>
+                                            <td>
+                                                <% let statusClass = ''; %> <%
+                                                if (order.status ===
+                                                'Processing') { %> <%
+                                                statusClass =
+                                                'status-processing'; %> <% }
+                                                else if (order.status ===
+                                                'Shipped') { %> <% statusClass =
+                                                'status-shipped'; %> <% } else
+                                                if (order.status ===
+                                                'Delivered') { %> <% statusClass
+                                                = 'status-delivered'; %> <% }
+                                                else if (order.status ===
+                                                'Cancelled') { %> <% statusClass
+                                                = 'status-cancelled'; %> <% } %>
+                                                <span
+                                                    class="status-badge <%= statusClass %>"
+                                                >
+                                                    <%= order.status %>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <%= new
+                                                Date(order.createdAt).toLocaleDateString('en-US',
+                                                { day: 'numeric', month:
+                                                'short', year: 'numeric' }) %>
+                                            </td>
+                                        </tr>
+                                        <% }); %> <% } else { %>
+                                        <tr>
+                                            <td
+                                                colspan="5"
+                                                class="text-center py-4"
+                                            >
+                                                No orders found for this
+                                                customer
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <% if (orders && orders.length > 0) { %>
+                            <div
+                                class="d-flex justify-content-between align-items-center p-3 border-top"
+                            >
+                                <div>
+                                    <p class="text-muted mb-0">
+                                        Showing <%= Math.min(orders.length, 5)
+                                        %> of <%= totalOrders %> orders
+                                    </p>
+                                </div>
+                            </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- SweetAlert2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+
+        <script>
+            // Sidebar Toggle for Mobile
+            document.addEventListener("DOMContentLoaded", function () {
+                // Check for flash messages
+                if (locals.success_msg && success_msg.length > 0) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: "<%= success_msg %>",
+                        confirmButtonColor: "#000",
+                    });
+                }
+
+                if (locals.error_msg && error_msg.length > 0) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: error_msg,
+                        confirmButtonColor: "#000",
+                    });
+                }
+
+                const sidebar = document.getElementById("sidebar");
+                const sidebarToggle = document.getElementById("sidebarToggle");
+                const sidebarOverlay =
+                    document.getElementById("sidebarOverlay");
+
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener("click", function () {
+                        sidebar.classList.toggle("show");
+                        sidebarOverlay.classList.toggle("show");
+                        document.body.classList.toggle("overflow-hidden");
+                    });
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener("click", function () {
+                        sidebar.classList.remove("show");
+                        sidebarOverlay.classList.remove("show");
+                        document.body.classList.remove("overflow-hidden");
+                    });
+                }
+
+                // Close sidebar when clicking on a nav link on mobile
+                const navLinks =
+                    document.querySelectorAll(".sidebar .nav-link");
+                navLinks.forEach((link) => {
+                    link.addEventListener("click", function () {
+                        if (window.innerWidth < 992) {
+                            sidebar.classList.remove("show");
+                            sidebarOverlay.classList.remove("show");
+                            document.body.classList.remove("overflow-hidden");
+                        }
+                    });
+                });
+
+                // Handle window resize
+                window.addEventListener("resize", function () {
+                    if (window.innerWidth >= 992) {
+                        sidebar.classList.remove("show");
+                        sidebarOverlay.classList.remove("show");
+                        document.body.classList.remove("overflow-hidden");
+                    }
+                });
+
+                // Block/Unblock customer confirmation
+                const blockBtn = document.getElementById("blockBtn");
+                const unblockBtn = document.getElementById("unblockBtn");
+
+                if (blockBtn) {
+                    blockBtn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Are you sure?",
+                            text: "This will block the customer from accessing their account and making purchases",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#dc3545",
+                            cancelButtonColor: "#6c757d",
+                            confirmButtonText: "Yes, block customer",
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                this.closest("form").submit();
+                            }
+                        });
+                    });
+                }
+
+                if (unblockBtn) {
+                    unblockBtn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Are you sure?",
+                            text: "This will unblock the customer and restore their account access",
+                            icon: "question",
+                            showCancelButton: true,
+                            confirmButtonColor: "#28a745",
+                            cancelButtonColor: "#6c757d",
+                            confirmButtonText: "Yes, unblock customer",
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                this.closest("form").submit();
+                            }
+                        });
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

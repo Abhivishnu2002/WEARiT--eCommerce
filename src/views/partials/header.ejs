@@ -152,10 +152,47 @@
                 <div class="brand-name">WEAR<span>iT</span></div>
             </div>
 
-            <nav class="center-nav">
+            <nav class="center-nav d-flex align-items-center gap-4">
                 <a href="/">Home</a>
                 <a href="/products">Sale</a>
+
+                <% if (typeof user !== 'undefined' && user) { %>
+                <!-- If user is logged in -->
+                <div class="dropdown">
+                    <a
+                        class="dropdown-toggle text-white text-decoration-none"
+                        href="#"
+                        role="button"
+                        id="accountDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                    >
+                        My Account
+                    </a>
+                    <ul
+                        class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
+                        aria-labelledby="accountDropdown"
+                    >
+                        <li>
+                            <a class="dropdown-item" href="/account">Account</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/orders">Orders</a>
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form action="/logout" method="get">
+                                <button class="dropdown-item" type="submit">
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+                <% } else { %>
+                <!-- If user is NOT logged in -->
                 <a href="/login">Sign In</a>
+                <% } %>
             </nav>
 
             <div class="right-section">

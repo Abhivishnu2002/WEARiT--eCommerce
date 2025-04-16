@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Add Product</title>
+        <!-- Bootstrap CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <!-- SweetAlert2 CSS -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css"
+        />
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f8f9fa;
+                overflow-x: hidden;
+            }
+
+            /* Sidebar styles */
+            .sidebar {
+                width: 220px;
+                background-color: #ffffff;
+                height: 100vh;
+                position: fixed;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                z-index: 1030;
+                transition: all 0.3s ease;
+            }
+
+            .main-content {
+                margin-left: 220px;
+                padding: 20px;
+                background-color: #f8f9fa;
+                transition: all 0.3s ease;
+                width: calc(100% - 220px);
+            }
+
+            .logo {
+                font-weight: 800;
+                font-size: 24px;
+                padding: 20px;
+            }
+
+            .nav-item {
+                margin-bottom: 5px;
+            }
+
+            .nav-link {
+                color: #6c757d;
+                padding: 12px 20px;
+                border-radius: 5px;
+                margin: 0 10px;
+                display: flex;
+                align-items: center;
+            }
+
+            .nav-link i {
+                margin-right: 10px;
+                width: 20px;
+            }
+
+            .nav-link:hover,
+            .nav-link.active {
+                background-color: #f8f9fa;
+                color: #000;
+            }
+
+            .nav-link.active {
+                font-weight: 600;
+            }
+
+            /* Bottom buttons */
+            .bottom-buttons {
+                position: absolute;
+                bottom: 20px;
+                width: 100%;
+                padding: 0 20px;
+            }
+
+            .btn-account {
+                width: 100%;
+                margin-bottom: 10px;
+                border: 1px solid #dee2e6;
+                background-color: transparent;
+                color: #212529;
+            }
+
+            .btn-logout {
+                width: 100%;
+                background-color: #212529;
+                color: #fff;
+            }
+
+            /* Form styles */
+            .form-card {
+                background-color: #fff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+                margin-bottom: 20px;
+            }
+
+            .form-label {
+                font-weight: 500;
+                color: #212529;
+                margin-bottom: 8px;
+            }
+
+            .form-control {
+                border-radius: 4px;
+                padding: 10px 15px;
+                border: 1px solid #dee2e6;
+            }
+
+            .form-control:focus {
+                box-shadow: none;
+                border-color: #212529;
+            }
+
+            .form-text {
+                color: #6c757d;
+                font-size: 12px;
+            }
+
+            /* Radio buttons */
+            .form-check-input {
+                width: 20px;
+                height: 20px;
+                margin-top: 2px;
+            }
+
+            .form-check-input:checked {
+                background-color: #212529;
+                border-color: #212529;
+            }
+
+            .form-check-label {
+                margin-left: 5px;
+                font-weight: 500;
+            }
+
+            /* Size buttons */
+            .size-btn {
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                background-color: #fff;
+                margin-right: 10px;
+            }
+
+            .size-input {
+                width: 40px;
+                height: 40px;
+                text-align: center;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                margin-left: 5px;
+            }
+
+            /* Section titles */
+            .section-title {
+                font-weight: 600;
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .subsection-title {
+                font-weight: 500;
+                font-size: 16px;
+                margin-bottom: 10px;
+                color: #6c757d;
+            }
+
+            /* Image upload area */
+            .image-upload-section {
+                border: 1px solid #0d6efd;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .image-upload-title {
+                font-weight: 600;
+                font-size: 18px;
+                margin-bottom: 20px;
+                color: #000;
+            }
+
+            .image-upload-area {
+                border: 2px dashed #dee2e6;
+                border-radius: 8px;
+                padding: 40px 20px;
+                text-align: center;
+                background-color: #f8f9fa;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                height: 100%;
+                min-height: 200px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .image-upload-area:hover {
+                border-color: #adb5bd;
+            }
+
+            .upload-icon {
+                font-size: 24px;
+                color: #6c757d;
+                margin-bottom: 10px;
+            }
+
+            .upload-text {
+                color: #6c757d;
+                margin-bottom: 15px;
+            }
+
+            .btn-upload {
+                background-color: #e9ecef;
+                color: #6c757d;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 4px;
+                font-size: 14px;
+            }
+
+            .main-photo-label {
+                font-weight: 500;
+                margin-bottom: 10px;
+            }
+
+            .additional-photos-label {
+                font-weight: 500;
+                margin-bottom: 10px;
+                margin-top: 20px;
+            }
+
+            /* Action buttons */
+            .btn-add {
+                background-color: #000;
+                color: #fff;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+
+            .btn-cancel {
+                background-color: #fff;
+                color: #000;
+                border: 1px solid #dee2e6;
+                padding: 10px 20px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+
+            .btn-add:hover {
+                background-color: #212529;
+            }
+
+            .btn-add-info {
+                background-color: #000;
+                color: #fff;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            /* User profile */
+            .user-profile {
+                display: flex;
+                align-items: center;
+                padding: 10px;
+                background-color: transparent;
+                border-radius: 10px;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                margin-right: 10px;
+                object-fit: cover;
+            }
+
+            .user-info {
+                line-height: 1.2;
+            }
+
+            .user-name {
+                font-weight: 600;
+                margin-bottom: 0;
+            }
+
+            .user-role {
+                color: #6c757d;
+                font-size: 12px;
+            }
+
+            /* Mobile navbar */
+            .mobile-nav {
+                display: none;
+                background-color: #ffffff;
+                padding: 15px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                width: 100%;
+            }
+
+            .mobile-nav .logo {
+                padding: 0;
+            }
+
+            /* Responsive styles */
+            @media (max-width: 991.98px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    z-index: 1050;
+                }
+
+                .sidebar.show {
+                    transform: translateX(0);
+                }
+
+                .main-content {
+                    margin-left: 0;
+                    padding: 15px;
+                    width: 100%;
+                }
+
+                .mobile-nav {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .bottom-buttons {
+                    position: static;
+                    padding: 20px;
+                }
+
+                .sidebar-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    z-index: 1040;
+                    display: none;
+                }
+
+                .sidebar-overlay.show {
+                    display: block;
+                }
+
+                .action-buttons {
+                    flex-direction: column;
+                }
+
+                .action-buttons .btn {
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
+            }
+
+            @media (max-width: 767.98px) {
+                .size-container {
+                    flex-wrap: wrap;
+                }
+
+                .size-group {
+                    margin-bottom: 15px;
+                    width: 50%;
+                }
+
+                .additional-photos .col-md-4 {
+                    margin-bottom: 15px;
+                }
+            }
+
+            /* Preview image style */
+            .image-preview {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 8px;
+            }
+
+            /* Remove image button */
+            .remove-image-btn {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background-color: rgba(255, 255, 255, 0.8);
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 10;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Mobile Navigation -->
+        <div class="mobile-nav d-lg-none">
+            <div class="logo">WEARiT</div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <img
+                        src="<%= admin.profileImage %>"
+                        alt="Admin Avatar"
+                        class="user-avatar dropdown-toggle"
+                        data-bs-toggle="dropdown"
+                    />
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/admin/account"
+                                >Profile</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="dropdown-item"
+                                href="/admin/changepassword"
+                                >Change Password</a
+                            >
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <a class="dropdown-item" href="/admin/logout"
+                                >Logout</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <button class="btn btn-light" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <div class="d-flex w-100">
+            <!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                <div class="logo d-none d-lg-block">WEARiT</div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/admin/products">
+                            <i class="fas fa-box"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/orders">
+                            <i class="fas fa-list"></i> Order List
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/customer">
+                            <i class="fas fa-user"></i> Customer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/sales">
+                            <i class="fas fa-chart-line"></i> Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/category">
+                            <i class="fas fa-th-large"></i> Category
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/coupons">
+                            <i class="fas fa-tags"></i> Coupons
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/banner">
+                            <i class="fas fa-image"></i> Banner
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="bottom-buttons">
+                    <a href="/admin/account" class="btn btn-account">Account</a>
+                    <a href="/admin/logout" class="btn btn-logout">Logout</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Header with User Profile -->
+                <div
+                    class="d-flex justify-content-between align-items-center mb-4"
+                >
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="/admin/dashboard"
+                                    class="text-decoration-none"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="/admin/products"
+                                    class="text-decoration-none"
+                                    >Products</a
+                                >
+                            </li>
+                            <li
+                                class="breadcrumb-item active"
+                                aria-current="page"
+                            >
+                                Add Product
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <% if (locals.success_msg && success_msg.length > 0) { %>
+                <div
+                    class="alert alert-success alert-dismissible fade show"
+                    role="alert"
+                >
+                    <%= success_msg %>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
+                <% } %> <% if (locals.error_msg && error_msg.length > 0) { %>
+                <div
+                    class="alert alert-danger alert-dismissible fade show"
+                    role="alert"
+                >
+                    <%= error_msg %>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
+                <% } %>
+
+                <!-- Page Header -->
+                <div class="mb-4">
+                    <h2 class="fw-bold">Add Product</h2>
+                </div>
+
+                <!-- Product Form -->
+                <form
+                    action="/admin/addproducts"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    id="addProductForm"
+                >
+                    <!-- General Information -->
+                    <div class="form-card mb-4">
+                        <h3 class="section-title">General Information</h3>
+
+                        <div class="mb-3">
+                            <label for="productName" class="form-label"
+                                >Product Name</label
+                            >
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="productName"
+                                name="name"
+                                placeholder="Type product name here..."
+                                required
+                            />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label"
+                                >Description</label
+                            >
+                            <textarea
+                                class="form-control"
+                                id="description"
+                                name="description"
+                                rows="4"
+                                placeholder="Type product description here..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <label for="price" class="form-label"
+                                    >Price (₹):</label
+                                >
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="price"
+                                    name="price"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                />
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <label class="form-label d-block">Status</label>
+                                <div class="d-flex">
+                                    <div class="form-check me-3">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="isDeleted"
+                                            id="listed"
+                                            value="false"
+                                            checked
+                                        />
+                                        <label
+                                            class="form-check-label"
+                                            for="listed"
+                                            >Listed</label
+                                        >
+                                    </div>
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="isDeleted"
+                                            id="unlisted"
+                                            value="true"
+                                        />
+                                        <label
+                                            class="form-check-label"
+                                            for="unlisted"
+                                            >Unlisted</label
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="productOffer" class="form-label"
+                                    >Product Offer (%):</label
+                                >
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="productOffer"
+                                    name="offer"
+                                    min="0"
+                                    max="100"
+                                />
+                                <small class="form-text"
+                                    >Leave empty if no offer is available</small
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Images -->
+                    <div class="image-upload-section mb-4">
+                        <h3 class="image-upload-title">ADD PRODUCT IMAGES</h3>
+
+                        <div class="mb-4">
+                            <p class="main-photo-label">
+                                Main Photo (Required)
+                            </p>
+                            <div class="position-relative">
+                                <div
+                                    class="image-upload-area"
+                                    id="mainPhotoUpload"
+                                >
+                                    <i class="fas fa-image upload-icon"></i>
+                                    <p class="upload-text">
+                                        Drag and drop image here, or click add
+                                        image
+                                    </p>
+                                    <label class="btn-upload" for="mainImage"
+                                        >Add Image</label
+                                    >
+                                    <input
+                                        type="file"
+                                        name="images"
+                                        id="mainImage"
+                                        class="d-none"
+                                        accept="image/*"
+                                        required
+                                    />
+                                </div>
+                                <div
+                                    class="remove-image-btn d-none"
+                                    id="removeMainImage"
+                                >
+                                    <i class="fas fa-times"></i>
+                                </div>
+                            </div>
+                            <!-- Make sure the name is 'images' to match multer config -->
+                            <input
+                                type="file"
+                                name="images"
+                                id="mainImage"
+                                class="d-none"
+                                accept="image/*"
+                                required
+                            />
+                            <small class="form-text"
+                                >Recommended size: 800x1000 pixels. Max file
+                                size: 2MB.</small
+                            >
+                        </div>
+
+                        <div class="additional-photos">
+                            <p class="additional-photos-label">
+                                Additional Photos (Optional)
+                            </p>
+                            <div class="row">
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <div class="position-relative">
+                                        <div
+                                            class="image-upload-area"
+                                            id="additionalPhoto1Container"
+                                        >
+                                            <i
+                                                class="fas fa-image upload-icon"
+                                            ></i>
+                                            <p class="upload-text">
+                                                Drag and drop image here, or
+                                                click add image
+                                            </p>
+                                            <label
+                                                class="btn-upload"
+                                                for="mainImage"
+                                                >Add Image</label
+                                            >
+                                            <input
+                                                type="file"
+                                                name="images"
+                                                id="mainImage"
+                                                class="d-none"
+                                                accept="image/*"
+                                                required
+                                            />
+                                        </div>
+                                        <div
+                                            class="remove-image-btn d-none"
+                                            id="removeAdditionalPhoto1"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Make sure the name is 'images' to match multer config -->
+                                    <input
+                                        type="file"
+                                        name="images"
+                                        id="additionalPhoto1"
+                                        class="d-none"
+                                        accept="image/*"
+                                    />
+                                </div>
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <div class="position-relative">
+                                        <div
+                                            class="image-upload-area"
+                                            id="additionalPhoto2Container"
+                                        >
+                                            <i
+                                                class="fas fa-image upload-icon"
+                                            ></i>
+                                            <p class="upload-text">
+                                                Drag and drop image here, or
+                                                click add image
+                                            </p>
+                                            <label
+                                                class="btn-upload"
+                                                for="mainImage"
+                                                >Add Image</label
+                                            >
+                                            <input
+                                                type="file"
+                                                name="images"
+                                                id="mainImage"
+                                                class="d-none"
+                                                accept="image/*"
+                                                required
+                                            />
+                                        </div>
+                                        <div
+                                            class="remove-image-btn d-none"
+                                            id="removeAdditionalPhoto2"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Make sure the name is 'images' to match multer config -->
+                                    <input
+                                        type="file"
+                                        name="images"
+                                        id="additionalPhoto2"
+                                        class="d-none"
+                                        accept="image/*"
+                                    />
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="position-relative">
+                                        <div
+                                            class="image-upload-area"
+                                            id="additionalPhoto3Container"
+                                        >
+                                            <i
+                                                class="fas fa-image upload-icon"
+                                            ></i>
+                                            <p class="upload-text">
+                                                Drag and drop image here, or
+                                                click add image
+                                            </p>
+                                            <label
+                                                class="btn-upload"
+                                                for="mainImage"
+                                                >Add Image</label
+                                            >
+                                            <input
+                                                type="file"
+                                                name="images"
+                                                id="mainImage"
+                                                class="d-none"
+                                                accept="image/*"
+                                                required
+                                            />
+                                        </div>
+                                        <div
+                                            class="remove-image-btn d-none"
+                                            id="removeAdditionalPhoto3"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Make sure the name is 'images' to match multer config -->
+                                    <input
+                                        type="file"
+                                        name="images"
+                                        id="additionalPhoto3"
+                                        class="d-none"
+                                        accept="image/*"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Attributes -->
+                    <div class="form-card mb-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="category" class="form-label"
+                                    >Select Category</label
+                                >
+                                <select
+                                    class="form-select"
+                                    id="category"
+                                    name="category"
+                                    required
+                                >
+                                    <option value="" selected disabled>
+                                        Select a category
+                                    </option>
+                                    <% if (categories && categories.length > 0)
+                                    { %> <% categories.forEach(category => { %>
+                                    <option value="<%= category._id %>">
+                                        <%= category.name %>
+                                    </option>
+                                    <% }); %> <% } else { %>
+                                    <!-- Default categories if none are found in the database -->
+                                    <option value="Formals">Formals</option>
+                                    <option value="Casuals">Casuals</option>
+                                    <option value="Premium">Premium</option>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="fitType" class="form-label"
+                                    >Select Fit Type</label
+                                >
+                                <select
+                                    class="form-select"
+                                    id="fitType"
+                                    name="fitType"
+                                >
+                                    <option value="" selected disabled>
+                                        Select a fit type
+                                    </option>
+                                    <option value="Regular Fit">
+                                        Regular Fit
+                                    </option>
+                                    <option value="Slim Fit">Slim Fit</option>
+                                    <option value="Relaxed Fit">
+                                        Relaxed Fit
+                                    </option>
+                                    <option value="Athletic Fit">
+                                        Athletic Fit
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="sleeve" class="form-label"
+                                    >Select Sleeve</label
+                                >
+                                <select
+                                    class="form-select"
+                                    id="sleeve"
+                                    name="sleeve"
+                                >
+                                    <option value="" selected disabled>
+                                        Select sleeve type
+                                    </option>
+                                    <option value="Full sleeve">
+                                        Full sleeve
+                                    </option>
+                                    <option value="Half sleeve">
+                                        Half sleeve
+                                    </option>
+                                    <option value="Sleeveless">
+                                        Sleeveless
+                                    </option>
+                                    <option value="Roll-up sleeve">
+                                        Roll-up sleeve
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label">Size Available</label>
+                                <div class="d-flex flex-wrap size-container">
+                                    <div
+                                        class="d-flex align-items-center me-4 mb-3 size-group"
+                                    >
+                                        <div class="size-btn">S</div>
+                                        <input
+                                            type="number"
+                                            class="size-input"
+                                            name="sizeQuantity[S]"
+                                            min="0"
+                                            value="0"
+                                        />
+                                    </div>
+                                    <div
+                                        class="d-flex align-items-center me-4 mb-3 size-group"
+                                    >
+                                        <div class="size-btn">M</div>
+                                        <input
+                                            type="number"
+                                            class="size-input"
+                                            name="sizeQuantity[M]"
+                                            min="0"
+                                            value="0"
+                                        />
+                                    </div>
+                                    <div
+                                        class="d-flex align-items-center me-4 mb-3 size-group"
+                                    >
+                                        <div class="size-btn">L</div>
+                                        <input
+                                            type="number"
+                                            class="size-input"
+                                            name="sizeQuantity[L]"
+                                            min="0"
+                                            value="0"
+                                        />
+                                    </div>
+                                    <div
+                                        class="d-flex align-items-center me-4 mb-3 size-group"
+                                    >
+                                        <div class="size-btn">XL</div>
+                                        <input
+                                            type="number"
+                                            class="size-input"
+                                            name="sizeQuantity[XL]"
+                                            min="0"
+                                            value="0"
+                                        />
+                                    </div>
+                                    <div
+                                        class="d-flex align-items-center mb-3 size-group"
+                                    >
+                                        <div class="size-btn">XXL</div>
+                                        <input
+                                            type="number"
+                                            class="size-input"
+                                            name="sizeQuantity[XXL]"
+                                            min="0"
+                                            value="0"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="stockQuantity" class="form-label"
+                                    >Total Stock Quantity</label
+                                >
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    id="stockQuantity"
+                                    name="stockQuantity"
+                                    min="0"
+                                    required
+                                />
+                                <small class="form-text"
+                                    >This will be calculated automatically based
+                                    on size quantities</small
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Specifications -->
+                    <div class="form-card mb-4">
+                        <h3 class="section-title">Product Specifications</h3>
+
+                        <div class="mb-4">
+                            <p class="subsection-title mb-2">Color</p>
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="color"
+                                placeholder="Product color..."
+                                required
+                            />
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="subsection-title mb-2">Size & Fit</p>
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="sizeFit"
+                                placeholder="Size information..."
+                            />
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="subsection-title mb-2">Wash Care</p>
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="washCare"
+                                placeholder="Wash care instructions..."
+                            />
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="subsection-title mb-2">
+                                Additional Information
+                            </p>
+                            <div id="additionalInfoContainer">
+                                <div class="input-group mb-2">
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        name="additionalInfo[]"
+                                        placeholder="Additional information..."
+                                    />
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger remove-info"
+                                    >
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <button
+                                    type="button"
+                                    class="btn btn-add-info"
+                                    id="addInfoBtn"
+                                >
+                                    ADD MORE INFORMATION
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-center mt-5 mb-4">
+                        <a href="/admin/products" class="btn btn-cancel me-3"
+                            >CANCEL</a
+                        >
+                        <button type="submit" class="btn btn-add">
+                            ADD PRODUCT
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- SweetAlert2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+
+        <script>
+            // Sidebar Toggle for Mobile
+            document.addEventListener("DOMContentLoaded", function () {
+                // Check for flash messages
+                if (locals.success_msg && success_msg.length > 0) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: success_msg,
+                        confirmButtonColor: "#000",
+                    });
+                }
+
+                if (locals.error_msg && error_msg.length > 0) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: error_msg,
+                        confirmButtonColor: "#000",
+                    });
+                }
+
+                const sidebar = document.getElementById("sidebar");
+                const sidebarToggle = document.getElementById("sidebarToggle");
+                const sidebarOverlay =
+                    document.getElementById("sidebarOverlay");
+
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener("click", function () {
+                        sidebar.classList.toggle("show");
+                        sidebarOverlay.classList.toggle("show");
+                        document.body.classList.toggle("overflow-hidden");
+                    });
+                }
+
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener("click", function () {
+                        sidebar.classList.remove("show");
+                        sidebarOverlay.classList.remove("show");
+                        document.body.classList.remove("overflow-hidden");
+                    });
+                }
+
+                // Close sidebar when clicking on a nav link on mobile
+                const navLinks =
+                    document.querySelectorAll(".sidebar .nav-link");
+                navLinks.forEach((link) => {
+                    link.addEventListener("click", function () {
+                        if (window.innerWidth < 992) {
+                            sidebar.classList.remove("show");
+                            sidebarOverlay.classList.remove("show");
+                            document.body.classList.remove("overflow-hidden");
+                        }
+                    });
+                });
+
+                // Handle window resize
+                window.addEventListener("resize", function () {
+                    if (window.innerWidth >= 992) {
+                        sidebar.classList.remove("show");
+                        sidebarOverlay.classList.remove("show");
+                        document.body.classList.remove("overflow-hidden");
+                    }
+                });
+
+                // Image upload functionality
+                setupImageUpload(
+                    "mainPhotoUpload",
+                    "mainImage",
+                    "removeMainImage"
+                );
+                setupImageUpload(
+                    "additionalPhoto1Container",
+                    "additionalPhoto1",
+                    "removeAdditionalPhoto1"
+                );
+                setupImageUpload(
+                    "additionalPhoto2Container",
+                    "additionalPhoto2",
+                    "removeAdditionalPhoto2"
+                );
+                setupImageUpload(
+                    "additionalPhoto3Container",
+                    "additionalPhoto3",
+                    "removeAdditionalPhoto3"
+                );
+
+                function setupImageUpload(
+                    containerId,
+                    inputId,
+                    removeButtonId
+                ) {
+                    const container = document.getElementById(containerId);
+                    const fileInput = document.getElementById(inputId);
+                    const removeButton =
+                        document.getElementById(removeButtonId);
+
+                    if (container && fileInput) {
+                        // Make sure container click triggers file input
+                        container.addEventListener("click", function (e) {
+                            // Prevent click if it's on the remove button
+                            if (
+                                removeButton &&
+                                (e.target === removeButton ||
+                                    removeButton.contains(e.target))
+                            ) {
+                                return;
+                            }
+                            fileInput.click();
+                        });
+
+                        // Handle file selection
+                        fileInput.addEventListener("change", function () {
+                            if (fileInput.files && fileInput.files[0]) {
+                                const reader = new FileReader();
+
+                                reader.onload = function (e) {
+                                    // Clear container content
+                                    container.innerHTML = "";
+
+                                    // Create and add image preview
+                                    const img = document.createElement("img");
+                                    img.src = e.target.result;
+                                    img.className = "image-preview";
+                                    img.style.width = "100%";
+                                    img.style.height = "100%";
+                                    img.style.objectFit = "cover";
+                                    img.style.borderRadius = "8px";
+                                    container.appendChild(img);
+
+                                    // Show remove button
+                                    if (removeButton) {
+                                        removeButton.classList.remove("d-none");
+                                    }
+                                };
+
+                                reader.readAsDataURL(fileInput.files[0]);
+                            }
+                        });
+
+                        // Remove button functionality
+                        if (removeButton) {
+                            removeButton.addEventListener(
+                                "click",
+                                function (e) {
+                                    e.stopPropagation(); // Prevent container click
+
+                                    // Reset file input
+                                    fileInput.value = "";
+
+                                    // Reset container
+                                    container.innerHTML = `
+                            <i class="fas fa-image upload-icon"></i>
+                            <p class="upload-text">Drag and drop image here, or click add image</p>
+                            <button type="button" class="btn-upload">Add Image</button>
+                        `;
+
+                                    // Hide remove button
+                                    removeButton.classList.add("d-none");
+                                }
+                            );
+                        }
+
+                        // Drag and drop functionality
+                        container.addEventListener("dragover", function (e) {
+                            e.preventDefault();
+                            container.style.borderColor = "#0d6efd";
+                        });
+
+                        container.addEventListener("dragleave", function (e) {
+                            e.preventDefault();
+                            container.style.borderColor = "#dee2e6";
+                        });
+
+                        container.addEventListener("drop", function (e) {
+                            e.preventDefault();
+                            container.style.borderColor = "#dee2e6";
+
+                            if (
+                                e.dataTransfer.files &&
+                                e.dataTransfer.files[0]
+                            ) {
+                                fileInput.files = e.dataTransfer.files;
+
+                                const reader = new FileReader();
+                                reader.onload = function (e) {
+                                    // Clear container content
+                                    container.innerHTML = "";
+
+                                    // Create and add image preview
+                                    const img = document.createElement("img");
+                                    img.src = e.target.result;
+                                    img.className = "image-preview";
+                                    img.style.width = "100%";
+                                    img.style.height = "100%";
+                                    img.style.objectFit = "cover";
+                                    img.style.borderRadius = "8px";
+                                    container.appendChild(img);
+
+                                    // Show remove button
+                                    if (removeButton) {
+                                        removeButton.classList.remove("d-none");
+                                    }
+                                };
+
+                                reader.readAsDataURL(e.dataTransfer.files[0]);
+                            }
+                        });
+                    }
+                }
+
+                // Add more information fields
+                const addInfoBtn = document.getElementById("addInfoBtn");
+                const additionalInfoContainer = document.getElementById(
+                    "additionalInfoContainer"
+                );
+
+                if (addInfoBtn && additionalInfoContainer) {
+                    addInfoBtn.addEventListener("click", function () {
+                        const newInfoField = document.createElement("div");
+                        newInfoField.className = "input-group mb-2";
+                        newInfoField.innerHTML = `
+                            <input
+                                type="text"
+                                class="form-control"
+                                name="additionalInfo[]"
+                                placeholder="Additional information..."
+                            />
+                            <button type="button" class="btn btn-outline-danger remove-info">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        additionalInfoContainer.appendChild(newInfoField);
+
+                        // Add event listener to the remove button
+                        const removeBtn =
+                            newInfoField.querySelector(".remove-info");
+                        removeBtn.addEventListener("click", function () {
+                            additionalInfoContainer.removeChild(newInfoField);
+                        });
+                    });
+
+                    // Add event listeners to existing remove buttons
+                    document.querySelectorAll(".remove-info").forEach((btn) => {
+                        btn.addEventListener("click", function () {
+                            const infoField = this.closest(".input-group");
+                            additionalInfoContainer.removeChild(infoField);
+                        });
+                    });
+                }
+
+                // Calculate total stock quantity based on size quantities
+                const sizeInputs = document.querySelectorAll(".size-input");
+                const stockQuantityInput =
+                    document.getElementById("stockQuantity");
+
+                if (sizeInputs.length > 0 && stockQuantityInput) {
+                    function updateTotalStock() {
+                        let total = 0;
+                        sizeInputs.forEach((input) => {
+                            total += parseInt(input.value) || 0;
+                        });
+                        stockQuantityInput.value = total;
+                    }
+
+                    sizeInputs.forEach((input) => {
+                        input.addEventListener("input", updateTotalStock);
+                    });
+
+                    // Initial calculation
+                    updateTotalStock();
+                }
+
+                // Form validation
+                const form = document.getElementById("addProductForm");
+                if (form) {
+                    form.addEventListener("submit", function (e) {
+                        const productName = document
+                            .getElementById("productName")
+                            .value.trim();
+                        const description = document
+                            .getElementById("description")
+                            .value.trim();
+                        const price = document.getElementById("price").value;
+                        const category =
+                            document.getElementById("category").value;
+                        const mainImage =
+                            document.getElementById("mainImage").files.length;
+
+                        let isValid = true;
+                        let errorMessage = "";
+
+                        if (!productName) {
+                            isValid = false;
+                            errorMessage = "Product name is required";
+                        } else if (!description) {
+                            isValid = false;
+                            errorMessage = "Product description is required";
+                        } else if (!price || price <= 0) {
+                            isValid = false;
+                            errorMessage = "Valid price is required";
+                        } else if (!category) {
+                            isValid = false;
+                            errorMessage = "Category selection is required";
+                        } else if (!mainImage) {
+                            isValid = false;
+                            errorMessage = "Main product image is required";
+                        }
+
+                        if (!isValid) {
+                            e.preventDefault();
+                            Swal.fire({
+                                icon: "error",
+                                title: "Validation Error",
+                                text: errorMessage,
+                                confirmButtonColor: "#000",
+                            });
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

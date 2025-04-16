@@ -1,180 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OTP Verification</title>
-  <style>
-    /* Reset and base styles */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    
-    /* Page layout */
-    body {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #ffffff;
-    }
-    
-    .container {
-      width: 100%;
-      max-width: 500px;
-      padding: 20px;
-      text-align: center;
-    }
-    
-    /* Typography */
-    h1 {
-      font-size: 28px;
-      margin-bottom: 20px;
-      font-weight: 700;
-    }
-    
-    p {
-      font-size: 16px;
-      line-height: 1.5;
-      color: #333;
-      margin-bottom: 30px;
-    }
-    
-    /* OTP input boxes */
-    .otp-container {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-    
-    .otp-input {
-      width: 50px;
-      height: 50px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 500;
-    }
-    
-    .otp-input:first-child {
-      border: 2px solid #000;
-    }
-    
-    .otp-input:focus {
-      outline: none;
-      border: 2px solid #000;
-    }
-    
-    /* Timer and resend */
-    .timer {
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-    
-    .resend-container {
-      margin-bottom: 30px;
-      font-size: 14px;
-    }
-    
-    .resend-link {
-      color: #000;
-      font-weight: 700;
-      text-decoration: none;
-      cursor: pointer;
-      margin-left: 5px;
-    }
-    
-    /* Verify button */
-    .verify-btn {
-      background-color: #000;
-      color: white;
-      border: none;
-      padding: 15px;
-      width: 100%;
-      font-size: 16px;
-      font-weight: 600;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    
-    .verify-btn:hover {
-      background-color: #333;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      .otp-container {
-        gap: 6px;
-      }
-      
-      .otp-input {
-        width: 45px;
-        height: 45px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Verify OTP</h1>
-    <p>We've sent an email with an activation code to your phone test@gmail.com</p>
-    
-    <div class="otp-container">
-      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 0)">
-      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 1)">
-      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 2)">
-      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 3)">
-      <input type="text" maxlength="1" class="otp-input" onkeyup="moveToNext(this, 4)">
-    </div>
-    
-    <div class="timer">Send code again 00:20</div>
-    
-    <div class="resend-container">
-      I didn't receive a code <span class="resend-link">Resend</span>
-    </div>
-    
-    <button class="verify-btn">Verify</button>
-  </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Verify OTP - WEARiT</title>
+        <link rel="stylesheet" href="/css/styles.css" />
 
-  <script>
-    function moveToNext(field, index) {
-      // Allow only numbers
-      field.value = field.value.replace(/[^0-9]/g, '');
-      
-      // Get all input fields
-      let inputs = document.querySelectorAll('.otp-input');
-      
-      // Move to next field if current field is filled
-      if (field.value !== '' && index < inputs.length - 1) {
-        inputs[index + 1].focus();
-      }
-      
-      // Add active border to current field, remove from others
-      inputs.forEach(input => {
-        input.style.border = '1px solid #ddd';
-      });
-      
-      if (field.value === '') {
-        field.style.border = '2px solid #000';
-      } else if (index < inputs.length - 1) {
-        inputs[index + 1].style.border = '2px solid #000';
-      }
-    }
-    
-    // Initialize the first input with focus
-    document.addEventListener('DOMContentLoaded', () => {
-      const firstInput = document.querySelector('.otp-input');
-      if (firstInput) {
-        firstInput.focus();
-      }
-    });
-  </script>
-</body>
+        <!-- Bootstrap 5 CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+
+        <!-- Font Awesome -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+
+        <style>
+            body {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #f8f9fa;
+                font-family: "Poppins", sans-serif;
+            }
+
+            .card {
+                max-width: 450px;
+                width: 100%;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            }
+
+            .login-button {
+                width: 100%;
+                padding: 12px;
+                font-weight: 500;
+                background-color: #000;
+                color: #fff;
+                border: none;
+                border-radius: 8px;
+            }
+
+            .login-button:hover {
+                background-color: #333;
+            }
+
+            .divider {
+                text-align: center;
+                margin: 25px 0 15px;
+                font-size: 14px;
+                color: #6c757d;
+            }
+
+            .form-label {
+                font-weight: 500;
+            }
+
+            .form-control:focus {
+                border-color: #000;
+                box-shadow: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2 class="text-center mb-4">Verify Your Email</h2>
+
+            <!-- Flash Messages -->
+            <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) {
+            %>
+            <div class="alert alert-danger"><%= error_msg %></div>
+            <% } %> <% if (typeof success_msg !== 'undefined' &&
+            success_msg.length > 0) { %>
+            <div class="alert alert-success"><%= success_msg %></div>
+            <% } %>
+
+            <p class="text-muted text-center mb-4">
+                We've sent a verification code to your email. Please enter the
+                code below.
+            </p>
+
+            <!-- Verify Form -->
+            <form action="/verifyotp" method="POST">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email ID</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control"
+                        value="<%= typeof email !== 'undefined' ? email : '' %>"
+                    />
+                    <label for="otp" class="form-label"
+                        >Verification Code (OTP)</label
+                    >
+                    <input
+                        type="text"
+                        id="otp"
+                        name="otp"
+                        class="form-control"
+                        placeholder="Enter verification code"
+                        required
+                    />
+                </div>
+
+                <button type="submit" class="login-button mb-3">
+                    Verify Email
+                </button>
+            </form>
+
+            <div class="divider">Didn't receive the code?</div>
+            <form action="/resendotp" method="POST" id="resendForm">
+                <button
+                    type="submit"
+                    class="btn btn-outline-dark w-100"
+                    id="resendBtn"
+                    disabled
+                >
+                    Resend Code
+                    <span id="timer" class="ms-2 text-muted">(60s)</span>
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <a href="/login" class="text-decoration-none text-dark">
+                    Back to Login
+                </a>
+            </div>
+        </div>
+        <script>
+            let timerDuration = 60; // seconds
+            let resendBtn = document.getElementById("resendBtn");
+            let timerText = document.getElementById("timer");
+
+            function startTimer() {
+                resendBtn.disabled = true;
+                let timeLeft = timerDuration;
+
+                const countdown = setInterval(() => {
+                    timeLeft--;
+                    timerText.textContent = `(${timeLeft}s)`;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        resendBtn.disabled = false;
+                        timerText.textContent = "";
+                    }
+                }, 1000);
+            }
+
+            // Start timer when page loads
+            window.addEventListener("DOMContentLoaded", () => {
+                startTimer();
+            });
+
+            // Reset timer after resend clicked
+            document
+                .getElementById("resendForm")
+                .addEventListener("submit", function (e) {
+                    startTimer();
+                });
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
 </html>

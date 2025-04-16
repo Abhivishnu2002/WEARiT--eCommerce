@@ -5,6 +5,7 @@ const path = require('path');
 const session = require('express-session')
 const nocache = require('nocache');
 const flash = require('connect-flash');
+const expressLayouts = require('express-ejs-layouts');
 const MongoStore = require('connect-mongo');
 const userRoutes = require('./routes/userRoutes.js')
 const productRoutes = require('./routes/productRouter.js')
@@ -37,7 +38,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI,
+        mongoUrl: process.env.MONGO_URI,
         ttl:5 * 24 * 60 * 60
     }),
     cookie: {
@@ -59,7 +60,7 @@ app.use((req, res, next)=>{
 })
 
 app.use("/products", productRoutes);
-app.use('/user', userRoutes);
+app.use('/', userRoutes);
 app.use("/admin", adminRoutes);
 
 app.get('/', (req, res)=>{
@@ -68,7 +69,7 @@ app.get('/', (req, res)=>{
 
 app.use((err, req, res, next)=>{
     console.log(err.stack);
-    res.status(500).render('errors/500', {error: err});
+    res.status(404).render('errors/404', {err});
 })
 
 const PORT = process.env.PORT || 5000;

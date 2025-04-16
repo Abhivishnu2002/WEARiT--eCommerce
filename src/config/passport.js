@@ -14,7 +14,7 @@ passport.use(new LocalStrategy(
             if(!user){
                 return done(null, false, {message: 'Invalid email or password'});
             }
-            if(!user.isBlocked){
+            if(user.isBlocked){
                 return done(null, false, {message: 'You account is blocked. Please contact for support!'})
             }
 
@@ -32,10 +32,10 @@ passport.use(new LocalStrategy(
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: 'auth/google/callback'
-}, async (accessToken, refreshToken, ProfilingLevel, done)=>{
+    callbackURL: '/google/callback'
+}, async (accessToken, refreshToken, profile, done)=>{
     try {
-        let user = await User.findOne({googleId: ProfilingLevel.id});
+        let user = await User.findOne({googleId: profile.id});
         if(!user){
             user = new User ({
                 googleId: profile.id,
@@ -51,8 +51,12 @@ passport.use(new GoogleStrategy({
     }
 }));
 
+passport.serializeUser((user, done) => {
+    done(null, user._id); // serialize by unique identifier
+});
+
+
 passport.deserializeUser(async (id, done)=>{
-    
     try {
         const user = await User.findById(id);
         done(null, user)
