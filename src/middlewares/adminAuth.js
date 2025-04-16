@@ -1,23 +1,7 @@
-const User = require('../models/userModel');
-
-// Ensure user is authenticated
-const ensureAuthenticated = (req, res, next) => {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    req.flash('error_msg', 'Please log in to view this resource');
-    res.redirect('/login');
-};
-
-// Ensure user is NOT authenticated (for login/register pages)
-const forwardAuthenticated = (req, res, next) => {
-    if (!req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/');
-};
-
-// Check if admin is logged in
+/**
+ * Checks if admin is logged in
+ * If not logged in, redirects to admin login page with an error message
+ */
 const isAdminLoggedIn = (req, res, next) => {
     if (req.session.admin) {
         next();
@@ -27,7 +11,10 @@ const isAdminLoggedIn = (req, res, next) => {
     }
 };
 
-// Check if admin is logged out
+/**
+ * Checks if admin is logged out
+ * If already logged in, redirects to admin dashboard
+ */
 const isAdminLoggedOut = (req, res, next) => {
     if (!req.session.admin) {
         next();
@@ -36,7 +23,10 @@ const isAdminLoggedOut = (req, res, next) => {
     }
 };
 
-// Verify admin session and pass admin data to views
+/**
+ * Verifies admin session and passes admin data to views
+ * If not logged in, redirects to admin login page with an error message
+ */
 const verifyAdminSession = (req, res, next) => {
     if (req.session.admin) {
         // Pass admin data to all views
@@ -53,4 +43,8 @@ const verifyAdminSession = (req, res, next) => {
     }
 };
 
-module.exports = {ensureAuthenticated, forwardAuthenticated, isAdminLoggedIn, isAdminLoggedOut, verifyAdminSession};
+module.exports = {
+    isAdminLoggedIn,
+    isAdminLoggedOut,
+    verifyAdminSession
+};

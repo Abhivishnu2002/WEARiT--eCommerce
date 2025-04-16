@@ -1,786 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | WEARiT</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
-    <style>
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Sidebar styles */
-        .sidebar {
-            width: 250px;
-            background-color: #ffffff;
-            height: 100vh;
-            position: fixed;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-            z-index: 1030;
-            transition: all 0.3s ease;
-            overflow-y: auto;
-        }
-
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .logo {
-            font-weight: 800;
-            font-size: 24px;
-            padding: 20px;
-        }
-
-        .nav-item {
-            margin-bottom: 5px;
-        }
-
-        .nav-link {
-            color: #6c757d;
-            padding: 12px 20px;
-            border-radius: 5px;
-            margin: 0 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-link i {
-            margin-right: 10px;
-            width: 20px;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            background-color: #f8f9fa;
-            color: #000;
-        }
-
-        .nav-link.active {
-            font-weight: 600;
-        }
-
-        /* Bottom buttons */
-        .bottom-buttons {
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .btn-account {
-            width: 100%;
-            margin-bottom: 10px;
-            border: 1px solid #dee2e6;
-            background-color: transparent;
-            color: #212529;
-        }
-
-        .btn-logout {
-            width: 100%;
-            background-color: #212529;
-            color: #fff;
-        }
-
-        /* Mobile navbar */
-        .mobile-nav {
-            display: none;
-            background-color: #ffffff;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1040;
-        }
-
-        .mobile-nav .logo {
-            padding: 0;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            cursor: pointer;
-        }
-
-        /* Sidebar overlay */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1025;
-            display: none;
-        }
-
-        /* Stats cards */
-        .stat-card {
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .stat-title {
-            color: #6c757d;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .stat-value {
-            font-weight: 700;
-            margin-bottom: 5px;
-            font-size: 24px;
-        }
-
-        .stat-percent {
-            color: #00c853;
-            font-size: 12px;
-            margin-bottom: 0;
-        }
-
-        /* Chart containers */
-        .chart-container {
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            height: 100%;
-        }
-
-        .activity-chart-container {
-            height: 300px;
-            position: relative;
-        }
-
-        /* Progress circle */
-        .progress-circle {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            margin: 0 auto;
-        }
-
-        .progress-value {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .progress-percent {
-            color: #00c853;
-            text-align: center;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        /* Metric row */
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .metric-item {
-            text-align: center;
-            flex: 1;
-        }
-
-        .metric-label {
-            color: #6c757d;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-
-        .metric-value {
-            font-weight: 600;
-            margin-bottom: 0;
-        }
-
-        .up-arrow {
-            color: #00c853;
-            font-size: 12px;
-        }
-
-        .down-arrow {
-            color: #f44336;
-            font-size: 12px;
-        }
-
-        /* Responsive styles */
-        @media (max-width: 991.98px) {
-            .sidebar {
-                transform: translateX(-100%);
-                z-index: 1050;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding-top: 70px;
-            }
-            
-            .mobile-nav {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .sidebar-overlay.show {
-                display: block;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Mobile Navigation -->
-    <div class="mobile-nav d-lg-none">
-        <div class="logo">WEARiT</div>
-        <div class="d-flex align-items-center">
-            <div class="dropdown me-3">
-                <img
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-TXKW8HEwholHUq1AhmPCBtj0jGP8MX.png"
-                    alt="Admin Avatar"
-                    class="user-avatar dropdown-toggle"
-                    data-bs-toggle="dropdown"
-                />
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="/admin/account">Profile</a></li>
-                    <li><a class="dropdown-item" href="/admin/changepassword">Change Password</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="/admin/logout">Logout</a></li>
-                </ul>
-            </div>
-            <button class="btn btn-light" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <div class="d-flex w-100">
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div class="logo d-none d-lg-block">WEARiT</div>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link active" href="/admin/dashboard">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/products">
-                        <i class="fas fa-box"></i> Products
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/orders">
-                        <i class="fas fa-list"></i> Order List
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/customer">
-                        <i class="fas fa-user"></i> Customer
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/sales">
-                        <i class="fas fa-chart-line"></i> Sales
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/category">
-                        <i class="fas fa-th-large"></i> Category
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/coupons">
-                        <i class="fas fa-tags"></i> Coupons
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/banner">
-                        <i class="fas fa-image"></i> Banner
-                    </a>
-                </li>
-            </ul>
-
-            <div class="bottom-buttons d-none d-lg-block">
-                <a href="/admin/account" class="btn btn-account">Account</a>
-                <a href="/admin/logout" class="btn btn-logout">Logout</a>
-            </div>
-
-            <div class="d-lg-none mt-4 px-3">
-                <a href="/admin/account" class="btn btn-account mb-2 w-100">Account</a>
-                <a href="/admin/logout" class="btn btn-logout w-100">Logout</a>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Stats Row -->
-            <div class="row g-3 w-100">
-                <!-- Total Customers -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="d-flex align-items-center">
-                            <div
-                                class="stat-icon me-3"
-                                style="background-color: #e6f7ee"
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT Dashboard</title>
+        <!-- Bootstrap CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <!-- Bootstrap Icons -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+        />
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div
+                    class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm p-0"
+                    style="height: 100vh"
+                >
+                    <div class="d-flex flex-column h-100">
+                        <div class="p-3 border-bottom">
+                            <h4 class="fw-bold">WEARiT</h4>
+                        </div>
+                        <div class="list-group list-group-flush flex-grow-1">
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action active border-0 py-3"
                             >
-                                <i
-                                    class="fas fa-users"
-                                    style="color: #00c853"
-                                ></i>
-                            </div>
-                            <div>
-                                <p class="stat-title">Total Customers</p>
-                                <h2 class="stat-value"><%= userCount %></h2>
-                                <p class="stat-percent">
-                                    <% const userGrowth = 16; %>
-                                    <%= userGrowth %>% this month
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Products -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="d-flex align-items-center">
-                            <div
-                                class="stat-icon me-3"
-                                style="background-color: #e6f7ee"
+                                <i class="bi bi-grid-1x2-fill me-2"></i>
+                                Dashboard
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
                             >
-                                <i
-                                    class="fas fa-box"
-                                    style="color: #00c853"
-                                ></i>
-                            </div>
-                            <div>
-                                <p class="stat-title">Total Products</p>
-                                <h2 class="stat-value"><%= productCount %></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Categories -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="d-flex align-items-center">
-                            <div
-                                class="stat-icon me-3"
-                                style="background-color: #e6f7ee"
+                                <i class="bi bi-box-seam me-2"></i> Products
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
                             >
-                                <i
-                                    class="fas fa-th-large"
-                                    style="color: #00c853"
-                                ></i>
-                            </div>
-                            <div>
-                                <p class="stat-title">Total Categories</p>
-                                <h2 class="stat-value"><%= categoryCount %></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Pending -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="d-flex align-items-center">
-                            <div
-                                class="stat-icon me-3"
-                                style="background-color: #e6f7ee"
+                                <i class="bi bi-list-ul me-2"></i> Order List
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
                             >
-                                <i
-                                    class="fas fa-clock"
-                                    style="color: #00c853"
-                                ></i>
-                            </div>
-                            <div>
-                                <p class="stat-title">Total Pending</p>
-                                <h2 class="stat-value">
-                                    <% const pendingOrders = 0; %>
-                                    <%= pendingOrders %>
-                                </h2>
-                            </div>
+                                <i class="bi bi-person me-2"></i> Customer
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-currency-dollar me-2"></i> Sales
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-grid me-2"></i> Category
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-ticket-perforated me-2"></i>
+                                Coupons
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-image me-2"></i> Banner
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                        </div>
+                        <div class="mt-auto p-3">
+                            <button class="btn btn-outline-dark w-100 mb-2">
+                                Account
+                            </button>
+                            <button class="btn btn-dark w-100">Logout</button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Recent Users Section -->
-            <h4 class="mt-4 mb-3">Recent Users</h4>
-            <div class="row g-3 w-100 mb-4">
-                <div class="col-12">
-                    <div class="chart-container">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Status</th>
-                                        <th>Joined</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% if (recentUsers && recentUsers.length > 0) { %>
-                                        <% recentUsers.forEach(user => { %>
-                                            <tr>
-                                                <td><%= user.name %></td>
-                                                <td><%= user.email %></td>
-                                                <td><%= user.phone || 'N/A' %></td>
-                                                <td>
-                                                    <% if (user.isBlocked) { %>
-                                                        <span class="badge bg-danger">Blocked</span>
-                                                    <% } else { %>
-                                                        <span class="badge bg-success">Active</span>
-                                                    <% } %>
-                                                </td>
-                                                <td><%= new Date(user.createdAt).toLocaleDateString() %></td>
-                                            </tr>
-                                        <% }); %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="5" class="text-center">No recent users found</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
+                <!-- Main Content -->
+                <div class="col-md-9 col-lg-10 ms-sm-auto bg-light">
+                    <!-- Header - Simplified without admin profile -->
+                    <div class="bg-white p-3 shadow-sm">
+                        <!-- Empty header, admin profile removed -->
                     </div>
-                </div>
-            </div>
 
-            <!-- Sales Details Section -->
-            <h4 class="mt-4 mb-3">Sales Details</h4>
-
-            <div class="row g-3 w-100">
-                <!-- Activity Chart -->
-                <div class="col-lg-8 col-md-12">
-                    <div class="chart-container">
-                        <div
-                            class="d-flex justify-content-between align-items-center mb-4"
-                        >
-                            <h5 class="mb-0">Activity</h5>
-                            <div class="dropdown">
-                                <button
-                                    class="btn btn-sm btn-light dropdown-toggle"
-                                    type="button"
-                                    id="dropdownMenuButton"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                >
-                                    Month
-                                </button>
-                                <ul
-                                    class="dropdown-menu dropdown-menu-end"
-                                    aria-labelledby="dropdownMenuButton"
-                                >
-                                    <li>
-                                        <a class="dropdown-item" href="#"
-                                            >Week</a
+                    <!-- Dashboard Content -->
+                    <div class="p-4">
+                        <!-- Stats Cards -->
+                        <div class="row g-4 mb-4">
+                            <!-- Total Customers -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body d-flex">
+                                        <div
+                                            class="bg-success bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px"
                                         >
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="#"
-                                            >Month</a
+                                            <i
+                                                class="bi bi-people text-success fs-4"
+                                            ></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted">
+                                                Total Customers
+                                            </div>
+                                            <h3 class="mb-0">5,423</h3>
+                                            <div class="text-success small">
+                                                16% this month
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Orders -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body d-flex">
+                                        <div
+                                            class="bg-success bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px"
                                         >
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="#"
-                                            >Year</a
+                                            <i
+                                                class="bi bi-truck text-success fs-4"
+                                            ></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted">
+                                                Total Orders
+                                            </div>
+                                            <h3 class="mb-0">1,893</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Sales -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body d-flex">
+                                        <div
+                                            class="bg-success bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px"
                                         >
-                                    </li>
-                                </ul>
+                                            <i
+                                                class="bi bi-currency-dollar text-success fs-4"
+                                            ></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted">
+                                                Total Sales
+                                            </div>
+                                            <h3 class="mb-0">₹65,805</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Pending -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body d-flex">
+                                        <div
+                                            class="bg-success bg-opacity-10 p-3 rounded-circle d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px"
+                                        >
+                                            <i
+                                                class="bi bi-clock text-success fs-4"
+                                            ></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted">
+                                                Total Pending
+                                            </div>
+                                            <h3 class="mb-0">189</h3>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="activity-chart-container">
-                            <canvas id="activityChart"></canvas>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Sales Progress -->
-                <div class="col-lg-4 col-md-12">
-                    <div class="chart-container">
-                        <div
-                            class="d-flex justify-content-between align-items-center mb-3"
-                        >
-                            <div>
-                                <h5 class="mb-0">Sales Progress</h5>
-                                <p class="text-muted small mb-0">
-                                    This Quarter
-                                </p>
-                            </div>
-                            <div class="dropdown">
-                                <button
-                                    class="btn btn-sm btn-light"
-                                    type="button"
-                                >
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                            </div>
-                        </div>
+                        <!-- Sales Details -->
+                        <h4 class="mb-4">Sales Details</h4>
 
-                        <div class="progress-circle">
-                            <canvas id="progressChart"></canvas>
-                            <div class="progress-value">75.55%</div>
-                        </div>
-                        <p class="progress-percent">+10%</p>
-
-                        <p class="text-center mt-3 mb-4">
-                            You succeed earn ₹28963 today, its higher than
-                            yesterday
-                        </p>
-
-                        <div class="metric-row">
-                            <div class="metric-item">
-                                <p class="metric-label">Target</p>
-                                <p class="metric-value">
-                                    ₹30k
-                                    <i
-                                        class="fas fa-arrow-down down-arrow"
-                                    ></i>
-                                </p>
+                        <div class="row g-4">
+                            <!-- Chart - Fixed to prevent overflow -->
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <div
+                                            class="d-flex justify-content-between mb-4"
+                                        >
+                                            <h5 class="card-title">Activity</h5>
+                                            <div class="dropdown">
+                                                <button
+                                                    class="btn btn-light dropdown-toggle"
+                                                    type="button"
+                                                    id="timeDropdown"
+                                                    data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                >
+                                                    Month
+                                                </button>
+                                                <ul
+                                                    class="dropdown-menu"
+                                                    aria-labelledby="timeDropdown"
+                                                >
+                                                    <li>
+                                                        <a
+                                                            class="dropdown-item"
+                                                            href="#"
+                                                            >Week</a
+                                                        >
+                                                    </li>
+                                                    <li>
+                                                        <a
+                                                            class="dropdown-item"
+                                                            href="#"
+                                                            >Month</a
+                                                        >
+                                                    </li>
+                                                    <li>
+                                                        <a
+                                                            class="dropdown-item"
+                                                            href="#"
+                                                            >Year</a
+                                                        >
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <!-- Fixed height container for chart -->
+                                        <div style="height: 300px; width: 100%">
+                                            <canvas id="salesChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="metric-item">
-                                <p class="metric-label">Revenue</p>
-                                <p class="metric-value">
-                                    ₹16k
-                                    <i class="fas fa-arrow-up up-arrow"></i>
-                                </p>
-                            </div>
-                            <div class="metric-item">
-                                <p class="metric-label">Today</p>
-                                <p class="metric-value">
-                                    ₹28k
-                                    <i class="fas fa-arrow-up up-arrow"></i>
-                                </p>
+
+                            <!-- Sales Progress -->
+                            <div class="col-lg-4">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <div
+                                            class="d-flex justify-content-between align-items-center mb-3"
+                                        >
+                                            <h5 class="card-title">
+                                                Sales Progress
+                                            </h5>
+                                            <i
+                                                class="bi bi-three-dots-vertical"
+                                            ></i>
+                                        </div>
+                                        <div class="text-muted mb-3">
+                                            This Quarter
+                                        </div>
+
+                                        <div class="text-center my-4">
+                                            <div
+                                                class="position-relative d-inline-block"
+                                            >
+                                                <canvas
+                                                    id="progressChart"
+                                                    width="150"
+                                                    height="150"
+                                                ></canvas>
+                                                <div
+                                                    class="position-absolute top-50 start-50 translate-middle text-center"
+                                                >
+                                                    <h3 class="mb-0">75.55%</h3>
+                                                    <div class="text-success">
+                                                        +10%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-center mb-3">
+                                            You succeed earn ₹28963 today, its
+                                            higher than yesterday
+                                        </div>
+
+                                        <div class="row text-center g-3 mt-3">
+                                            <div class="col-4">
+                                                <div class="text-muted small">
+                                                    Target
+                                                </div>
+                                                <div>
+                                                    ₹30k
+                                                    <i
+                                                        class="bi bi-arrow-down-short text-danger"
+                                                    ></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted small">
+                                                    Revenue
+                                                </div>
+                                                <div>
+                                                    ₹16k
+                                                    <i
+                                                        class="bi bi-arrow-up-short text-success"
+                                                    ></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted small">
+                                                    Today
+                                                </div>
+                                                <div>
+                                                    ₹28k
+                                                    <i
+                                                        class="bi bi-arrow-up-short text-success"
+                                                    ></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+        <!-- Bootstrap JS Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        // Sidebar Toggle for Mobile
-        document.addEventListener("DOMContentLoaded", function () {
-            // Check for flash messages
-             if (locals.success_msg && success_msg.length > 0) { 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: success_msg,
-                    confirmButtonColor: '#000'
-                });
-             } 
-
-             if (locals.error_msg && error_msg.length > 0) { 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text:  error_msg ,
-                    confirmButtonColor: '#000'
-                });
-             } 
-
-            const sidebar = document.getElementById("sidebar");
-            const sidebarToggle = document.getElementById("sidebarToggle");
-            const sidebarOverlay = document.getElementById("sidebarOverlay");
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener("click", function () {
-                    sidebar.classList.toggle("show");
-                    sidebarOverlay.classList.toggle("show");
-                    document.body.classList.toggle("overflow-hidden");
-                });
-            }
-
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener("click", function () {
-                    sidebar.classList.remove("show");
-                    sidebarOverlay.classList.remove("show");
-                    document.body.classList.remove("overflow-hidden");
-                });
-            }
-
-            // Close sidebar when clicking on a nav link on mobile
-            const navLinks = document.querySelectorAll(".sidebar .nav-link");
-            navLinks.forEach((link) => {
-                link.addEventListener("click", function () {
-                    if (window.innerWidth < 992) {
-                        sidebar.classList.remove("show");
-                        sidebarOverlay.classList.remove("show");
-                        document.body.classList.remove("overflow-hidden");
-                    }
-                });
-            });
-
-            // Handle window resize
-            window.addEventListener("resize", function () {
-                if (window.innerWidth >= 992) {
-                    sidebar.classList.remove("show");
-                    sidebarOverlay.classList.remove("show");
-                    document.body.classList.remove("overflow-hidden");
-                }
-            });
-        });
-
-        // Activity Chart
-        const activityCtx = document
-            .getElementById("activityChart")
-            .getContext("2d");
-        const activityChart = new Chart(activityCtx, {
-            type: "bar",
-            data: {
-                labels: [
-                    "JAN",
-                    "FEB",
-                    "MAR",
-                    "APR",
-                    "MAY",
-                    "JUN",
-                    "JUL",
-                    "AUG",
-                    "SEP",
-                    "OCT",
-                    "NOV",
-                    "DEC",
-                ],
-                datasets: [
-                    {
-                        label: "Sales",
-                        data: [
-                            80, 120, 110, 220, 250, 190, 220, 90, 230, 210,
-                            280, 330,
+        <script>
+            // Initialize charts when the document is ready
+            document.addEventListener("DOMContentLoaded", function () {
+                // Sales Chart - Fixed configuration to prevent overflow
+                const salesCtx = document
+                    .getElementById("salesChart")
+                    .getContext("2d");
+                const salesChart = new Chart(salesCtx, {
+                    type: "bar",
+                    data: {
+                        labels: [
+                            "JAN",
+                            "FEB",
+                            "MAR",
+                            "APR",
+                            "MAY",
+                            "JUN",
+                            "JUL",
+                            "AUG",
+                            "SEP",
+                            "OCT",
+                            "NOV",
+                            "DEC",
                         ],
-                        backgroundColor: "#5c7cfa",
-                        borderRadius: 5,
-                        barThickness: 15,
+                        datasets: [
+                            {
+                                label: "Sales",
+                                data: [
+                                    80, 120, 110, 220, 250, 190, 220, 90, 230,
+                                    210, 280, 330,
+                                ],
+                                backgroundColor: "#6366f1",
+                                borderRadius: 4,
+                                barThickness: 12,
+                            },
+                        ],
                     },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 400, // Set a fixed maximum value
-                        grid: {
-                            display: false,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false,
+                            },
                         },
-                        ticks: {
-                            stepSize: 100,
-                            callback: function (value) {
-                                if (value === 0) return "0";
-                                if (value === 100) return "100";
-                                if (value === 200) return "200";
-                                if (value === 300) return "300";
-                                if (value === 400) return "400";
-                                return "";
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false,
+                                },
+                                ticks: {
+                                    stepSize: 100,
+                                },
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                },
                             },
                         },
                     },
-                    x: {
-                        grid: {
-                            display: false,
+                });
+
+                // Progress Chart
+                const progressCtx = document
+                    .getElementById("progressChart")
+                    .getContext("2d");
+                const progressChart = new Chart(progressCtx, {
+                    type: "doughnut",
+                    data: {
+                        datasets: [
+                            {
+                                data: [75.55, 24.45],
+                                backgroundColor: ["#6366f1", "#f5f5f5"],
+                                borderWidth: 0,
+                                cutout: "80%",
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false,
+                            },
+                            tooltip: {
+                                enabled: false,
+                            },
                         },
                     },
-                },
-            },
-        });
-
-        // Progress Chart
-        const progressCtx = document
-            .getElementById("progressChart")
-            .getContext("2d");
-        const progressChart = new Chart(progressCtx, {
-            type: "doughnut",
-            data: {
-                datasets: [
-                    {
-                        data: [75.55, 24.45],
-                        backgroundColor: ["#5c7cfa", "#f1f3fa"],
-                        borderWidth: 0,
-                        cutout: "80%",
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false,
-                    },
-                    tooltip: {
-                        enabled: false,
-                    },
-                },
-            },
-        });
-
-        // Redraw charts on window resize for better responsiveness
-        window.addEventListener("resize", function () {
-            activityChart.resize();
-            progressChart.resize();
-        });
-    </script>
-</body>
+                });
+            });
+        </script>
+    </body>
 </html>

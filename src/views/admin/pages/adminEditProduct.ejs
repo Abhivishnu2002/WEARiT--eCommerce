@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Product Details</title>
+        <!-- Bootstrap CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <!-- Bootstrap Icons -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+        />
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar - Fixed -->
+                <div
+                    class="col-md-3 col-lg-2 position-fixed bg-white shadow-sm p-0"
+                    style="height: 100vh; z-index: 1000"
+                >
+                    <div class="d-flex flex-column h-100">
+                        <div class="p-3 border-bottom">
+                            <h4 class="fw-bold">WEARiT</h4>
+                        </div>
+                        <div
+                            class="list-group list-group-flush flex-grow-1 overflow-auto"
+                        >
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-grid-1x2-fill me-2"></i>
+                                Dashboard
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action active border-0 py-3"
+                            >
+                                <i class="bi bi-box-seam me-2"></i> Products
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-list-ul me-2"></i> Order List
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-person me-2"></i> Customer
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-currency-dollar me-2"></i> Sales
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-grid me-2"></i> Category
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-ticket-perforated me-2"></i>
+                                Coupons
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                            <a
+                                href="#"
+                                class="list-group-item list-group-item-action border-0 py-3"
+                            >
+                                <i class="bi bi-image me-2"></i> Banner
+                                <i class="bi bi-chevron-right float-end"></i>
+                            </a>
+                        </div>
+                        <div class="mt-auto p-3">
+                            <button class="btn btn-outline-dark w-100 mb-2">
+                                Account
+                            </button>
+                            <button class="btn btn-dark w-100">Logout</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spacer div to offset the fixed sidebar -->
+                <div class="col-md-3 col-lg-2"></div>
+
+                <!-- Main Content -->
+                <div class="col-md-9 col-lg-10 ms-auto bg-light">
+                    <div class="p-4">
+                        <!-- Breadcrumb -->
+                        <nav aria-label="breadcrumb" class="mb-2">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="#" class="text-decoration-none"
+                                        >Dashboard</a
+                                    >
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="#" class="text-decoration-none"
+                                        >products</a
+                                    >
+                                </li>
+                                <li
+                                    class="breadcrumb-item active"
+                                    aria-current="page"
+                                >
+                                    add product
+                                </li>
+                            </ol>
+                        </nav>
+
+                        <h2 class="mb-4">Product Details</h2>
+
+                        <form>
+                            <!-- General Information -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body">
+                                    <h5 class="mb-3">General Information</h5>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            >Product Name</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Type product name here..."
+                                        />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            >Description</label
+                                        >
+                                        <textarea
+                                            class="form-control bg-light"
+                                            rows="4"
+                                        >
+Update your everyday shirt collection with this cool and comfy slim fit sleeve shirt from snitch. The regular fit lends you an easygoing look and with our breathable shirts in 100% cotton, comfort is no longer reserved for the weekends.</textarea
+                                        >
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label"
+                                                >Price:</label
+                                            >
+                                            <input
+                                                type="text"
+                                                class="form-control bg-light"
+                                            />
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label"
+                                                >Should be</label
+                                            >
+                                            <div>
+                                                <div
+                                                    class="form-check form-check-inline"
+                                                >
+                                                    <input
+                                                        class="form-check-input"
+                                                        type="radio"
+                                                        name="listingStatus"
+                                                        id="listed"
+                                                        value="listed"
+                                                        checked
+                                                    />
+                                                    <label
+                                                        class="form-check-label"
+                                                        for="listed"
+                                                        >Listed</label
+                                                    >
+                                                </div>
+                                                <div
+                                                    class="form-check form-check-inline"
+                                                >
+                                                    <input
+                                                        class="form-check-input"
+                                                        type="radio"
+                                                        name="listingStatus"
+                                                        id="unlisted"
+                                                        value="unlisted"
+                                                    />
+                                                    <label
+                                                        class="form-check-label"
+                                                        for="unlisted"
+                                                        >Unlisted</label
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 mb-3">
+                                            <label class="form-label"
+                                                >Product Offer:</label
+                                            >
+                                            <input
+                                                type="text"
+                                                class="form-control bg-light"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Images Section -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Product Images</h5>
+
+                                    <div class="row">
+                                        <!-- Main Image -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Main Product Image</label
+                                            >
+                                            <div
+                                                class="border rounded bg-white p-3 text-center"
+                                                style="height: 250px"
+                                            >
+                                                <div
+                                                    class="d-flex flex-column justify-content-center align-items-center h-100"
+                                                >
+                                                    <i
+                                                        class="bi bi-image fs-1 text-secondary mb-3"
+                                                    ></i>
+                                                    <p class="text-muted mb-3">
+                                                        Drag and drop main image
+                                                        here, or click to upload
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-light bg-light-subtle"
+                                                    >
+                                                        Upload Main Image
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Additional Images -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Additional Images</label
+                                            >
+                                            <div class="row g-2">
+                                                <!-- Additional Image 1 -->
+                                                <div class="col-4">
+                                                    <div
+                                                        class="border rounded bg-white p-2 text-center"
+                                                        style="height: 120px"
+                                                    >
+                                                        <div
+                                                            class="d-flex flex-column justify-content-center align-items-center h-100"
+                                                        >
+                                                            <i
+                                                                class="bi bi-image text-secondary"
+                                                            ></i>
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-light mt-2"
+                                                            >
+                                                                Upload
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Additional Image 2 -->
+                                                <div class="col-4">
+                                                    <div
+                                                        class="border rounded bg-white p-2 text-center"
+                                                        style="height: 120px"
+                                                    >
+                                                        <div
+                                                            class="d-flex flex-column justify-content-center align-items-center h-100"
+                                                        >
+                                                            <i
+                                                                class="bi bi-image text-secondary"
+                                                            ></i>
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-light mt-2"
+                                                            >
+                                                                Upload
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Additional Image 3 -->
+                                                <div class="col-4">
+                                                    <div
+                                                        class="border rounded bg-white p-2 text-center"
+                                                        style="height: 120px"
+                                                    >
+                                                        <div
+                                                            class="d-flex flex-column justify-content-center align-items-center h-100"
+                                                        >
+                                                            <i
+                                                                class="bi bi-image text-secondary"
+                                                            ></i>
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-light mt-2"
+                                                            >
+                                                                Upload
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 mt-2">
+                                                    <div
+                                                        class="border rounded bg-white p-2 text-center"
+                                                        style="height: 120px"
+                                                    >
+                                                        <div
+                                                            class="d-flex flex-column justify-content-center align-items-center h-100"
+                                                        >
+                                                            <p
+                                                                class="text-muted small mb-1"
+                                                            >
+                                                                Add up to 3 more
+                                                                images
+                                                            </p>
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-light"
+                                                            >
+                                                                Add More Images
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Options -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Select category</label
+                                            >
+                                            <select class="form-select">
+                                                <option selected>Casual</option>
+                                                <option>Formal</option>
+                                                <option>Sports</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Size Available</label
+                                            >
+                                            <div class="d-flex flex-wrap gap-3">
+                                                <div>
+                                                    <label class="form-label"
+                                                        >S</label
+                                                    >
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        value="10"
+                                                        style="width: 60px"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="form-label"
+                                                        >M</label
+                                                    >
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        value="10"
+                                                        style="width: 60px"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="form-label"
+                                                        >L</label
+                                                    >
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        value="10"
+                                                        style="width: 60px"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="form-label"
+                                                        >XL</label
+                                                    >
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        value="10"
+                                                        style="width: 60px"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label class="form-label"
+                                                        >XXL</label
+                                                    >
+                                                    <input
+                                                        type="text"
+                                                        class="form-control"
+                                                        value="10"
+                                                        style="width: 60px"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Select Fit type</label
+                                            >
+                                            <select class="form-select">
+                                                <option selected>
+                                                    Regular Fit
+                                                </option>
+                                                <option>Slim Fit</option>
+                                                <option>Relaxed Fit</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Stock Quantity</label
+                                            >
+                                            <input
+                                                type="text"
+                                                class="form-control"
+                                                value="230"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"
+                                                >Select Sleeve</label
+                                            >
+                                            <select class="form-select">
+                                                <option selected>
+                                                    Full sleeve
+                                                </option>
+                                                <option>Half sleeve</option>
+                                                <option>Sleeveless</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Specifications -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Product Specifications</h5>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Color</label>
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            placeholder="Product color..."
+                                        />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Size</label>
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            placeholder="Model is wearing M size"
+                                        />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            >Wash Care</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light"
+                                            placeholder="Machine Wash"
+                                        />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            >Additional Informations</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light mb-2"
+                                            placeholder="casual wear, college wear"
+                                        />
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light mb-2"
+                                            placeholder="Stripes"
+                                        />
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light mb-2"
+                                            placeholder="button down"
+                                        />
+                                        <input
+                                            type="text"
+                                            class="form-control bg-light mb-2"
+                                            placeholder="Full sleeves"
+                                        />
+                                    </div>
+
+                                    <div class="text-center mt-4">
+                                        <button
+                                            type="button"
+                                            class="btn btn-dark"
+                                        >
+                                            ADD RELATED INFORMATION
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div
+                                class="d-flex justify-content-center gap-3 mt-4 mb-5"
+                            >
+                                <button
+                                    type="submit"
+                                    class="btn btn-dark px-4 py-2"
+                                >
+                                    EDIT PRODUCT
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-dark px-4 py-2"
+                                >
+                                    CANCEL
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

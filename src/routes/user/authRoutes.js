@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const userController = require('../controllers/userController');
-const {forwardAuthenticated, ensureAuthenticated} = require('../middlewares/auth');
+const userController = require('../../controllers/userController');
+const { forwardAuthenticated } = require('../../middlewares/userAuth');
 
-router.get('/', userController.loadHome);
+// Authentication routes
 router.get('/login', forwardAuthenticated, userController.loadLogin);
 router.post('/login', forwardAuthenticated, userController.loginUser);
 router.get('/signup', forwardAuthenticated, userController.loadSignup);
@@ -18,20 +18,13 @@ router.get('/newpassword', forwardAuthenticated, userController.loadNewPassword)
 router.post('/resetpassword', forwardAuthenticated, userController.resetPassword);
 router.get('/logout', userController.logout);
 
-// Protected routes
-// router.get('/account', ensureAuthenticated, userController.loadAccount);
-// router.get('/wishlist', ensureAuthenticated, userController.loadWishlist);
-// router.get('/cart', ensureAuthenticated, userController.loadCart);
-
-// Other routes
-router.get('/about', userController.loadAbout);
-router.get('/contact', userController.loadContact);
-
+// OAuth routes
 router.get('/google', passport.authenticate('google', {scope: ['profile', 'email']}));
-router.get('/google/callback', passport.authenticate('google', {failureRedirect: '/login', failureFlash: true}), (req, res)=>{
+router.get('/google/callback', passport.authenticate('google', {
+    failureRedirect: '/login', 
+    failureFlash: true
+}), (req, res) => {
     res.redirect('/');
 });
-
-router.get("/logout", userController.logout);
 
 module.exports = router;
