@@ -1,78 +1,88 @@
-const express = require('express');
-const connectDB = require('./config/db.js');
-const dotenv = require('dotenv');
-const path = require('path');
-const session = require('express-session')
-const nocache = require('nocache');
-const flash = require('connect-flash');
-const expressLayouts = require('express-ejs-layouts');
-const MongoStore = require('connect-mongo');
-const userRoutes = require('./routes/userRoutes.js')
-const productRoutes = require('./routes/productRouter.js')
-const adminRoutes = require('./routes/adminRoutes.js');
-const passport = require('passport');
-require('./config/db.js');
-require('./config/passport.js');
+const express = require("express")
+const path = require("path")
+const session = require("express-session")
+const MongoStore = require("connect-mongo")
+const flash = require("connect-flash")
+const mongoose = require("mongoose")
+const passport = require('./config/passport');
+const methodOverride = require("method-override")
+const dotenv = require("dotenv")
 
-dotenv.config();
+// Load environment variables
+dotenv.config()
 
+// Initialize app
+const app = express()
+const PORT = process.env.PORT || 3000
 
-connectDB();
+// Connect to MongoDB
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error("MongoDB Connection Error:", err))
 
-const app = express();
+// Middleware
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(methodOverride("_method"))
+app.use(express.static(path.join(__dirname, "public")))
 
-app.set("view engine", "ejs");
-
-app.set("views", path.join(__dirname, "views"));
-
-app.use(express.json());
-
-app.use(express.urlencoded({extended: true}));
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(nocache());
-
-app.use(session({
-    secret:'secret',
+// Session configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "secret",
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
-        ttl:5 * 24 * 60 * 60
+      mongoUrl: process.env.MONGODB_URI,
+      ttl: 14 * 24 * 60 * 60, // 14 days
     }),
     cookie: {
-        maxAge: 5 * 24 * 60 * 60 * 1000
-    }
-}));
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
+    },
+  }),
+)
 
-app.use(passport.initialize());
-app.use(passport.session());
+// Passport middleware
+app.use(passport.initialize())
+app.use(passport.session())
 
-app.use(flash());
+// Flash messages
+app.use(flash())
 
-app.use((req, res, next)=>{
-    res.locals.user = req.user || null;
-    res.locals.success_msg = req.flash('success_msg');
-    res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error');
-    next();
+// Global variables
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg")
+  res.locals.error_msg = req.flash("error_msg")
+  res.locals.error = req.flash("error")
+  res.locals.user = req.session.user || null
+  next()
 })
 
-app.use("/products", productRoutes);
-app.use('/', userRoutes);
-app.use("/admin", adminRoutes);
+// View engine
+app.set("view engine", "ejs")
+app.set("views", path.join(__dirname, "views"))
 
-app.get('/', (req, res)=>{
-    res.render('home');
+// Routes
+app.use("/", require("./routes/index"))
+app.use("/admin", require("./routes/admin/index"))
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).render("errors/404")
 })
 
-app.use((err, req, res, next)=>{
-    console.log(err.stack);
-    res.status(404).render('errors/404', {err});
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack)
+  res.status(500).render("errors/500", {
+    error: process.env.NODE_ENV === "development" ? err : {},
+  })
 })
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>{
-    console.log(`Server started at: http://localhost:${PORT}`);
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
+
+module.exports = app

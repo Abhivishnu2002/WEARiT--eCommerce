@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const { dashboard } = require('../../controllers');
-const { isAdminAuthenticated } = require('../../middlewares/authMiddleware');
+const express = require("express")
+const router = express.Router()
+const dashboardController = require("../../controllers/dashboardController")
+const { isAdminLoggedIn } = require("../../middlewares/adminAuth")
 
 // Dashboard route
-router.get('/dashboard', isAdminAuthenticated, dashboard.loadDashboard);
+router.get("/dashboard", isAdminLoggedIn, dashboardController.loadDashboard)
 
-module.exports = router;
+module.exports = router

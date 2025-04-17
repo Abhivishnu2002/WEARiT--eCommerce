@@ -86,7 +86,7 @@
             </p>
 
             <!-- Verify Form -->
-            <form action="/verifyotp" method="POST">
+            <form action="/auth/verifyotp" method="POST">
                 <div class="mb-3">
                     <label for="email" class="form-label">Email ID</label>
                     <input
@@ -115,7 +115,7 @@
             </form>
 
             <div class="divider">Didn't receive the code?</div>
-            <form action="/resendotp" method="POST" id="resendForm">
+            <form action="/auth/resendotp" method="POST" id="resendForm">
                 <button
                     type="submit"
                     class="btn btn-outline-dark w-100"
@@ -128,7 +128,7 @@
             </form>
 
             <div class="text-center mt-3">
-                <a href="/login" class="text-decoration-none text-dark">
+                <a href="/auth/login" class="text-decoration-none text-dark">
                     Back to Login
                 </a>
             </div>

@@ -1,13 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const { auth } = require('../../controllers');
-const { isAdminAuthenticated } = require('../../middlewares/authMiddleware');
+const express = require("express")
+const router = express.Router()
+const adminController = require("../../controllers/authController")
+const { isAdminLoggedOut, isAdminLoggedIn } = require("../../middlewares/adminAuth")
 
 // Auth routes
-router.get('/login', auth.loadLogin);
-router.post('/login', auth.verifyLogin);
-router.get('/logout', auth.logout);
-router.get('/change-password', isAdminAuthenticated, auth.loadChangePassword);
-router.post('/update-password', isAdminAuthenticated, auth.updatePassword);
+router.get("/login", isAdminLoggedOut, adminController.loadLogin)
+router.post("/login", isAdminLoggedOut, adminController.verifyLogin)
+router.get("/logout", isAdminLoggedIn, adminController.logout)
+router.get("/change-password", isAdminLoggedIn, adminController.loadChangePassword)
+router.post("/update-password", isAdminLoggedIn, adminController.updatePassword)
 
-module.exports = router;
+module.exports = router

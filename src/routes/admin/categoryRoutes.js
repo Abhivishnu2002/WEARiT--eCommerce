@@ -1,15 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const { category } = require('../../controllers');
-const { isAdminAuthenticated } = require('../../middlewares/authMiddleware');
-const upload = require('../../middlewares/uploadMiddleware');
+const express = require("express")
+const router = express.Router()
+const categoryController = require("../../controllers/categoryController")
+const { isAdminLoggedIn } = require("../../middlewares/adminAuth")
+const upload = require("../../middlewares/upload/index");
+const categoryUpload = require("../../middlewares/upload/categoryUpload");
 
 // Category routes
-router.get('/category', isAdminAuthenticated, category.loadCategory);
-router.get('/add-category', isAdminAuthenticated, category.loadAddCategory);
-router.post('/add-category', isAdminAuthenticated, upload.single('image'), category.addCategory);
-router.get('/edit-category', isAdminAuthenticated, category.loadEditCategory);
-router.post('/update-category/:id', isAdminAuthenticated, upload.single('image'), category.updateCategory);
-router.delete('/delete-category/:id', isAdminAuthenticated, category.deleteCategory);
+router.get("/category", isAdminLoggedIn, categoryController.loadCategory)
+router.get("/add-category", isAdminLoggedIn, categoryController.loadAddCategory)
+router.post("/add-category", isAdminLoggedIn, categoryUpload.single("image"), categoryController.addCategory)
+router.get("/edit-category", isAdminLoggedIn, categoryController.loadEditCategory)
+router.post("/update-category/:id", isAdminLoggedIn, categoryUpload.single("image"), categoryController.updateCategory)
+router.delete("/delete-category/:id", isAdminLoggedIn, categoryController.deleteCategory)
 
-module.exports = router;
+module.exports = router

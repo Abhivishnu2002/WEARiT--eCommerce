@@ -1,11 +1,11 @@
-const express = require('express');
-const router = express.Router();
-const { customer } = require('../../controllers');
-const { isAdminAuthenticated } = require('../../middlewares/authMiddleware');
+const express = require("express")
+const router = express.Router()
+const customerController = require("../../controllers/customerController");
+const { isAdminLoggedIn } = require("../../middlewares/adminAuth")
 
 // Customer routes
-router.get('/customer', isAdminAuthenticated, customer.loadCustomer);
-router.get('/customer/details', isAdminAuthenticated, customer.loadCustomerDetails);
-router.patch('/customer/block-unblock/:id', isAdminAuthenticated, customer.blockUnblockUser);
+router.get("/customer", isAdminLoggedIn, customerController.loadCustomer)
+router.get("/customer/details", isAdminLoggedIn, customerController.loadCustomerDetails)
+router.patch("/customer/block-unblock/:id", isAdminLoggedIn, customerController.blockUnblockUser)
 
-module.exports = router;
+module.exports = router

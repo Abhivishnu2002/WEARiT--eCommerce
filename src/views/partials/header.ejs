@@ -181,7 +181,7 @@
                         </li>
                         <li><hr class="dropdown-divider" /></li>
                         <li>
-                            <form action="/logout" method="get">
+                            <form action="/auth/logout" method="get">
                                 <button class="dropdown-item" type="submit">
                                     Logout
                                 </button>
@@ -191,7 +191,7 @@
                 </div>
                 <% } else { %>
                 <!-- If user is NOT logged in -->
-                <a href="/login">Sign In</a>
+                <a href="/auth/login">Sign In</a>
                 <% } %>
             </nav>
 

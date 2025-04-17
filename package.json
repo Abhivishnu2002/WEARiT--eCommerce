@@ -24,6 +24,7 @@
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
+    "method-override": "^3.0.0",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
     "multer": "^1.4.5-lts.2",
@@ -36,7 +37,6 @@
     "passport-local": "^1.0.0",
     "sharp": "^0.34.1"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Abhivishnu2002/WEARiT--eCommerce.git"
