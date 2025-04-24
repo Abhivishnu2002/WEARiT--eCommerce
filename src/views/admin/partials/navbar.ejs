@@ -1,0 +1,228 @@
+<header class="mobile-header">
+    <div class="mobile-header-content">
+        <a href="/admin/dashboard" class="mobile-brand">WEARiT</a>
+        <div class="mobile-actions">
+            <div class="dropdown me-2">
+                <button
+                    class="mobile-toggle"
+                    id="mobileUserToggle"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
+                    <img
+                        src="/images/admin-img.png"
+                        alt="Admin"
+                        class="user-avatar"
+                        style="width: 32px; height: 32px"
+                    />
+                </button>
+                <ul
+                    class="dropdown-menu dropdown-menu-end"
+                    aria-labelledby="mobileUserToggle"
+                >
+                    <li>
+                        <a class="dropdown-item" href="/admin/account"
+                            ><i class="fas fa-user"></i> My Profile</a
+                        >
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/admin/changepassword"
+                            ><i class="fas fa-key"></i> Change Password</a
+                        >
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <a class="dropdown-item" href="/admin/logout"
+                            ><i class="fas fa-sign-out-alt"></i> Logout</a
+                        >
+                    </li>
+                </ul>
+            </div>
+            <button class="mobile-toggle" id="mobileSidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+        <a href="/admin/dashboard" class="sidebar-brand">
+            <i class="fas fa-shopping-bag"></i>
+            <span>WEARiT</span>
+        </a>
+        <button class="sidebar-toggle d-none d-lg-block" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="sidebar-toggle d-lg-none" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="sidebar-body">
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a
+                    href="/admin/dashboard"
+                    class="nav-link <%= activePage === 'dashboard' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/products"
+                    class="nav-link <%= activePage === 'products' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon"><i class="fas fa-box"></i></div>
+                    <span class="nav-text">Products</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/orders"
+                    class="nav-link <%= activePage === 'orders' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <span class="nav-text">Orders</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/customer"
+                    class="nav-link <%= activePage === 'customers' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <span class="nav-text">Customers</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/category"
+                    class="nav-link <%= activePage === 'categories' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon"><i class="fas fa-th-large"></i></div>
+                    <span class="nav-text">Categories</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/sales"
+                    class="nav-link <%= activePage === 'sales' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <span class="nav-text">Sales Report</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/coupons"
+                    class="nav-link <%= activePage === 'coupons' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon"><i class="fas fa-tags"></i></div>
+                    <span class="nav-text">Coupons</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/banner"
+                    class="nav-link <%= activePage === 'banners' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon"><i class="fas fa-image"></i></div>
+                    <span class="nav-text">Banners</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    href="/admin/settings"
+                    class="nav-link <%= activePage === 'settings' ? 'active' : '' %>"
+                >
+                    <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-profile" id="userDropdownToggle">
+            <img
+                src="<%= admin.profileImage || '/images/admin-img.png' %>"
+                alt="Admin"
+                class="user-avatar"
+            />
+            <div class="user-info">
+                <div class="user-name text-truncate"><%= admin.name %></div>
+                <div class="user-role">Administrator</div>
+            </div>
+        </div>
+        <div class="dropdown-menu" id="userDropdownMenu">
+            <a class="dropdown-item" href="/admin/account"
+                ><i class="fas fa-user"></i> My Profile</a
+            >
+            <a class="dropdown-item" href="/admin/changepassword"
+                ><i class="fas fa-key"></i> Change Password</a
+            >
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="/admin/logout"
+                ><i class="fas fa-sign-out-alt"></i> Logout</a
+            >
+        </div>
+    </div>
+</aside>
+
+<header class="admin-header">
+    <div class="header-search"></div>
+
+    <div class="header-actions">
+        <button class="header-action" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+        </button>
+        <button class="header-action" title="Messages">
+            <i class="fas fa-envelope"></i>
+        </button>
+        <div class="user-dropdown">
+            <button
+                class="header-action"
+                id="headerUserToggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+            >
+                <img src=<%= admin.profileImage || '/images/admin-img.png' %>
+                alt="Admin" class="user-avatar" style="width: 32px; height:
+                32px" />
+            </button>
+            <ul
+                class="dropdown-menu dropdown-menu-end"
+                aria-labelledby="headerUserToggle"
+            >
+                <li>
+                    <a class="dropdown-item" href="/admin/account"
+                        ><i class="fas fa-user"></i> My Profile</a
+                    >
+                </li>
+                <li>
+                    <a class="dropdown-item" href="/admin/changepassword"
+                        ><i class="fas fa-key"></i> Change Password</a
+                    >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <a class="dropdown-item" href="/admin/logout"
+                        ><i class="fas fa-sign-out-alt"></i> Logout</a
+                    >
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>

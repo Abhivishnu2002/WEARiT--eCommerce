@@ -1,114 +1,115 @@
-const mongoose = require("mongoose")
-const bcrypt = require("bcrypt")
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
   name: {
-    type: String,
-    required: true,
-    trim: true,
+      type: String,
+      required: true,
+      trim: true
   },
   email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true,
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true
   },
   mobile: {
-    type: String,
-    trim: true,
+      type: String,
+      trim: true
   },
   password: {
-    type: String,
-    required: function () {
-      return !this.googleId // Password is required unless user signed up with Google
-    },
+      type: String,
+      required: function() {
+          return !this.googleId;
+      }
   },
   googleId: {
-    type: String,
+      type: String
   },
   isVerified: {
-    type: Boolean,
-    default: true,
+      type: Boolean,
+      default: true
   },
   isBlocked: {
-    type: Boolean,
-    default: false,
+      type: Boolean,
+      default: false
   },
   otp: {
-    code: String,
-    expiresAt: Date,
+      code: String,
+      expiresAt: Date
   },
   referralCode: {
-    type: String,
-    unique: true,
-    sparse: true,
+      type: String,
+      unique: true,
+      sparse: true
   },
   referredBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
   },
   isAdmin: {
     type: Boolean,
-    default: false,
+    default: false
   },
-  wishlist: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-    },
-  ],
-  cart: [
-    {
-      product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-      },
-      quantity: {
-        type: Number,
-        default: 1,
-      },
-    },
-  ],
   createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-})
-
-// Hash password before saving
-userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 10)
+      type: Date,
+      default: Date.now
   }
-  next()
-})
+});
+
+userSchema.statics.validatePasswordComplexity = function(password) {
+    if(!password || password.length < 8){
+        return { isValid: false, message: 'Password must be at least 8 characters long'};
+    }
+
+    if(!/[A-Z]/.test(password)){
+        return { isValid: false, message: 'Password must include at least one capital letter'}
+    }
+
+    if(!/\d/.test(password)){
+        return { isValid: false, message: 'Password must include at least one number'}
+    }
+
+    if(!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)){
+        return { isValid: false, message: 'Password must include at least one symbol' };
+    }
+
+    return {isValid: true};
+}
+
+userSchema.pre('save', async function(next) {
+    if (this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
+    next();
+});
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password)
-}
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
-// Generate OTP
-userSchema.methods.generateOTP = function () {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString()
-  this.otp = {
-    code: otp,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
-  }
-  return otp
-}
+userSchema.methods.generateOTP = function() {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    this.otp = {
+        code: otp,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+    };
+    return otp;
+};
 
-// Verify OTP
-userSchema.methods.verifyOTP = function (otpToVerify) {
-  if (!this.otp || !this.otp.code || !this.otp.expiresAt) {
-    return false
-  }
+userSchema.methods.verifyOTP = function(otpToVerify) {
+    if (!this.otp || !this.otp.code || !this.otp.expiresAt) {
+        return false;
+    }
+    
+    if (this.otp.expiresAt < new Date()) {
+        return false;
+    }
+    
+    return this.otp.code === otpToVerify;
+};
 
-  if (this.otp.expiresAt < new Date()) {
-    return false // OTP expired
-  }
+const User = mongoose.model('User', userSchema);
 
-  return this.otp.code === otpToVerify
-}
-
-module.exports = mongoose.model("User", userSchema)
+module.exports =  User;

@@ -2,343 +2,447 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WEARiT | Home</title>
-
-    <!-- Bootstrap CSS -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     />
-
-    <!-- Font Awesome -->
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/home.css" />
 </head>
-
-<%- include('../partials/header') %>
-<section class="hero-banner position-relative m-0 p-0">
-    <div class="container-fluid px-0">
-        <div class="position-relative">
-            <!-- Hero Carousel -->
-            <div
-                id="heroCarousel"
-                class="carousel slide"
-                data-bs-ride="carousel"
-            >
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <img
-                            src="/images/banner.jpg"
-                            class="d-block w-100"
-                            alt="Shirts Collection"
-                        />
-                    </div>
-                    <!-- Additional carousel items -->
-                    <div class="carousel-item">
-                        <img
-                            src="/images/banner2.jpg"
-                            class="d-block w-100"
-                            alt="Fashion Collection"
-                        />
-                    </div>
-                    <div class="carousel-item">
-                        <img
-                            src="/images/banner3.png"
-                            class="d-block w-100"
-                            alt="Summer Collection"
-                        />
-                    </div>
-                </div>
-                <!-- Carousel Navigation -->
-                <button
-                    class="carousel-control-prev"
-                    type="button"
-                    data-bs-target="#heroCarousel"
-                    data-bs-slide="prev"
+<body>
+    <%- include('../partials/header') %>
+    <section class="hero-banner position-relative m-0 p-0">
+        <div class="container-fluid px-0">
+            <div class="position-relative">
+                <div
+                    id="heroCarousel"
+                    class="carousel slide"
+                    data-bs-ride="carousel"
+                    data-bs-interval="5000"
                 >
-                    <span
-                        class="carousel-control-prev-icon"
-                        aria-hidden="true"
-                    ></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-                <button
-                    class="carousel-control-next"
-                    type="button"
-                    data-bs-target="#heroCarousel"
-                    data-bs-slide="next"
+                    <div class="carousel-indicators">
+                        <button
+                            type="button"
+                            data-bs-target="#heroCarousel"
+                            data-bs-slide-to="0"
+                            class="active"
+                            aria-current="true"
+                            aria-label="Slide 1"
+                        ></button>
+                        <button
+                            type="button"
+                            data-bs-target="#heroCarousel"
+                            data-bs-slide-to="1"
+                            aria-label="Slide 2"
+                        ></button>
+                        <button
+                            type="button"
+                            data-bs-target="#heroCarousel"
+                            data-bs-slide-to="2"
+                            aria-label="Slide 3"
+                        ></button>
+                    </div>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img
+                                src="/images/banner1.jpg"
+                                class="d-block w-100"
+                                alt="Shirts Collection"
+                            />
+                        </div>
+                        <div class="carousel-item">
+                            <img
+                                src="/images/banner2.jpg"
+                                class="d-block w-100"
+                                alt="Fashion Collection"
+                            />
+                        </div>
+                        <div class="carousel-item">
+                            <img
+                                src="/images/banner4.jpg"
+                                class="d-block w-100"
+                                alt="Summer Collection"
+                            />
+                        </div>
+                    </div>
+                    <button
+                        class="carousel-control-prev"
+                        type="button"
+                        data-bs-target="#heroCarousel"
+                        data-bs-slide="prev"
+                    >
+                        <span
+                            class="carousel-control-prev-icon"
+                            aria-hidden="true"
+                        ></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button
+                        class="carousel-control-next"
+                        type="button"
+                        data-bs-target="#heroCarousel"
+                        data-bs-slide="next"
+                    >
+                        <span
+                            class="carousel-control-next-icon"
+                            aria-hidden="true"
+                        ></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="new-arrivals py-4 py-md-5">
+        <div class="container">
+            <h2 class="text-center mb-2 mb-md-3">New Arrivals</h2>
+            <p class="text-center text-muted mb-3 mb-md-5 px-3 px-md-0">
+                Check out our latest collection of trendy and stylish products.
+                Find your perfect match from our new arrivals.
+            </p>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+                <% if (typeof newArrivals !== 'undefined' && newArrivals.length
+                > 0) { %> <% newArrivals.forEach(function(product) { var
+                mainImage = product.images.find(img => img.isMain) ||
+                product.images[0] || { url: '/images/placeholder.jpg' }; var
+                defaultVariant = product.variants && product.variants.length > 0
+                ? product.variants[0] : null; var hasDiscount = product.offer >
+                0 && defaultVariant; var originalPrice = defaultVariant ?
+                defaultVariant.varientPrice : 0; var salePrice = defaultVariant
+                ? defaultVariant.salePrice : 0; var totalStock =
+                product.variants.reduce((sum, variant) => sum +
+                variant.varientquatity, 0); var rating = product.ratings ?
+                product.ratings.average : 0; var ratingCount = product.ratings ?
+                product.ratings.count : 0; %>
+                <div class="col">
+                    <div class="card product-card h-100 border-0 shadow-sm">
+                        <a
+                            href="/products/<%= product._id %>"
+                            class="text-decoration-none"
+                        >
+                            <div class="product-img-container">
+                                <img
+                                    src="<%= mainImage.url %>"
+                                    class="card-img-top"
+                                    alt="<%= product.name %>"
+                                />
+                            </div>
+                            <div class="card-body p-3">
+                                <h5 class="card-title product-title">
+                                    <%= product.name %>
+                                </h5>
+                                <p class="text-muted brand-name mb-2">
+                                    <%= product.brand || 'WEARiT' %>
+                                </p>
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-2"
+                                >
+                                    <div class="price-container">
+                                        <% if (hasDiscount && salePrice <
+                                        originalPrice) { %>
+                                        <span class="fw-bold"
+                                            >₹<%= salePrice.toFixed(2) %></span
+                                        >
+                                        <span
+                                            class="text-decoration-line-through text-muted small"
+                                            >₹<%= originalPrice.toFixed(2)
+                                            %></span
+                                        >
+                                        <% } else if (defaultVariant) { %>
+                                        <span class="fw-bold"
+                                            >₹<%= originalPrice.toFixed(2)
+                                            %></span
+                                        >
+                                        <% } else { %>
+                                        <span class="fw-bold"
+                                            >Price not available</span
+                                        >
+                                        <% } %>
+                                    </div>
+                                    <div class="stock-status">
+                                        <% if (totalStock <= 5 && totalStock >
+                                        0) { %>
+                                        <span class="text-warning small"
+                                            >Low Stock</span
+                                        >
+                                        <% } else if (totalStock <= 0) { %>
+                                        <span class="text-danger small"
+                                            >Out of Stock</span
+                                        >
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <div class="rating">
+                                    <% for (var i = 1; i <= 5; i++) { %> <% if
+                                    (i <= rating) { %>
+                                    <i
+                                        class="fas fa-star text-warning small-icon"
+                                    ></i>
+                                    <% } else { %>
+                                    <i
+                                        class="far fa-star text-warning small-icon"
+                                    ></i>
+                                    <% } %> <% } %>
+                                    <small class="ms-1 text-muted"
+                                        >(<%= ratingCount %>)</small
+                                    >
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <% }); %> <% } else { %> <% for (var i = 0; i < 4; i++) { %>
+                <div class="col">
+                    <div class="card product-card h-100 border-0 shadow-sm">
+                        <a href="#" class="text-decoration-none">
+                            <div class="product-img-container">
+                                <img
+                                    src="/images/image<%= i+1 %>.jpg"
+                                    class="card-img-top"
+                                    alt="Product"
+                                />
+                            </div>
+                            <div class="card-body p-3">
+                                <h5 class="card-title product-title">
+                                    Stylish Item
+                                </h5>
+                                <p class="text-muted brand-name mb-2">WEARiT</p>
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-2"
+                                >
+                                    <span class="fw-bold">₹95.50</span>
+                                    <span class="text-danger small"
+                                        >Almost Sold Out</span
+                                    >
+                                </div>
+                                <div class="rating">
+                                    <% for(var j = 0; j < 5; j++) { %>
+                                    <i
+                                        class="fas fa-star text-warning small-icon"
+                                    ></i>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <% } %> <% } %>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="/products" class="btn btn-outline-dark"
+                    >View All New Arrivals</a
                 >
-                    <span
-                        class="carousel-control-next-icon"
-                        aria-hidden="true"
-                    ></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- New Arrivals Section -->
-<section class="new-arrivals py-5">
-    <div class="container">
-        <h2 class="text-center mb-3">New Arrivals</h2>
-        <p class="text-center text-muted mb-5">
-            Check out our latest collection of trendy and stylish products. Find
-            your perfect match from our new arrivals.
-        </p>
-
-        <div class="row">
-            <% if (typeof products !== 'undefined' && products.length > 0) { %>
-            <% products.slice(0, 4).forEach(function(product) { %>
-            <div class="col-md-3 mb-4">
-                <div class="card product-card h-100 border-0 shadow-sm">
-                    <a
-                        href="/products/<%= product._id %>"
-                        class="text-decoration-none"
-                    >
-                        <img
-                            src="<%= product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg' %>"
-                            class="card-img-top"
-                            alt="<%= product.name %>"
-                            style="height: 250px; object-fit: cover"
-                        />
-                        <div class="card-body">
-                            <h5 class="card-title"><%= product.name %></h5>
-                            <p class="text-muted">
-                                <%= product.brand || 'WEARiT' %>
-                            </p>
-                            <div
-                                class="d-flex justify-content-between align-items-center"
-                            >
-                                <% if (product.discountPrice &&
-                                product.discountPrice < product.price) { %>
-                                <span class="fw-bold"
-                                    >₹<%= product.discountPrice.toFixed(2)
-                                    %></span
-                                >
-                                <span
-                                    class="text-decoration-line-through text-muted"
-                                    >₹<%= product.price.toFixed(2) %></span
-                                >
-                                <% } else { %>
-                                <span class="fw-bold"
-                                    >₹<%= typeof product.price === 'number' ?
-                                    product.price.toFixed(2) : product.price
-                                    %></span
-                                >
-                                <% } %> <% if (product.stock <= 5 &&
-                                product.stock > 0) { %>
-                                <span class="text-warning">Low Stock</span>
-                                <% } else if (product.stock <= 0) { %>
-                                <span class="text-danger">Out of Stock</span>
-                                <% } %>
-                            </div>
-                            <div class="rating">
-                                <% for(var i = 1; i <= 5; i++) { %> <% if (i <=
-                                (product.averageRating || 0)) { %>
-                                <i class="fas fa-star text-warning"></i>
-                                <% } else { %>
-                                <i class="far fa-star text-warning"></i>
-                                <% } %> <% } %>
-                            </div>
-                        </div>
-                    </a>
+    </section>
+    <section class="nature-banner py-3 py-md-5">
+        <div class="container-fluid px-0">
+            <div class="position-relative">
+                <img
+                    src="/images/banner2.jpg"
+                    class="w-100"
+                    alt="Blend Into Nature"
+                />
+                <div
+                    class="position-absolute top-50 end-0 translate-middle-y pe-3 pe-md-5"
+                >
+                    <h2 class="display-6 display-md-4 text-white script-font">
+                        Blend into nature
+                    </h2>
                 </div>
-            </div>
-            <% }); %> <% } else { %>
-            <!-- Placeholder products when no data is available -->
-            <% for(var i = 0; i < 4; i++) { %>
-            <div class="col-md-3 mb-4">
-                <div class="card product-card h-100 border-0 shadow-sm">
-                    <a href="#" class="text-decoration-none">
-                        <img
-                            src="/images/image<%= i+1 %>.jpg"
-                            class="card-img-top"
-                            alt="Product"
-                            style="height: 250px; object-fit: cover"
-                        />
-                        <div class="card-body">
-                            <h5 class="card-title">Stylish Item</h5>
-                            <p class="text-muted">WEARiT</p>
-                            <div
-                                class="d-flex justify-content-between align-items-center"
-                            >
-                                <span class="fw-bold">₹95.50</span>
-                                <span class="text-danger">Almost Sold Out</span>
-                            </div>
-                            <div class="rating">
-                                <% for(var j = 0; j < 5; j++) { %>
-                                <i class="fas fa-star text-warning"></i>
-                                <% } %>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <% } %> <% } %>
-        </div>
-    </div>
-</section>
-
-<!-- Blend Into Nature Banner -->
-<section class="nature-banner py-5">
-    <div class="container-fluid px-0">
-        <div class="position-relative">
-            <img
-                src="/images/banner2.png"
-                class="w-100"
-                alt="Blend Into Nature"
-            />
-            <div class="position-absolute top-50 end-0 translate-middle-y pe-5">
-                <h2 class="display-4 text-white script-font">
-                    Blend into nature
-                </h2>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+    <section class="premium py-4 py-md-5">
+        <div class="container">
+            <h2 class="text-center mb-2 mb-md-3">Premium Collection</h2>
+            <p class="text-center text-muted mb-3 mb-md-5 px-3 px-md-0">
+                Discover our exclusive premium collection featuring high-quality
+                fabrics and exceptional craftsmanship. Elevate your style with
+                these luxury pieces.
+            </p>
 
-<!-- Trending Section -->
-<section class="trending py-5">
-    <div class="container">
-        <h2 class="text-center mb-3">Trending</h2>
-        <p class="text-center text-muted mb-5">
-            Discover our most popular items that everyone loves. These trending
-            products are flying off the shelves!
-        </p>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+                <% if (typeof premiumProducts !== 'undefined' &&
+                premiumProducts.length > 0) { %> <%
+                premiumProducts.forEach(function(product) { var mainImage =
+                product.images.find(img => img.isMain) || product.images[0] || {
+                url: '/images/placeholder.jpg' }; var defaultVariant =
+                product.variants && product.variants.length > 0 ?
+                product.variants[0] : null; var hasDiscount = product.offer > 0
+                && defaultVariant; var originalPrice = defaultVariant ?
+                defaultVariant.varientPrice : 0; var salePrice = defaultVariant
+                ? defaultVariant.salePrice : 0; var totalStock =
+                product.variants.reduce((sum, variant) => sum +
+                variant.varientquatity, 0); var rating = product.ratings ?
+                product.ratings.average : 0; var ratingCount = product.ratings ?
+                product.ratings.count : 0; %>
+                <div class="col">
+                    <div class="card product-card h-100 border-0 shadow-sm">
+                        <a
+                            href="/products/<%= product._id %>"
+                            class="text-decoration-none"
+                        >
+                            <div class="product-img-container">
+                                <img
+                                    src="<%= mainImage.url %>"
+                                    class="card-img-top"
+                                    alt="<%= product.name %>"
+                                />
+                            </div>
+                            <div class="card-body p-3">
+                                <h5 class="card-title product-title">
+                                    <%= product.name %>
+                                </h5>
+                                <p class="text-muted brand-name mb-2">
+                                    <%= product.brand || 'WEARiT' %>
+                                </p>
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-2"
+                                >
+                                    <div class="price-container">
+                                        <% if (hasDiscount && salePrice <
+                                        originalPrice) { %>
+                                        <span class="fw-bold"
+                                            >₹<%= salePrice.toFixed(2) %></span
+                                        >
+                                        <span
+                                            class="text-decoration-line-through text-muted small"
+                                            >₹<%= originalPrice.toFixed(2)
+                                            %></span
+                                        >
+                                        <% } else if (defaultVariant) { %>
+                                        <span class="fw-bold"
+                                            >₹<%= originalPrice.toFixed(2)
+                                            %></span
+                                        >
+                                        <% } else { %>
+                                        <span class="fw-bold"
+                                            >Price not available</span
+                                        >
+                                        <% } %>
+                                    </div>
+                                    <div class="stock-status">
+                                        <% if (totalStock <= 5 && totalStock >
+                                        0) { %>
+                                        <span class="text-warning small"
+                                            >Low Stock</span
+                                        >
+                                        <% } else if (totalStock <= 0) { %>
+                                        <span class="text-danger small"
+                                            >Out of Stock</span
+                                        >
+                                        <% } %>
+                                    </div>
+                                </div>
+                                <div class="rating">
+                                    <% for (var i = 1; i <= 5; i++) { %> <% if
+                                    (i <= rating) { %>
+                                    <i
+                                        class="fas fa-star text-warning small-icon"
+                                    ></i>
+                                    <% } else { %>
+                                    <i
+                                        class="far fa-star text-warning small-icon"
+                                    ></i>
+                                    <% } %> <% } %>
+                                    <small class="ms-1 text-muted"
+                                        >(<%= ratingCount %>)</small
+                                    >
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <% }); %> <% } else { %> <% for (var i = 0; i < 4; i++) { %>
+                <div class="col">
+                    <div class="card product-card h-100 border-0 shadow-sm">
+                        <a href="#" class="text-decoration-none">
+                            <div class="product-img-container">
+                                <img
+                                    src="/images/image<%= i+1 %>.jpg"
+                                    class="card-img-top"
+                                    alt="Product"
+                                />
+                            </div>
+                            <div class="card-body p-3">
+                                <h5 class="card-title product-title">
+                                    Premium Item
+                                </h5>
+                                <p class="text-muted brand-name mb-2">WEARiT</p>
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-2"
+                                >
+                                    <span class="fw-bold">₹195.50</span>
+                                    <span class="text-danger small"
+                                        >Limited Edition</span
+                                    >
+                                </div>
+                                <div class="rating">
+                                    <% for(var j = 0; j < 5; j++) { %>
+                                    <i
+                                        class="fas fa-star text-warning small-icon"
+                                    ></i>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <% } %> <% } %>
+            </div>
 
-        <div class="row">
-            <% if (typeof products !== 'undefined' && products.length > 0) { %>
-            <% for (var i = 0; i < Math.min(3, products.length); i++) { var
-            product = products[i]; %>
-            <div class="col-md-4 mb-4">
-                <div class="card product-card h-100 border-0 shadow-sm">
-                    <a
-                        href="/products/<%= product._id %>"
-                        class="text-decoration-none"
-                    >
-                        <img
-                            src="<%= product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg' %>"
-                            class="card-img-top"
-                            alt="<%= product.name %>"
-                            style="height: 250px; object-fit: cover"
-                        />
-                        <div class="card-body">
-                            <h5 class="card-title"><%= product.name %></h5>
-                            <p class="text-muted">
-                                <%= product.brand || 'WEARiT' %>
-                            </p>
-                            <div
-                                class="d-flex justify-content-between align-items-center"
-                            >
-                                <% if (product.discountPrice &&
-                                product.discountPrice < product.price) { %>
-                                <span class="fw-bold"
-                                    >₹<%= product.discountPrice.toFixed(2)
-                                    %></span
-                                >
-                                <span
-                                    class="text-decoration-line-through text-muted"
-                                    >₹<%= product.price.toFixed(2) %></span
-                                >
-                                <% } else { %>
-                                <span class="fw-bold"
-                                    >₹<%= typeof product.price === 'number' ?
-                                    product.price.toFixed(2) : product.price
-                                    %></span
-                                >
-                                <% } %> <% if (product.stock <= 5 &&
-                                product.stock > 0) { %>
-                                <span class="text-warning">Low Stock</span>
-                                <% } else if (product.stock <= 0) { %>
-                                <span class="text-danger">Out of Stock</span>
-                                <% } %>
-                            </div>
-                            <div class="rating">
-                                <% for(var j = 1; j <= 5; j++) { %> <% if (j <=
-                                (product.averageRating || 0)) { %>
-                                <i class="fas fa-star text-warning"></i>
-                                <% } else { %>
-                                <i class="far fa-star text-warning"></i>
-                                <% } %> <% } %>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+            <div class="text-center mt-4">
+                <a
+                    href="/products?category=<%= premiumProducts && premiumProducts.length > 0 && premiumProducts[0].categoryId ? premiumProducts[0].categoryId._id : '' %>"
+                    class="btn btn-outline-dark"
+                    >View All Premium Products</a
+                >
             </div>
-            <% } %> <% } else { %>
-            <!-- Placeholder trending products when no data is available -->
-            <% for(var i = 0; i < 3; i++) { %>
-            <div class="col-md-4 mb-4">
-                <div class="card product-card h-100 border-0 shadow-sm">
-                    <a href="#" class="text-decoration-none">
-                        <img
-                            src="/images/image<%= i+1 %>.jpg"
-                            class="card-img-top"
-                            alt="Trending Product"
-                            style="height: 250px; object-fit: cover"
-                        />
-                        <div class="card-body">
-                            <h5 class="card-title">Trending Item</h5>
-                            <p class="text-muted">WEARiT</p>
-                            <div
-                                class="d-flex justify-content-between align-items-center"
-                            >
-                                <span class="fw-bold">₹95.50</span>
-                                <span class="text-danger">Almost Sold Out</span>
-                            </div>
-                            <div class="rating">
-                                <% for(var j = 0; j < 5; j++) { %>
-                                <i class="fas fa-star text-warning"></i>
-                                <% } %>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <% } %> <% } %>
         </div>
-    </div>
-</section>
-
-<!-- Formal Shirts Banner -->
-<section class="formal-banner py-5">
-    <div class="container-fluid px-0">
-        <div class="bg-light py-5">
-            <div class="row g-0 align-items-center">
-                <div class="col-md-12">
+    </section>
+    <section class="formal-banner py-3 py-md-5">
+        <div class="container-fluid px-0">
+            <div class="bg-light py-3 py-md-5">
+                <div class="row g-0 align-items-center">
+                    <div class="col-12">
+                        <img
+                            src="/images/banner6.png"
+                            class="img-fluid"
+                            alt="Formal Shirt Model"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="urban-banner">
+        <div class="container-fluid px-0">
+            <div class="row g-0">
+                <div class="col-12">
                     <img
-                        src="/images/banner3.png"
+                        src="/images/banner5.jpg"
                         class="img-fluid"
-                        alt="Formal Shirt Model"
+                        alt="Urban Style Model"
                     />
                 </div>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- Urban Style Banner -->
-<section class="urban-banner">
-    <div class="container-fluid px-0">
-        <div class="row g-0">
-            <div class="col-md-12">
-                <img
-                    src="/images/banner4.png"
-                    class="img-fluid"
-                    alt="Urban Style Model"
-                />
-            </div>
-        </div>
-    </div>
-</section>
-
-<%- include('../partials/footer') %>
-
-<!-- Bootstrap JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    </section>
+    <%- include('../partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const heroCarousel = document.getElementById("heroCarousel");
+            const carousel = new bootstrap.Carousel(heroCarousel, {
+                interval: 4000,
+                pause: "hover",
+                wrap: true,
+            });
+        });
+    </script>
+</body>

@@ -1,0 +1,75 @@
+body {
+    background-color: #f9f9f9;
+    font-family: "Inter", Arial, sans-serif;
+}
+
+.form-container {
+    max-width: 400px;
+    margin: auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+    color: #777;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider span {
+    padding: 0 10px;
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #000;
+}
+
+.google-btn svg {
+    margin-right: 8px;
+}
+
+.referral-btn {
+    background-color: #f2f2f2;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.alert {
+    font-size: 14px;
+    padding: 10px;
+}

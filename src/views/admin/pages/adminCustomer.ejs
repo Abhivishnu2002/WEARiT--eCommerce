@@ -4,805 +4,289 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>WEARiT - Customer List</title>
-        <!-- Bootstrap CSS -->
         <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
             rel="stylesheet"
         />
-        <!-- Bootstrap Icons -->
         <link
             rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css"
+        />
+        <link rel="stylesheet" href="/css/admin-navbar.css" />
+        <link rel="stylesheet" href="/css/admin-customer.css" />
     </head>
     <body>
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Sidebar -->
+        <%- include('../partials/navbar', {activePage: 'customer'}) %>
+
+        <main class="admin-main">
+            <div class="admin-content">
+                <div class="page-header mb-4">
+                    <h2 class="page-title">Customer List</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a
+                                    href="/admin/dashboard"
+                                    class="text-decoration-none"
+                                    >Dashboard</a
+                                >
+                            </li>
+                            <li
+                                class="breadcrumb-item active"
+                                aria-current="page"
+                            >
+                                Customers
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
                 <div
-                    class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm p-0"
-                    style="height: 100vh"
+                    class="d-flex justify-content-between align-items-center mb-4 search-section"
                 >
-                    <div class="d-flex flex-column h-100">
-                        <div class="p-3 border-bottom">
-                            <h4 class="fw-bold">WEARiT</h4>
-                        </div>
-                        <div class="list-group list-group-flush flex-grow-1">
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-grid-1x2-fill me-2"></i>
-                                Dashboard
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-box-seam me-2"></i> Products
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-list-ul me-2"></i> Order List
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action active border-0 py-3"
-                            >
-                                <i class="bi bi-person me-2"></i> Customer
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-currency-dollar me-2"></i> Sales
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-grid me-2"></i> Category
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-ticket-perforated me-2"></i>
-                                Coupons
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                            <a
-                                href="#"
-                                class="list-group-item list-group-item-action border-0 py-3"
-                            >
-                                <i class="bi bi-image me-2"></i> Banner
-                                <i class="bi bi-chevron-right float-end"></i>
-                            </a>
-                        </div>
-                        <div class="mt-auto p-3">
-                            <button class="btn btn-outline-dark w-100 mb-2">
-                                Account
-                            </button>
-                            <button class="btn btn-dark w-100">Logout</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Content -->
-                <div class="col-md-9 col-lg-10 ms-sm-auto bg-light">
-                    <!-- Header with Admin Profile -->
-                    <div
-                        class="bg-white p-3 d-flex justify-content-end shadow-sm"
+                    <form
+                        action="/admin/customer"
+                        method="GET"
+                        class="input-group"
+                        style="max-width: 400px"
                     >
-                        <div class="d-flex align-items-center">
-                            <img
-                                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-IqRrVxo8uqD325k0duuCMPEtkgjpjb.png"
-                                alt="Profile"
-                                class="rounded-circle"
-                                width="40"
-                                height="40"
-                            />
-                            <div class="ms-2">
-                                <div class="fw-bold">Abhijith</div>
-                                <div class="text-muted small">Admin</div>
-                            </div>
-                            <i class="bi bi-chevron-down ms-2"></i>
-                        </div>
-                    </div>
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control border-start-0"
+                            placeholder="Search customer..."
+                            value="<%= locals.searchQuery ? searchQuery : '' %>"
+                        />
+                        <button type="submit" class="btn btn-primary">
+                            Search
+                        </button>
+                    </form>
 
-                    <!-- Customer List Content -->
-                    <div class="p-4">
-                        <div class="mb-4">
-                            <h2 class="mb-0">CUSTOMER LIST</h2>
-                            <nav aria-label="breadcrumb">
-                                <ol class="breadcrumb mb-0">
-                                    <li class="breadcrumb-item">
-                                        <a href="#" class="text-decoration-none"
-                                            >Dashboard</a
-                                        >
-                                    </li>
-                                    <li class="breadcrumb-item active">
-                                        CUSTOMERS
-                                    </li>
-                                </ol>
-                            </nav>
-                        </div>
-
-                        <!-- Search and Filters -->
-                        <div class="d-flex justify-content-between mb-4">
-                            <div class="input-group" style="max-width: 300px">
-                                <span class="input-group-text bg-white">
-                                    <i class="bi bi-search"></i>
-                                </span>
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    placeholder="Search customer..."
-                                />
-                            </div>
-                            <button
-                                class="btn btn-outline-secondary d-flex align-items-center"
-                            >
-                                <i class="bi bi-funnel me-2"></i> Filters
-                            </button>
-                        </div>
-
-                        <!-- Customers Table -->
-                        <div class="card border-0 shadow-sm">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>Customer Name</th>
-                                            <th>Phone</th>
-                                            <th>Orders</th>
-                                            <th>Balance</th>
-                                            <th>Status</th>
-                                            <th>
-                                                BLOCK/UNBLOCK
-                                                <i
-                                                    class="bi bi-chevron-down ms-1"
-                                                ></i>
-                                            </th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Customer 1 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>John Bushmill</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            john@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>078 5054 8877</td>
-                                            <td>124</td>
-                                            <td>$121.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-danger bg-opacity-25 text-danger px-3 py-2 rounded-pill"
-                                                    >Blocked</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                        checked
-                                                    />
-                                                    <label
-                                                        class="form-check-label text-danger"
-                                                        >UN BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 2 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Laura Prichet</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            laura_prichet@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>215 302 3376</td>
-                                            <td>45</td>
-                                            <td>$590.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill"
-                                                    >Active</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                    />
-                                                    <label
-                                                        class="form-check-label"
-                                                        >BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 3 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>
-                                                            Mohammad Karim
-                                                        </div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            m_karim@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>050 414 8778</td>
-                                            <td>984</td>
-                                            <td>$125.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-danger bg-opacity-25 text-danger px-3 py-2 rounded-pill"
-                                                    >Blocked</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                        checked
-                                                    />
-                                                    <label
-                                                        class="form-check-label text-danger"
-                                                        >UN BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 4 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Josh Bill</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            josh_bill@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>216 75 612 706</td>
-                                            <td>99</td>
-                                            <td>$348.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-danger bg-opacity-25 text-danger px-3 py-2 rounded-pill"
-                                                    >Blocked</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                        checked
-                                                    />
-                                                    <label
-                                                        class="form-check-label text-danger"
-                                                        >UN BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 5 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Josh Adam</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            josh_adam@mail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>02 75 150 655</td>
-                                            <td>1,540</td>
-                                            <td>$607.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill"
-                                                    >Active</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                    />
-                                                    <label
-                                                        class="form-check-label"
-                                                        >BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 6 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Sin Tae</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            sin_tae@mail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>078 6013 3854</td>
-                                            <td>431</td>
-                                            <td>$234.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill"
-                                                    >Active</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                    />
-                                                    <label
-                                                        class="form-check-label"
-                                                        >BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 7 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>
-                                                            Rajesh Masvidal
-                                                        </div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            rajesh_m@mail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>828 216 2190</td>
-                                            <td>36</td>
-                                            <td>$760.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-danger bg-opacity-25 text-danger px-3 py-2 rounded-pill"
-                                                    >Blocked</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                        checked
-                                                    />
-                                                    <label
-                                                        class="form-check-label text-danger"
-                                                        >UN BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 8 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Fajar Surya</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            fajar@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>078 7173 9261</td>
-                                            <td>77</td>
-                                            <td>$400.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill"
-                                                    >Active</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                    />
-                                                    <label
-                                                        class="form-check-label"
-                                                        >BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 9 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Lisa Greg</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            lisa@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>077 6157 4248</td>
-                                            <td>89</td>
-                                            <td>$812.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill"
-                                                    >Active</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                    />
-                                                    <label
-                                                        class="form-check-label"
-                                                        >BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Customer 10 -->
-                                        <tr>
-                                            <td>
-                                                <div
-                                                    class="d-flex align-items-center"
-                                                >
-                                                    <div
-                                                        class="bg-secondary bg-opacity-25 rounded-circle me-2"
-                                                        style="
-                                                            width: 40px;
-                                                            height: 40px;
-                                                        "
-                                                    ></div>
-                                                    <div>
-                                                        <div>Linda Blair</div>
-                                                        <div
-                                                            class="text-muted small"
-                                                        >
-                                                            lindablair@gmail.com
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>050 414 8778</td>
-                                            <td>1,296</td>
-                                            <td>$723.00</td>
-                                            <td>
-                                                <span
-                                                    class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill"
-                                                    >Active</span
-                                                >
-                                            </td>
-                                            <td>
-                                                <div
-                                                    class="form-check form-switch"
-                                                >
-                                                    <input
-                                                        class="form-check-input"
-                                                        type="checkbox"
-                                                        role="switch"
-                                                    />
-                                                    <label
-                                                        class="form-check-label"
-                                                        >BLOCK</label
-                                                    >
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                >
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div
-                            class="d-flex justify-content-between align-items-center mt-4"
-                        >
-                            <div>Showing 1-10 from 100</div>
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination">
-                                    <li class="page-item">
-                                        <a
-                                            class="page-link"
-                                            href="#"
-                                            aria-label="Previous"
-                                        >
-                                            <span aria-hidden="true"
-                                                >&laquo;</span
-                                            >
-                                        </a>
-                                    </li>
-                                    <li class="page-item active">
-                                        <a class="page-link" href="#">1</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">2</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">3</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">4</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">5</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">...</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a
-                                            class="page-link"
-                                            href="#"
-                                            aria-label="Next"
-                                        >
-                                            <span aria-hidden="true"
-                                                >&raquo;</span
-                                            >
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
+                    <div>
+                        <a href="/admin/customer" class="btn btn-light">
+                            <i class="fas fa-sync-alt me-2"></i> Reset
+                        </a>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Bootstrap JS Bundle with Popper -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                <% if (locals.success_msg && success_msg.length > 0) { %>
+                <div
+                    class="alert alert-success alert-dismissible fade show"
+                    role="alert"
+                >
+                    <%= success_msg %>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
+                <% } %> <% if (locals.error_msg && error_msg.length > 0) { %>
+                <div
+                    class="alert alert-danger alert-dismissible fade show"
+                    role="alert"
+                >
+                    <%= error_msg %>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
+                <% } %>
+                <div class="table-responsive customer-table mb-4">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Phone</th>
+                                <th>Orders</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>BLOCK/<br />UNBLOCK</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (users && users.length > 0) { %> <%
+                            users.forEach(user => { %>
+                            <tr>
+                                <td>
+                                    <div class="customer-info">
+                                        <div class="customer-avatar">
+                                            <% if (user.profileImage) { %>
+                                            <img
+                                                src="<%= user.profileImage %>"
+                                                alt="<%= user.name %>"
+                                                class="w-100 h-100 rounded-circle"
+                                            />
+                                            <% } else { %>
+                                            <i class="fas fa-user"></i>
+                                            <% } %>
+                                        </div>
+                                        <div>
+                                            <p class="customer-name">
+                                                <%= user.name %>
+                                            </p>
+                                            <p class="customer-email">
+                                                <%= user.email %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><%= user.phone || 'N/A' %></td>
+                                <td><%= user.orderCount || 0 %></td>
+                                <td>
+                                    ₹<%= user.totalSpent ?
+                                    user.totalSpent.toFixed(2) : '0.00' %>
+                                </td>
+                                <td>
+                                    <% if (user.isBlocked) { %>
+                                    <span class="status-badge status-blocked"
+                                        >Blocked</span
+                                    >
+                                    <% } else { %>
+                                    <span class="status-badge status-active"
+                                        >Active</span
+                                    >
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <form
+                                        action="/admin/block-unblock-user/<%= user._id %>?returnTo=list&page=<%= currentPage %><%= searchQuery ? `&search=${searchQuery}` : '' %>"
+                                        method="POST"
+                                        class="toggle-form"
+                                    >
+                                        <label class="switch">
+                                            <input type="checkbox" <%=
+                                            user.isBlocked ? 'checked' : '' %>
+                                            onchange="this.form.submit()"
+                                            name="blockStatus" value="<%=
+                                            user.isBlocked ? 'unblock' : 'block'
+                                            %>" />
+                                            <span class="slider"></span>
+                                        </label>
+                                        <span class="switch-label"
+                                            ><%= user.isBlocked ? 'UNBLOCK' :
+                                            'BLOCK' %></span
+                                        >
+                                    </form>
+                                </td>
+                                <td>
+                                    <a
+                                        href="/admin/customerdetails/<%= user._id %>"
+                                        class="action-btn"
+                                    >
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <% }); %> <% } else { %>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    No customers found
+                                </td>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+                <% if (users && users.length > 0) { %>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0">
+                            Showing <%= (currentPage - 1) * limit + 1 %>-<%=
+                            Math.min(currentPage * limit, totalUsers) %> from
+                            <%= totalUsers %>
+                        </p>
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination mb-0">
+                            <% if (currentPage > 1) { %>
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="/admin/customer?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+                                    aria-label="Previous"
+                                >
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <% } else { %>
+                            <li class="page-item disabled">
+                                <a
+                                    class="page-link"
+                                    href="#"
+                                    aria-label="Previous"
+                                >
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <% } %> <% let startPage = Math.max(1, currentPage -
+                            2); let endPage = Math.min(totalPages, startPage +
+                            4); if (endPage - startPage < 4 && totalPages > 5) {
+                            startPage = Math.max(1, endPage - 4); } for (let i =
+                            startPage; i <= endPage; i++) { %>
+                            <li
+                                class="page-item <%= i === currentPage ? 'active' : '' %>"
+                            >
+                                <a
+                                    class="page-link"
+                                    href="/admin/customer?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+                                    ><%= i %></a
+                                >
+                            </li>
+                            <% } %> <% if (endPage < totalPages) { %>
+                            <li class="page-item">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="/admin/customer?page=<%= totalPages %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+                                    ><%= totalPages %></a
+                                >
+                            </li>
+                            <% } %> <% if (currentPage < totalPages) { %>
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="/admin/customer?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+                                    aria-label="Next"
+                                >
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            <% } else { %>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                </div>
+                <% } %>
+            </div>
+        </main>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+        <script src="/js/admin-navbar.js"></script>
+        <script src="/js/admin-customer.js"></script>
     </body>
 </html>

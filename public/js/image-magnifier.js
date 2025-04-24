@@ -1,0 +1,171 @@
+function magnify(imgID, zoom) {
+    let img, glass, w, h, bw;
+    img = document.getElementById(imgID);
+
+    glass = document.createElement("DIV");
+    glass.setAttribute("class", "img-magnifier-glass");
+
+    img.parentElement.insertBefore(glass, img);
+
+    glass.style.backgroundImage = "url('" + img.src + "')";
+    glass.style.backgroundRepeat = "no-repeat";
+    glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+    
+    bw = 2; 
+    w = glass.offsetWidth / 2;
+    h = glass.offsetHeight / 2;
+
+    glass.addEventListener("mousemove", moveMagnifier);
+    img.addEventListener("mousemove", moveMagnifier);
+
+    img.addEventListener("mouseenter", function() {
+        glass.style.display = "block";
+    });
+
+    img.addEventListener("mouseleave", function() {
+        glass.style.display = "none";
+    });
+    
+    function moveMagnifier(e) {
+        let pos, x, y;
+        e.preventDefault();
+
+        pos = getCursorPos(e);
+        x = pos.x;
+        y = pos.y;
+
+        if (x > img.width - (w / zoom)) {x = img.width - (w / zoom);}
+        if (x < w / zoom) {x = w / zoom;}
+        if (y > img.height - (h / zoom)) {y = img.height - (h / zoom);}
+        if (y < h / zoom) {y = h / zoom;}
+
+        glass.style.left = (x - w) + "px";
+        glass.style.top = (y - h) + "px";
+
+        glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
+    }
+    
+    function getCursorPos(e) {
+        let a, x = 0, y = 0;
+        e = e || window.event;
+
+        a = img.getBoundingClientRect();
+
+        x = e.pageX - a.left - window.pageXOffset;
+        y = e.pageY - a.top - window.pageYOffset;
+        
+        return {x : x, y : y};
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const thumbnails = document.querySelectorAll(".thumbnail-img");
+    const mainImage = document.getElementById("mainProductImage");
+    
+    if (mainImage) {
+        magnify("mainProductImage", 2.5);
+
+        function updateMagnifier() {
+            const oldGlass = document.querySelector(".img-magnifier-glass");
+            if (oldGlass) {
+                oldGlass.remove();
+            }
+
+            setTimeout(() => {
+                magnify("mainProductImage", 2.5);
+            }, 100);
+        }
+        
+        thumbnails.forEach((thumb) => {
+            thumb.addEventListener("click", function() {
+                mainImage.src = this.src;
+                document.querySelectorAll(".thumbnail").forEach((t) => t.classList.remove("active"));
+                this.parentElement.classList.add("active");
+
+                updateMagnifier();
+            });
+        });
+    }
+
+    const sizeButtons = document.querySelectorAll(".size-btn");
+    sizeButtons.forEach((btn) => {
+        btn.addEventListener("click", function() {
+            sizeButtons.forEach((b) => b.classList.remove("active"));
+            this.classList.add("active");
+
+            updatePriceForSize(this.getAttribute("data-size"));
+        });
+    });
+
+    if (sizeButtons.length > 0) {
+        sizeButtons[0].classList.add("active");
+        updatePriceForSize(sizeButtons[0].getAttribute("data-size"));
+    }
+    
+    function updatePriceForSize(size) {
+        const variants = window.productVariants;
+        if (!variants) return;
+        
+        const selectedVariant = variants.find(v => v.size === size);
+        if (!selectedVariant) return;
+        
+        const priceElement = document.querySelector(".product-price h2");
+        if (!priceElement) return;
+        
+        if (selectedVariant.varientPrice > selectedVariant.salePrice) {
+            priceElement.innerHTML = `
+                <span class="sale-price">₹${selectedVariant.salePrice}</span>
+                <span class="original-price">₹${selectedVariant.varientPrice}</span>
+                <span class="discount-percentage">
+                    (${Math.round((selectedVariant.varientPrice - selectedVariant.salePrice) / selectedVariant.varientPrice * 100)}% off)
+                </span>
+            `;
+        } else {
+            priceElement.innerHTML = `₹${selectedVariant.salePrice}`;
+        }
+
+        const quantityInput = document.getElementById("quantity");
+        if (quantityInput) {
+            quantityInput.setAttribute("max", selectedVariant.varientquatity);
+            if (parseInt(quantityInput.value) > selectedVariant.varientquatity) {
+                quantityInput.value = selectedVariant.varientquatity;
+            }
+        }
+    }
+
+    const quantityInput = document.getElementById("quantity");
+    const decreaseBtn = document.getElementById("decrease-qty");
+    const increaseBtn = document.getElementById("increase-qty");
+    
+    if (decreaseBtn && increaseBtn && quantityInput) {
+        decreaseBtn.addEventListener("click", function() {
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+        
+        increaseBtn.addEventListener("click", function() {
+            const currentValue = parseInt(quantityInput.value);
+            const maxValue = parseInt(quantityInput.getAttribute("max"));
+            if (currentValue < maxValue) {
+                quantityInput.value = currentValue + 1;
+            }
+        });
+    }
+
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabContents = document.querySelectorAll(".tab-content");
+    
+    tabButtons.forEach((button) => {
+        button.addEventListener("click", function() {
+            const tabId = this.getAttribute("data-tab");
+            
+            tabButtons.forEach((btn) => btn.classList.remove("active"));
+            tabContents.forEach((content) => content.classList.remove("active"));
+            
+            this.classList.add("active");
+            document.getElementById(tabId + "-tab").classList.add("active");
+        });
+    });
+});

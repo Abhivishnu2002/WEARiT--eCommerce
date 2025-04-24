@@ -1,0 +1,255 @@
+body {
+    font-family: "Inter", sans-serif;
+    background-color: #f8f9fa;
+    overflow-x: hidden;
+}
+
+.profile-header {
+    background-color: #0d6efd;
+    height: 100px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 5px solid #fff;
+    margin-top: -60px;
+    margin-bottom: 10px;
+    object-fit: cover;
+}
+
+.profile-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.profile-info {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.info-label i {
+    width: 30px;
+    height: 30px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #6c757d;
+}
+
+.info-title {
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.info-value {
+    color: #6c757d;
+    margin-left: 45px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.summary-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    height: 100%;
+}
+
+.summary-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.balance-icon {
+    background-color: #e7f4ee;
+    color: #0d894f;
+}
+
+.orders-icon {
+    background-color: #fae1cf;
+    color: #e46a11;
+}
+
+.summary-label {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-weight: 600;
+    font-size: 24px;
+}
+
+.transaction-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+}
+
+.transaction-header {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transaction-title {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 0;
+}
+
+.transaction-table th {
+    font-weight: 500;
+    color: #6c757d;
+    padding: 15px 20px;
+}
+
+.transaction-table td {
+    padding: 15px 20px;
+    vertical-align: middle;
+}
+
+.order-id {
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.product-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background-color: #f0f0f0;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+}
+
+.product-name {
+    font-weight: 500;
+    margin-bottom: 0;
+}
+
+.product-variant {
+    color: #6c757d;
+    font-size: 12px;
+    margin-bottom: 0;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-processing {
+    background-color: #fae1cf;
+    color: #e46a11;
+}
+
+.status-shipped {
+    background-color: #e8f8fd;
+    color: #13b2e4;
+}
+
+.status-delivered {
+    background-color: #e7f4ee;
+    color: #0d894f;
+}
+
+.status-cancelled {
+    background-color: #ffe8e8;
+    color: #dc3545;
+}
+@media (max-width: 991.98px) {
+    .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-section .btn {
+        margin-top: 10px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .breadcrumb-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .user-profile {
+        margin-bottom: 15px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        margin-top: -50px;
+    }
+
+    .transaction-table th,
+    .transaction-table td {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .product-img {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .table-responsive {
+        border: none;
+    }
+
+    .transaction-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .transaction-header .btn {
+        margin-top: 10px;
+        width: 100%;
+    }
+}

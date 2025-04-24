@@ -1,257 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>WEARiT - eCommerce Store</title>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: Arial, sans-serif;
-            }
+<div class="announcement-bar">
+    Get 10% off for your first purchase USE CODE NEW1
+</div>
 
-            .announcement-bar {
-                background-color: white;
-                color: black;
-                text-align: center;
-                padding: 8px 0;
-                font-size: 14px;
-                font-weight: bold;
-                border-bottom: 1px solid #eee;
-            }
+<header class="main-header">
+    <div class="left-section">
+        <div class="hamburger-menu" id="mobileMenuToggle">
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+        </div>
+        <div class="brand-name">WEAR<span>iT</span></div>
+    </div>
 
-            .main-header {
-                background-color: black;
-                color: white;
-                padding: 15px 30px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
+    <nav class="center-nav">
+        <a href="/">Home</a>
+        <a href="/products">Sale</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+    </nav>
 
-            .left-section {
-                display: flex;
-                align-items: center;
-                gap: 20px;
-            }
+    <div class="right-section">
+        <div class="search-container">
+            <input
+                type="text"
+                class="search-input"
+                id="searchInput"
+                placeholder="What are you looking for?"
+            />
+            <svg
+                class="search-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="black"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
 
-            .hamburger-menu {
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                height: 20px;
-                cursor: pointer;
-            }
-
-            .hamburger-line {
-                width: 25px;
-                height: 3px;
-                background-color: white;
-            }
-
-            .brand-name {
-                font-size: 24px;
-                font-weight: bold;
-                font-style: italic;
-            }
-
-            .brand-name span {
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .center-nav {
-                display: flex;
-                gap: 30px;
-            }
-
-            .center-nav a {
-                text-decoration: none;
-                color: white;
-                font-size: 16px;
-                transition: opacity 0.2s ease;
-            }
-
-            .center-nav a:hover {
-                opacity: 0.8;
-                text-decoration: underline;
-            }
-
-            .right-section {
-                display: flex;
-                align-items: center;
-                gap: 20px;
-            }
-
-            .search-container {
-                position: relative;
-            }
-
-            .search-input {
-                background-color: #f1f1f1;
-                border: none;
-                border-radius: 20px;
-                padding: 8px 40px 8px 15px;
-                width: 250px;
-                font-size: 14px;
-            }
-
-            .search-icon {
-                position: absolute;
-                right: 15px;
-                top: 50%;
-                transform: translateY(-50%);
-                cursor: pointer;
-            }
-
-            .icon {
-                cursor: pointer;
-            }
-
-            /* For small screens */
-            @media (max-width: 768px) {
-                .main-header {
-                    padding: 15px;
-                    flex-wrap: wrap;
-                }
-
-                .center-nav {
-                    display: none; /* Hide navigation on small screens */
-                }
-
-                .right-section {
-                    margin-left: auto;
-                }
-
-                .search-container {
-                    order: 3;
-                    width: 100%;
-                    margin-top: 15px;
-                }
-
-                .search-input {
-                    width: 100%;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="announcement-bar">
-            Get 10% off for your first purchase USE CODE NEW1
+            <div class="search-results" id="searchResults"></div>
         </div>
 
-        <header class="main-header">
-            <div class="left-section">
-                <div class="hamburger-menu">
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                </div>
-                <div class="brand-name">WEAR<span>iT</span></div>
-            </div>
+        <svg
+            class="icon wishlist-icon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+            ></path>
+        </svg>
 
-            <nav class="center-nav d-flex align-items-center gap-4">
-                <a href="/">Home</a>
-                <a href="/products">Sale</a>
+        <svg
+            class="icon cart-icon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path
+                d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+            ></path>
+        </svg>
 
+        <div class="user-account-container">
+            <svg
+                class="icon user-icon"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+
+            <div class="user-dropdown">
                 <% if (typeof user !== 'undefined' && user) { %>
                 <!-- If user is logged in -->
-                <div class="dropdown">
-                    <a
-                        class="dropdown-toggle text-white text-decoration-none"
-                        href="#"
-                        role="button"
-                        id="accountDropdown"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                    >
-                        My Account
-                    </a>
-                    <ul
-                        class="dropdown-menu dropdown-menu-dark dropdown-menu-end"
-                        aria-labelledby="accountDropdown"
-                    >
-                        <li>
-                            <a class="dropdown-item" href="/account">Account</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/orders">Orders</a>
-                        </li>
-                        <li><hr class="dropdown-divider" /></li>
-                        <li>
-                            <form action="/auth/logout" method="get">
-                                <button class="dropdown-item" type="submit">
-                                    Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
+                <a href="/account" class="dropdown-item">My Account</a>
+                <a href="/orders" class="dropdown-item">Orders</a>
+                <div class="dropdown-divider"></div>
+                <form action="/logout" method="get">
+                    <button class="dropdown-item logout-btn" type="submit">
+                        Logout
+                    </button>
+                </form>
                 <% } else { %>
-                <!-- If user is NOT logged in -->
-                <a href="/auth/login">Sign In</a>
+
+                <a href="/login" class="dropdown-item">Sign In</a>
+                <a href="/signup" class="dropdown-item">Register</a>
                 <% } %>
-            </nav>
-
-            <div class="right-section">
-                <div class="search-container">
-                    <input
-                        type="text"
-                        class="search-input"
-                        placeholder="What are you looking for?"
-                    />
-                    <svg
-                        class="search-icon"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="black"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                </div>
-
-                <svg
-                    class="icon"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    ></path>
-                </svg>
-
-                <svg
-                    class="icon"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path
-                        d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
-                    ></path>
-                </svg>
             </div>
-        </header>
-    </body>
-</html>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-header">
+        <div class="brand-name">WEAR<span>iT</span></div>
+        <div class="close-menu" id="closeMenu">✕</div>
+    </div>
+    <nav class="mobile-nav">
+        <a href="/">Home</a>
+        <a href="/products">Sale</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+
+        <% if (typeof user !== 'undefined' && user) { %>
+
+        <div class="mobile-account-section">
+            <span class="mobile-section-title">My Account</span>
+            <a href="/account" class="mobile-account-link">Profile</a>
+            <a href="/orders" class="mobile-account-link">Orders</a>
+            <form action="/logout" method="get">
+                <button class="mobile-logout-btn" type="submit">Logout</button>
+            </form>
+        </div>
+        <% } else { %>
+
+        <div class="mobile-account-section">
+            <a href="/login" class="mobile-account-link highlight">Sign In</a>
+            <a href="/register" class="mobile-account-link highlight"
+                >Register</a
+            >
+        </div>
+        <% } %>
+    </nav>
+</div>
+
+<div class="mobile-menu-overlay" id="menuOverlay"></div>
+<link rel="stylesheet" href="/css/header.css" />
+<script src="/js/header.js" defer></script>

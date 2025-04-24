@@ -1,0 +1,90 @@
+document.addEventListener('DOMContentLoaded', function() {
+    <% if (locals.success_msg && success_msg.length > 0) { %>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: '<%= success_msg %>',
+            confirmButtonColor: '#0d6efd'
+        });
+    <% } %>
+
+    <% if (locals.error_msg && error_msg.length > 0) { %>
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: '<%= error_msg %>',
+            confirmButtonColor: '#0d6efd'
+        });
+    <% } %>
+
+    const profileImageInput = document.getElementById('profileImageInput');
+    const profileImagePreview = document.getElementById('profileImagePreview');
+
+    if (profileImageInput && profileImagePreview) {
+        profileImageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    profileImagePreview.src = e.target.result;
+                }
+
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+    const editProfileForm = document.getElementById('editProfileForm');
+    if (editProfileForm) {
+        editProfileForm.addEventListener('submit', function(e) {
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            if (!fullName) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Full name is required',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+
+            if (!email) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Email is required',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please enter a valid email address',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+            const phone = document.getElementById('phoneNumber').value.trim();
+            if (phone) {
+                const phoneRegex = /^\d{10,15}$/;
+                if (!phoneRegex.test(phone.replace(/[-()\s]/g, ''))) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Please enter a valid phone number',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    return;
+                }
+            }
+        });
+    }
+});

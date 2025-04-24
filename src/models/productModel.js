@@ -1,43 +1,113 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-  stock: {
-    type: Number,
-    required: true,
-    min: 0,
-    default: 0,
-  },
-  images: {
-    type: [String],
-    required: true,
-  },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    required: true,
-  },
-  isDeleted: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-})
+const variantSchema = new Schema({
+    size: {
+        type: String, 
+        required: true
+    },
+    varientPrice: {  
+        type: Number,
+        required: true
+    },
+    salePrice: {
+        type: Number,
+        required: true
+    },
+    varientquatity: { 
+        type: Number,
+        required: true
+    }
+});
 
-module.exports = mongoose.model("Product", productSchema)
+const imageSchema = new Schema({
+    url: {
+        type: String,
+        required: true
+    },
+    thumbnail: {
+        type: String,
+        required: true
+    },
+    isMain: {
+        type: Boolean,
+        default: false
+    }
+});
+
+const productSchema = new Schema({
+    _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        auto: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    categoryId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Category',
+        required: true
+    },
+    brand: {
+        type: String,
+        required: false 
+    },
+    color : {
+        type: String,
+        required: true
+    },
+    offer: {
+        type: Number,
+        required: true
+    },
+    images: [imageSchema], 
+    variants: [variantSchema],
+    sku: {
+        type: String,
+        required: false,
+        unique: true
+    },
+    tags: [{
+        type: String
+    }],
+    ratings: {
+        average: {
+            type: Number,
+            default: 0
+        },
+        count: {
+            type: Number,
+            default: 0
+        }
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    fabric:{
+        type: String,
+        required: true,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+productSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
+});
+
+const Product = mongoose.model('Product', productSchema);
+module.exports = Product;

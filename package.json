@@ -14,7 +14,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
-    "cloudinary": "^2.6.0",
+    "cloudinary": "^1.41.3",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
@@ -24,7 +24,6 @@
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.1",
     "jsonwebtoken": "^9.0.2",
-    "method-override": "^3.0.0",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
     "multer": "^1.4.5-lts.2",
@@ -35,7 +34,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
-    "sharp": "^0.34.1"
+    "sharp": "^0.34.1",
+    "uuid": "^11.1.0"
   },
   "repository": {
     "type": "git",
@@ -45,5 +45,8 @@
   "bugs": {
     "url": "https://github.com/Abhivishnu2002/WEARiT--eCommerce/issues"
   },
-  "homepage": "https://github.com/Abhivishnu2002/WEARiT--eCommerce#readme"
+  "homepage": "https://github.com/Abhivishnu2002/WEARiT--eCommerce#readme",
+  "devDependencies": {
+    "ejs-lint": "^2.0.1"
+  }
 }
