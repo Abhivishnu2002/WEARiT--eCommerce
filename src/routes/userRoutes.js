@@ -11,6 +11,7 @@ router.get('/login', forwardAuthenticated, authController.loadLogin);
 router.post('/login', forwardAuthenticated, authController.loginUser);
 router.get('/signup', forwardAuthenticated, authController.loadSignup);
 router.post('/signup', forwardAuthenticated, authController.registerUser);
+router.get('/referral', forwardAuthenticated, pageController.loadReferralCode)
 router.get('/otp', authController.loadOtp);
 router.post('/verifyotp', authController.verifyOtp);
 router.post('/resendotp', authController.resendOtp);

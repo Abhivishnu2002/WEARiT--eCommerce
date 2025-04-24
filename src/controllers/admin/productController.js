@@ -418,6 +418,37 @@ const updateProduct = async (req, res) => {
         res.redirect("/admin/products");
     }
 };
+const updateProductOffer = async (req, res) => {
+    try {
+        const { productId, offer } = req.body;
+        const offerValue = parseFloat(offer) || 0;
+        
+        const product = await Product.findById(productId);
+        
+        if (!product) {
+            req.flash("error_msg", "Product not found");
+            return res.redirect("/admin/products");
+        }
+ 
+        product.offer = offerValue;
+
+        if (product.variants && product.variants.length > 0) {
+            product.variants.forEach(variant => {
+                const discount = variant.varientPrice * (offerValue / 100);
+                variant.salePrice = Math.round(variant.varientPrice - discount);
+            });
+        }
+        
+        await product.save();
+        
+        req.flash("success_msg", `Offer of ${offerValue}% added to product successfully`);
+        res.redirect("/admin/products");
+    } catch (error) {
+        console.error("Update product offer error:", error);
+        req.flash("error_msg", "Failed to update product offer");
+        res.redirect("/admin/products");
+    }
+};
 
 const deleteProduct = async (req, res) => {
     try {
@@ -475,6 +506,7 @@ module.exports = {
     addProduct,
     loadEditProducts,
     updateProduct,
+    updateProductOffer,
     deleteProduct,
     toggleProductListing,
 };

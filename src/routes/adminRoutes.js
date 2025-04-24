@@ -49,6 +49,7 @@ router.post('/editproducts', verifyAdminSession, upload.fields([
   { name: 'additionalImage2', maxCount: 1 },
   { name: 'additionalImage3', maxCount: 1 }
 ]), productController.updateProduct);
+router.post("/update-product-offer", verifyAdminSession, productController.updateProductOffer);
 router.delete("/deleteproduct/:id", verifyAdminSession, productController.deleteProduct);
 router.put("/toggle-product-listing/:id", verifyAdminSession, productController.toggleProductListing);
 

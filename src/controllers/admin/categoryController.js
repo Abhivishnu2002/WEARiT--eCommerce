@@ -159,15 +159,38 @@ const updateCategory = async (req, res) => {
       })
     }
 
+    const oldOffer = category.offer
+    const newOffer = Number(offer) || 0
+
     const updateData = {
       name,
       description,
-      offer: Number(offer) || 0,
+      offer: newOffer,
       maxRedeemable: Number(maxRedeemable) || 0,
       isListed: isDeleted === "false",
     }
 
     await Category.findByIdAndUpdate(categoryId, updateData, { new: true })
+
+    if (oldOffer !== newOffer) {
+      const products = await Product.find({ categoryId: categoryId })
+      
+      for (const product of products) {
+        product.variants = product.variants.map(variant => {
+          const originalPrice = variant.varientPrice
+          const discount = (originalPrice * newOffer) / 100
+          return {
+            ...variant,
+            salePrice: Math.round(originalPrice - discount)
+          }
+        })
+
+        product.offer = newOffer
+        
+        await product.save()
+      }
+    }
+
     req.flash("success_msg", "Category updated successfully")
     res.redirect("/admin/category")
   } catch (error) {
@@ -210,8 +233,14 @@ const toggleCategoryListing = async (req, res) => {
       return res.redirect("/admin/category")
     }
 
-    category.isListed = !category.isListed
+    const newListingStatus = !category.isListed
+    category.isListed = newListingStatus
     await category.save()
+
+    await Product.updateMany(
+      { categoryId: categoryId },
+      { isActive: newListingStatus }
+    )
 
     req.flash("success_msg", `Category ${category.isListed ? "listed" : "unlisted"} successfully`)
     res.redirect("/admin/category")

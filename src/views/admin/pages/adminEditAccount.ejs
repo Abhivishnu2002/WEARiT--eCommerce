@@ -87,7 +87,7 @@
                 <div class="profile-card">
                     <div class="profile-image-container">
                         <img
-                            src="<%= admin.profileImage || 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-CzWLpMp95jvKXjnFM6cS4gWAWSGCH2.png' %>"
+                            src="<%= admin.profileImage || '/images/admin-img.png' %>"
                             alt="Profile Image"
                             class="profile-image"
                             id="profileImagePreview"
@@ -98,7 +98,7 @@
                     </div>
 
                     <form
-                        action="/admin/account/edit"
+                        action="#"
                         method="POST"
                         enctype="multipart/form-data"
                         id="editProfileForm"
