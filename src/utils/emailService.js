@@ -57,31 +57,7 @@ const sendPasswordResetEmail = async (email, otp) => {
     }
   };
 
-  const sendOrderConfirmationEmail = async (email, order) => {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Order Confirmation - WEARiT',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #000000;">WEARiT - Order Confirmation</h2>
-          <p>Thank you for your order! Your order number is: <strong>${order._id}</strong></p>
-          <p>We'll notify you when your order ships.</p>
-        </div>
-      `
-    };
-  
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      return info;
-    } catch (error) {
-      console.error('Email sending error:', error);
-      throw new Error('Failed to send email');
-    }
-  };
-
   module.exports =  {
     sendOTPEmail,
     sendPasswordResetEmail,
-    sendOrderConfirmationEmail
   };

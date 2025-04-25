@@ -5,7 +5,7 @@ const Category = require("../../models/categoryModel")
 const loadCategory = async (req, res) => {
   try {
     const page = Number.parseInt(req.query.page) || 1
-    const limit = 10
+    const limit = 2
     const skip = (page - 1) * limit
     const searchQuery = req.query.search || ""
     const sort = req.query.sort || "addedDate"
