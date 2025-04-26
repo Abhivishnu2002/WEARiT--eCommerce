@@ -1,0 +1,143 @@
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+<link rel="stylesheet" href="/css/profile.css" />
+<%- include('../partials/header') %>
+<div class="profile-container">
+    <div class="breadcrumb-container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    Profile
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-sidebar">
+            <div class="user-info">
+                <div class="avatar">
+                    <img
+                        src="/images/default-avatar.png"
+                        alt="User Avatar"
+                        class="rounded-circle"
+                    />
+                </div>
+                <h3 class="user-name">Abhijith S S</h3>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="active">
+                    <a href="/profile">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>My Address</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/orders">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>My Order</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/wishlist">
+                        <i class="fas fa-heart"></i>
+                        <span>My Wishlist <span class="count">(4)</span></span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/wallet">
+                        <i class="fas fa-wallet"></i>
+                        <span>My Wallet</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/coupons">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>My Coupen</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/change-password">
+                        <i class="fas fa-lock"></i>
+                        <span>Change password</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Log out</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/referral">
+                        <i class="fas fa-users"></i>
+                        <span>Refferal Code</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="profile-details">
+            <h2 class="welcome-text">Welcome Abhijith !</h2>
+
+            <div class="profile-card">
+                <div class="profile-form">
+                    <div class="form-group">
+                        <label for="fullName">Full name</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="fullName"
+                            value="Abhijith"
+                            readonly
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            value="example@gmail.com"
+                            readonly
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input
+                            type="tel"
+                            class="form-control"
+                            id="phone"
+                            value="+91 12345 67890"
+                            readonly
+                        />
+                    </div>
+
+                    <div class="form-group text-center">
+                        <button class="btn btn-edit" id="editProfileBtn">
+                            EDIT
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="message-container">
+                <button class="btn btn-message">Your Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+<%- include('../partials/footer') %>
+<script src="/js/profile.js"></script>

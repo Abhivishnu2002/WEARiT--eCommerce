@@ -1,0 +1,247 @@
+const Cart = require('../../models/cartModel');
+const Product = require('../../models/productModel');
+const Category = require('../../models/categoryModel');
+const Wishlist = require('../../models/wishlistModel');
+
+const loadCart = async (req, res) => {
+  try {
+    let cart = await Cart.findOne({ user: req.user._id })
+      .populate({
+        path: 'products.product',
+        populate: {
+          path: 'categoryId'
+        }
+      });
+    
+    if (!cart) {
+      cart = { products: [] };
+    }
+    const validProducts = cart.products.filter(item => 
+      item.product && 
+      item.product.isActive && 
+      item.product.categoryId && 
+      item.product.categoryId.isListed
+    );
+
+    let subtotal = 0;
+    let totalDiscount = 0;
+    
+    validProducts.forEach(item => {
+      const variant = item.product.variants.find(v => v.size === item.size);
+      if (variant) {
+        const itemTotal = variant.varientPrice * item.quantity;
+        const discountAmount = (variant.varientPrice - variant.salePrice) * item.quantity;
+        
+        subtotal += itemTotal;
+        totalDiscount += discountAmount;
+      }
+    });
+    
+    const total = subtotal - totalDiscount;
+    
+    res.render('pages/cart', { 
+      cart: {
+        products: validProducts
+      },
+      totals: {
+        subtotal,
+        discount: totalDiscount,
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Load cart error:', error);
+    req.flash('error_msg', 'Failed to load cart');
+    res.redirect('/');
+  }
+};
+
+const addToCart = async (req, res) => {
+  try {
+    const { productId, size, quantity = 1 } = req.body;
+    const product = await Product.findById(productId).populate('categoryId');
+    
+    if (!product || !product.isActive || !product.categoryId || !product.categoryId.isListed) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product is not available'
+      });
+    }
+
+    const variant = product.variants.find(v => v.size === size);
+    if (!variant) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected variant not available'
+      });
+    }
+    
+    if (variant.varientquatity < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected variant is out of stock'
+      });
+    }
+
+    let cart = await Cart.findOne({ user: req.user._id });
+    
+    if (!cart) {
+      cart = new Cart({ user: req.user._id, products: [] });
+    }
+
+    const existingProduct = cart.products.find(
+      item => item.product.toString() === productId && item.size === size
+    );
+    
+    if (existingProduct) {
+      const newQuantity = existingProduct.quantity + parseInt(quantity);
+      const maxAllowed = Math.min(variant.varientquatity, 5);
+      
+      if (newQuantity > maxAllowed) {
+        return res.status(400).json({
+          success: false,
+          message: `You can only add up to ${maxAllowed} units of this item`
+        });
+      }
+
+      existingProduct.quantity = newQuantity;
+    } else {
+      cart.products.push({
+        product: productId,
+        size,
+        quantity: parseInt(quantity)
+      });
+    }
+    
+    await cart.save();
+
+    const wishlist = await Wishlist.findOne({ user: req.user._id });
+    if (wishlist && wishlist.products.includes(productId)) {
+      wishlist.products = wishlist.products.filter(id => id.toString() !== productId);
+      await wishlist.save();
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Product added to cart',
+      cartCount: cart.products.length
+    });
+  } catch (error) {
+    console.error('Add to cart error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+const updateCartQuantity = async (req, res) => {
+  try {
+    const { productId, size, action } = req.body;
+    
+    const cart = await Cart.findOne({ user: req.user._id });
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: 'Cart not found'
+      });
+    }
+    
+    const cartItem = cart.products.find(
+      item => item.product.toString() === productId && item.size === size
+    );
+    
+    if (!cartItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found in cart'
+      });
+    }
+
+    const product = await Product.findById(productId);
+    const variant = product.variants.find(v => v.size === size);
+    
+    if (!variant) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product variant not available'
+      });
+    }
+    
+    if (action === 'increment') {
+      if (cartItem.quantity >= Math.min(5, variant.varientquatity)) {
+        return res.status(400).json({
+          success: false,
+          message: `Maximum quantity reached`
+        });
+      }
+      
+      cartItem.quantity += 1;
+    } else if (action === 'decrement') {
+      if (cartItem.quantity <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Minimum quantity is 1'
+        });
+      }
+      
+      cartItem.quantity -= 1;
+    }
+    
+    await cart.save();
+
+    const price = variant.salePrice;
+    const itemTotal = price * cartItem.quantity;
+    
+    return res.status(200).json({
+      success: true,
+      quantity: cartItem.quantity,
+      itemTotal: itemTotal
+    });
+  } catch (error) {
+    console.error('Update cart quantity error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+const removeFromCart = async (req, res) => {
+  try {
+    const { productId, size } = req.body;
+    
+    const cart = await Cart.findOne({ user: req.user._id });
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: 'Cart not found'
+      });
+    }
+
+    cart.products = cart.products.filter(
+      item => !(item.product.toString() === productId && item.size === size)
+    );
+    
+    await cart.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Product removed from cart',
+      cartCount: cart.products.length
+    });
+  } catch (error) {
+    console.error('Remove from cart error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+module.exports = {
+  loadCart,
+  addToCart,
+  updateCartQuantity,
+  removeFromCart
+};

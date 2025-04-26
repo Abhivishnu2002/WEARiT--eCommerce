@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Wishlist</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="/css/wishlist.css" />
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <div class="container-fluid wishlist-container">
+            <div class="row">
+                <div class="col-lg-3 col-md-4">
+                    <div class="user-profile-card">
+                        <div class="user-avatar">
+                            <span>A</span>
+                        </div>
+                        <h3 class="user-name">Abhijith S S</h3>
+
+                        <div class="sidebar-menu">
+                            <a href="#" class="menu-item">
+                                <i class="fa-regular fa-user"></i>
+                                <span>My Profile</span>
+                            </a>
+                            <a href="#" class="menu-item">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span>My Address</span>
+                            </a>
+                            <a href="#" class="menu-item">
+                                <i class="fa-solid fa-bag-shopping"></i>
+                                <span>My Order</span>
+                            </a>
+                            <a href="#" class="menu-item active">
+                                <i class="fa-solid fa-heart"></i>
+                                <span>My Wishlist (4)</span>
+                            </a>
+                            <a href="#" class="menu-item">
+                                <i class="fa-solid fa-wallet"></i>
+                                <span>My Wallet</span>
+                            </a>
+                            <a href="#" class="menu-item">
+                                <i class="fa-solid fa-ticket"></i>
+                                <span>My Coupon</span>
+                            </a>
+                            <a href="#" class="menu-item">
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Change password</span>
+                            </a>
+                            <a href="#" class="menu-item">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>Log out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Content Area -->
+                <div class="col-lg-9 col-md-8">
+                    <div class="wishlist-content">
+                        <div class="wishlist-header">
+                            <h2 class="wishlist-title">Wishlist (4)</h2>
+                            <div class="wishlist-actions">
+                                <button
+                                    class="btn btn-outline-dark move-to-bag"
+                                >
+                                    Move All To Bag
+                                </button>
+                                <button class="btn btn-danger empty-wishlist">
+                                    Empty my Wishlist
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row wishlist-items">
+                            <!-- Wishlist Item 1 -->
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                                <div class="wishlist-item">
+                                    <div class="product-image">
+                                        <img
+                                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-G1yocD3BQpVwhFHf90cxFoU9LhzuVv.png"
+                                            alt="Black Stripes Slim Fit Shirt"
+                                        />
+                                    </div>
+                                    <h4 class="product-title">
+                                        Black Stripes Slim Fit Shirt
+                                    </h4>
+                                    <div class="product-price">
+                                        <span class="price">₹29,999</span>
+                                        <span class="discount">13% off</span>
+                                    </div>
+                                    <button
+                                        class="btn btn-dark add-to-cart-btn"
+                                    >
+                                        Add To Cart
+                                    </button>
+                                    <button class="btn btn-danger remove-btn">
+                                        Remove from wishlist
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Wishlist Item 2 -->
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                                <div class="wishlist-item">
+                                    <div class="product-image">
+                                        <img
+                                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-G1yocD3BQpVwhFHf90cxFoU9LhzuVv.png"
+                                            alt="Black Stripes Slim Fit Shirt"
+                                        />
+                                    </div>
+                                    <h4 class="product-title">
+                                        Black Stripes Slim Fit Shirt
+                                    </h4>
+                                    <div class="product-price">
+                                        <span class="price">₹29,999</span>
+                                        <span class="discount">13% off</span>
+                                    </div>
+                                    <button
+                                        class="btn btn-dark add-to-cart-btn"
+                                    >
+                                        Add To Cart
+                                    </button>
+                                    <button class="btn btn-danger remove-btn">
+                                        Remove from wishlist
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Wishlist Item 3 -->
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                                <div class="wishlist-item">
+                                    <div class="product-image">
+                                        <img
+                                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-G1yocD3BQpVwhFHf90cxFoU9LhzuVv.png"
+                                            alt="Black Stripes Slim Fit Shirt"
+                                        />
+                                    </div>
+                                    <h4 class="product-title">
+                                        Black Stripes Slim Fit Shirt
+                                    </h4>
+                                    <div class="product-price">
+                                        <span class="price">₹29,999</span>
+                                        <span class="discount">13% off</span>
+                                    </div>
+                                    <button
+                                        class="btn btn-dark add-to-cart-btn"
+                                    >
+                                        Add To Cart
+                                    </button>
+                                    <button class="btn btn-danger remove-btn">
+                                        Remove from wishlist
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Wishlist Item 4 -->
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                                <div class="wishlist-item">
+                                    <div class="product-image">
+                                        <img
+                                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WEARiT-G1yocD3BQpVwhFHf90cxFoU9LhzuVv.png"
+                                            alt="Black Stripes Slim Fit Shirt"
+                                        />
+                                    </div>
+                                    <h4 class="product-title">
+                                        Black Stripes Slim Fit Shirt
+                                    </h4>
+                                    <div class="product-price">
+                                        <span class="price">₹29,999</span>
+                                        <span class="discount">13% off</span>
+                                    </div>
+                                    <button
+                                        class="btn btn-dark add-to-cart-btn"
+                                    >
+                                        Add To Cart
+                                    </button>
+                                    <button class="btn btn-danger remove-btn">
+                                        Remove from wishlist
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <%- include('../partials/footer') %>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

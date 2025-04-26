@@ -1,0 +1,43 @@
+<div class="user-profile-card">
+    <div class="user-avatar">
+       
+    </div>
+    <h3 class="user-name">
+        Abhijit S S
+    </h3>
+
+    <div class="sidebar-menu">
+        <a href="/profile" class="menu-item <%= activePage === 'profile' ? 'active' : '' %>">
+            <i class="fa-regular fa-user"></i>
+            <span>My Profile</span>
+        </a>
+        <a href="/profile/address" class="menu-item <%= activePage === 'address' ? 'active' : '' %>">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>My Address</span>
+        </a>
+        <a href="/profile/orders" class="menu-item <%= activePage === 'orders' ? 'active' : '' %>">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>My Order</span>
+        </a>
+        <a href="/profile/wishlist" class="menu-item <%= activePage === 'wishlist' ? 'active' : '' %>">
+            <i class="fa-solid fa-heart"></i>
+            <span>My Wishlist</span>
+        </a>
+        <a href="/profile/wallet" class="menu-item <%= activePage === 'wallet' ? 'active' : '' %>">
+            <i class="fa-solid fa-wallet"></i>
+            <span>My Wallet</span>
+        </a>
+        <a href="/profile/coupons" class="menu-item <%= activePage === 'coupons' ? 'active' : '' %>">
+            <i class="fa-solid fa-ticket"></i>
+            <span>My Coupon</span>
+        </a>
+        <a href="/profile/change-password" class="menu-item <%= activePage === 'change-password' ? 'active' : '' %>">
+            <i class="fa-solid fa-lock"></i>
+            <span>Change password</span>
+        </a>
+        <a href="/logout" class="menu-item">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Log out</span>
+        </a>
+    </div>
+</div>

@@ -4,6 +4,8 @@ const passport = require('passport');
 const authController = require('../controllers/user/authController');
 const productController = require('../controllers/user/productController');
 const pageController = require('../controllers/user/pageController');
+const cartController = require('../controllers/user/cartController');
+const wishlistController = require('../controllers/user/wishlistController')
 const {forwardAuthenticated, ensureAuthenticated} = require('../middlewares/auth');
 
 router.get('/', authController.loadHome);
@@ -25,8 +27,12 @@ router.get('/logout', authController.logout);
 router.get('/products', productController.getAllProducts);
 router.get('/products/:id', productController.getProductDetails);
 router.get('/test', (req, res)=>{
-    res.render('pages/product-details');
+    res.render('pages/profile');
 })
+
+router.get('/cart', cartController.loadCart);
+
+router.get('/wishlist', wishlistController.loadWishlist);
 
 
 router.get('/about', pageController.loadAbout);

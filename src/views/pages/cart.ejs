@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Shopping Cart</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="/css/cart.css" />
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <!-- Cart Section -->
+        <div class="container cart-container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="cart-header">
+                        <h1 class="cart-title">CART</h1>
+                        <button class="btn empty-cart-btn">
+                            Empty my Cart
+                        </button>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div class="cart-items">
+                        <!-- Cart Item 1 -->
+                        <div class="cart-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 col-sm-3 col-4">
+                                    <div class="product-image">
+                                        <img
+                                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder-ob7miW3mUreePYfXdVwkpFWHthzoR5.svg?height=200&width=200&query=turquoise%20checks%20linen%20shirt"
+                                            alt="Turquoise Checks Linen Blend Shirt"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="col-md-5 col-sm-9 col-8">
+                                    <h3 class="product-title">
+                                        Turquoise Checks Linen Blend Shirt
+                                    </h3>
+                                    <div
+                                        class="product-price-mobile d-block d-md-none"
+                                    >
+                                        <div class="price-label">Price</div>
+                                        <div class="price-amount">
+                                            ₹2,036.00
+                                        </div>
+                                        <div class="original-price">
+                                            ₹2,136.00
+                                        </div>
+                                        <div class="save-amount">Save ₹100</div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-md-2 col-sm-4 col-6 d-none d-md-block"
+                                >
+                                    <div class="price-section">
+                                        <div class="price-label">Price</div>
+                                        <div class="price-amount">
+                                            ₹2,036.00
+                                        </div>
+                                        <div class="original-price">
+                                            ₹2,136.00
+                                        </div>
+                                        <div class="save-amount">Save ₹100</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-4 col-6">
+                                    <div class="quantity-section">
+                                        <div class="quantity-selector">
+                                            <button
+                                                class="quantity-btn minus-btn"
+                                            >
+                                                −
+                                            </button>
+                                            <input
+                                                type="text"
+                                                class="quantity-input"
+                                                value="1"
+                                                readonly
+                                            />
+                                            <button
+                                                class="quantity-btn plus-btn"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1 col-sm-4 col-6">
+                                    <button class="btn remove-btn">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cart Item 2 -->
+                        <div class="cart-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 col-sm-3 col-4">
+                                    <div class="product-image">
+                                        <img
+                                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder-ob7miW3mUreePYfXdVwkpFWHthzoR5.svg?height=200&width=200&query=olive%20linen%20shirt"
+                                            alt="Turquoise Checks Linen Blend Shirt"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="col-md-5 col-sm-9 col-8">
+                                    <h3 class="product-title">
+                                        Turquoise Checks Linen Blend Shirt
+                                    </h3>
+                                    <div
+                                        class="product-price-mobile d-block d-md-none"
+                                    >
+                                        <div class="price-label">Price</div>
+                                        <div class="price-amount">
+                                            ₹2,036.00
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="col-md-2 col-sm-4 col-6 d-none d-md-block"
+                                >
+                                    <div class="price-section">
+                                        <div class="price-label">Price</div>
+                                        <div class="price-amount">
+                                            ₹2,036.00
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-sm-4 col-6">
+                                    <div class="quantity-section">
+                                        <div class="quantity-selector">
+                                            <button
+                                                class="quantity-btn minus-btn"
+                                            >
+                                                −
+                                            </button>
+                                            <input
+                                                type="text"
+                                                class="quantity-input"
+                                                value="2"
+                                                readonly
+                                            />
+                                            <button
+                                                class="quantity-btn plus-btn"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1 col-sm-4 col-6">
+                                    <button class="btn remove-btn">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cart Summary -->
+                    <div class="cart-summary">
+                        <div class="row">
+                            <div class="col-md-6 col-sm-6 col-6">
+                                <div class="subtotal-label">SUBTOTAL</div>
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-6">
+                                <div class="subtotal-amount">
+                                    <div class="save-amount">Save ₹100</div>
+                                    <div class="original-subtotal">
+                                        INR 4172
+                                    </div>
+                                    <div class="final-subtotal">INR 4072</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shipping-note">
+                        Shipping, taxes, and discount codes calculated at
+                        checkout.
+                    </div>
+
+                    <div class="cart-actions">
+                        <button class="btn checkout-btn">
+                            Proceed to checkout
+                        </button>
+                        <button class="btn continue-shopping-btn">
+                            Continue Shopping
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <%- include('../partials/footer') %>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Quantity buttons functionality
+            document.querySelectorAll(".plus-btn").forEach((button) => {
+                button.addEventListener("click", function () {
+                    const input =
+                        this.parentElement.querySelector(".quantity-input");
+                    input.value = parseInt(input.value) + 1;
+                });
+            });
+
+            document.querySelectorAll(".minus-btn").forEach((button) => {
+                button.addEventListener("click", function () {
+                    const input =
+                        this.parentElement.querySelector(".quantity-input");
+                    if (parseInt(input.value) > 1) {
+                        input.value = parseInt(input.value) - 1;
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

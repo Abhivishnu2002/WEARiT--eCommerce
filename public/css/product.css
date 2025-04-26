@@ -16,12 +16,12 @@ body {
 
 .hero-banner {
     background: linear-gradient(to right, #a8c0ff, #3f2b96);
-    height: 350px;
+    height: 450px;
     display: flex;
     align-items: center;
     position: relative;
     overflow: hidden;
-    background-image: url(../images/banner8.png);
+    background-image: url(../images/banner4.jpg);
     background-size: cover;
     background-position: center;
 }

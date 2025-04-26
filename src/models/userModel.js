@@ -48,6 +48,24 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
   },
+  wallet: {
+    balance: {
+        type: Number,
+        default: 0
+    },
+    transactions: [{
+        amount: Number,
+        type: {
+            type: String,
+            enum: ['credit', 'debit']
+        },
+        description: String,
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }]
+  },
   isAdmin: {
     type: Boolean,
     default: false
