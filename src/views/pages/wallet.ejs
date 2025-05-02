@@ -1,0 +1,136 @@
+<!-- views/pages/wallet.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet - WEARiT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/wallet.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+    <div class="container my-4">
+        <div class="breadcrumb-container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/profile">profile</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">wallet</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <%- include('../partials/navbar', { activePage: 'wallet', wishlistCount: wishlistCount || 0 }) %>
+            </div>
+            <div class="col-lg-9">
+                <div class="wallet-card">
+                    <h2 class="wallet-title">My Wallet</h2>
+                    <div class="wallet-balance-card mt-4">
+                        <div class="wallet-balance">
+                            <h5>Available wallet balance : </h5>
+                            <h5 class="balance-amount">₹<%= user.wallet ? user.wallet.balance.toFixed(2) : '0.00' %></h5>
+                        </div>
+                    </div>
+
+                    <div class="wallet-transactions mt-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Transaction ID</th>
+                                        <th>Transaction Date</th>
+                                        <th>Amount</th>
+                                        <th>Description</th>
+                                        <th>Debit / Credit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (user.wallet && user.wallet.transactions && user.wallet.transactions.length > 0) { %>
+                                        <% user.wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => { %>
+                                            <tr>
+                                                <td><%= transaction._id %></td>
+                                                <td><%= new Date(transaction.date).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></td>
+                                                <td><%= transaction.amount.toFixed(2) %></td>
+                                                <td><%= transaction.description %></td>
+                                                <td class="<%= transaction.type === 'debit' ? 'text-danger' : 'text-success' %>">
+                                                    <%= transaction.type === 'debit' ? 'Amount Debited' : 'Amount Credited' %>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="5" class="text-center">No transactions found</td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-dark add-money-btn" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                            ADD Money
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addMoneyModal" tabindex="-1" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMoneyForm" action="/wallet/add-money" method="POST">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount (₹)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="creditCard" checked>
+                                <label class="form-check-label" for="creditCard">
+                                    Credit/Debit Card
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi">
+                                <label class="form-check-label" for="upi">
+                                    UPI
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="netBanking" value="netBanking">
+                                <label class="form-check-label" for="netBanking">
+                                    Net Banking
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="addMoneyForm" class="btn btn-dark">Proceed to Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('../partials/footer') %>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/wallet.js"></script>
+</body>
+</html>

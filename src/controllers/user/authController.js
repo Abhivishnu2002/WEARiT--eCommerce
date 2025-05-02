@@ -59,34 +59,38 @@ const loadLogin = (req, res) => {
     res.render("pages/login");
 };
 
-const loginUser = async (req, res, next) => {   
-    passport.authenticate('local', (err, user, info) => {
-        if (err) {
-            console.error('Login error:', err);
-            return next(err);
-        }
-        
-        if (!user) {
-            req.flash('error_msg', info.message || 'Invalid email or password');
-            return res.redirect('/login');
-        }
+const loginUser = async (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      console.error("Login error:", err)
+      return next(err)
+    }
 
-        if (!user.isVerified) {
-            req.flash('error_msg', 'Please verify your email before logging in');
-            return res.redirect('/otp');
-        }
-        
-        req.logIn(user, (err) => {
-            if (err) {
-                console.error('Login error:', err);
-                return next(err);
-            }
-            req.session.userId = user._id;
-            req.flash('success_msg', 'You are now logged in');
-            return res.redirect('/');
-        });
-    })(req, res, next);
-};
+    if (!user) {
+      req.flash("error_msg", info.message || "Invalid email or password")
+      return res.redirect("/login")
+    }
+
+    if (!user.isVerified) {
+      req.flash("error_msg", "Please verify your email before logging in")
+      return res.redirect("/otp")
+    }
+
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error("Login error:", err)
+        return next(err)
+      }
+
+      req.session.userId = user._id
+      req.flash("success_msg", "You are now logged in")
+      const returnTo = req.session.returnTo || "/"
+      delete req.session.returnTo
+
+      return res.redirect(returnTo)
+    })
+  })(req, res, next)
+}
 
 const loadSignup = (req, res) => {
     if(req.session.userId){

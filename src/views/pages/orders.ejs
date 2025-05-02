@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders | WEARiT</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/navbar.css" />
+  <link rel="stylesheet" href="/css/orders.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <div class="container my-4">
+    <div class="breadcrumb-container">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="/profile">Profile</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            my orders
+          </li>
+        </ol>
+      </nav>
+    </div>
+    <div class="row">
+      <div class="col-lg-3 mb-4">
+        <%- include('../partials/navbar', {activePage:
+                    'orders' , user: user, wishlistCount: wishlistCount || 0})
+                    %>
+      </div>
+      <div class="col-lg-9">
+        <div class="orders-container">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title">My Orders</h2>
+            <div class="order-search">
+              <form action="/orders" method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control me-2" placeholder="Search orders by ID or status" value="<%= search %>" />
+                <button type="submit" class="btn btn-dark">
+                  <i class="fas fa-search"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="orders-list">
+            <% if (orders && orders.length> 0) { %> <%
+                            orders.forEach(order=> { %>
+            <div class="order-item">
+              <div class="order-header">
+                <div class="row">
+                  <div class="col-md-8">
+                    <span class="order-id-label">Order ID:
+                      <strong>
+                        <%= order.orderID %>
+                      </strong></span>
+                    <span class="order-date-label ms-3">Ordered on: <%= new
+                                                Date(order.orderDate).toLocaleDateString()
+                                                %></span>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <a href="/orders/invoice/<%= order._id %>" class="btn btn-sm btn-outline-dark">
+                      <i class="fas fa-file-invoice"></i>
+                      Download Invoice
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <% if (order.products && order.products.length>
+                                0) { %> <% order.products.slice(0,
+                                1).forEach(product=> { %>
+              <!-- Only show first product if multiple items in order -->
+              <div class="row align-items-center mt-3">
+                <div class="col-md-2">
+                  <div class="product-image">
+                    <% if (product.product &&
+                                            product.product.images &&
+                                            product.product.images.length> 0) {
+                                            %> <% const
+                                            mainImage=product.product.images.find(img=>
+                                            img.isMain) ||
+                                            product.product.images[0]; %>
+                    <img src="<%= mainImage ? mainImage.url : '/images/placeholder.jpg' %>" alt="<%= product.product.name %>" class="img-fluid" />
+                    <% } else { %>
+                    <img src="/images/placeholder.jpg" alt="Product Image" class="img-fluid" />
+                    <% } %>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="product-details">
+                    <h4 class="product-name">
+                      <%= product.product ?
+                                                product.product.name : 'Product'
+                                                %>
+                    </h4>
+                    <p class="product-price">
+                      ₹<%= product.variant ?
+                                                product.variant.salePrice : 0 %>
+                    </p>
+                    <p class="product-quantity">
+                      Quantity: <%= product.quantity
+                                                %>
+                    </p>
+                    <% if (order.products.length> 1) {
+                                            %>
+                    <p class="text-muted">
+                      + <%= order.products.length - 1
+                                                %> more items
+                    </p>
+                    <% } %>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="order-status-container">
+                    <div class="status-badge <%= order.orderStatus.toLowerCase().replace(/\s+/g, '-') %>">
+                      Status: <%=
+                                                order.orderStatus.toUpperCase()
+                                                %>
+                    </div>
+                    <div class="action-buttons">
+                      <a href="/orders/details/<%= order._id %>" class="btn btn-dark btn-sm details-btn">
+                        View Details
+                      </a>
+
+                      <% if (order.orderStatus === 'delivered') { %>
+                      <button class="btn btn-dark btn-sm return-btn" data-order-id="<%= order._id %>">
+                        <i class="fas fa-undo-alt"></i> Return
+                      </button>
+                      <% } else if (
+                            order.orderStatus === 'pending' ||
+                            order.orderStatus === 'shipped' ||
+                            order.orderStatus === 'out for delivery'
+                        ) { %>
+                      <button class="btn btn-outline-dark btn-sm cancel-btn" data-order-id="<%= order._id %>">
+                        Cancel Order
+                      </button>
+                      <% } else if (order.orderStatus === 'cancelled') { %>
+                      <button class="btn btn-dark btn-sm reorder-btn" data-order-id="<%= order._id %>">
+                        <i class="fas fa-shopping-cart"></i> Re-Order
+                      </button>
+                      <% } %>
+                    </div>
+
+
+                    <% if (order.orderStatus==='pending'
+                                            ) { %>
+                    <div class="delivery-info">
+                      Processing your order
+                    </div>
+                    <% } else if
+                                            (order.orderStatus==='shipped' ) {
+                                            %>
+                    <div class="delivery-info">
+                      Your order has been shipped
+                    </div>
+                    <% } else if
+                                            (order.orderStatus==='out for delivery' ) { %>
+                    <div class="delivery-info">
+                      Your order is out for delivery
+                    </div>
+                    <% } else if
+                                            (order.orderStatus==='delivered' ) {
+                                            %>
+                    <div class="delivery-info">
+                      Delivered on <%= new
+                                                Date(order.updatedAt).toLocaleDateString()
+                                                %>
+                    </div>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+              <% }); %> <% } else { %>
+              <div class="text-center py-3">
+                <p>No products in this order</p>
+              </div>
+              <% } %>
+            </div>
+            <% }); %> <% } else { %>
+            <div class="no-orders text-center py-5">
+              <i class="fas fa-shopping-bag fs-1 mb-3"></i>
+              <h3>No orders found</h3>
+              <p>You haven't placed any orders yet</p>
+              <a href="/products" class="btn btn-dark mt-3">Shop Now</a>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Pagination -->
+          <% if (orders && orders.length> 0 && totalPages > 1) {
+                        %>
+          <div class="pagination-container mt-4">
+            <nav aria-label="Page navigation">
+              <ul class="pagination justify-content-center">
+                <% if (currentPage> 1) { %>
+                <li class="page-item">
+                  <a class="page-link" href="/orders?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %>" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                <% } %> <% for (let i=1; i <=totalPages;
+                                    i++) { %> <% if (i===currentPage) { %>
+                <li class="page-item active">
+                  <span class="page-link">
+                    <%= i %>
+                  </span>
+                </li>
+                <% } else if (i <=3 || i>= totalPages - 2 ||
+                                    Math.abs(i - currentPage) <= 1) { %>
+                <li class="page-item">
+                  <a class="page-link" href="/orders?page=<%= i %><%= search ? '&search=' + search : '' %>">
+                    <%= i %>
+                  </a>
+                </li>
+                <% } else if (i===4 && currentPage> 5) { %>
+                <li class="page-item disabled">
+                  <span class="page-link">...</span>
+                </li>
+                <% } else if (i===totalPages - 3 &&
+                                    currentPage < totalPages - 4) { %>
+                <li class="page-item disabled">
+                  <span class="page-link">...</span>
+                </li>
+                <% } %> <% } %> <% if (currentPage <
+                                    totalPages) { %>
+                <li class="page-item">
+                  <a class="page-link" href="/orders?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %>" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+                <% } %>
+              </ul>
+            </nav>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Order Modal -->
+  <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cancelOrderModalLabel">
+            Cancel Order
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to cancel this order?</p>
+          <form id="cancelOrderForm">
+            <div class="mb-3">
+              <label for="cancellationReason" class="form-label">Reason for cancellation (optional)</label>
+              <textarea class="form-control" id="cancellationReason" rows="3" placeholder="Please provide a reason for cancellation"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+          <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+            Cancel Order
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Return Order Modal -->
+  <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="returnOrderModalLabel">
+            Return Order
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Please provide a reason for returning this order.</p>
+          <form id="returnOrderForm">
+            <div class="mb-3">
+              <label for="returnReason" class="form-label">Reason for return
+                <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="returnReason" rows="3" placeholder="Please provide a reason for return" required></textarea>
+              <div class="invalid-feedback">
+                Please provide a reason for return.
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/order.js"></script>
+</body>
+</html>

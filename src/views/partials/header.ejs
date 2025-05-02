@@ -99,8 +99,7 @@
 
             <div class="user-dropdown">
                 <% if (typeof user !== 'undefined' && user) { %>
-                <!-- If user is logged in -->
-                <a href="/account" class="dropdown-item">My Account</a>
+                <a href="/profile" class="dropdown-item">My Account</a>
                 <a href="/orders" class="dropdown-item">Orders</a>
                 <div class="dropdown-divider"></div>
                 <form action="/logout" method="get">
@@ -117,8 +116,6 @@
         </div>
     </div>
 </header>
-
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
     <div class="mobile-menu-header">
         <div class="brand-name">WEAR<span>iT</span></div>
@@ -134,7 +131,7 @@
 
         <div class="mobile-account-section">
             <span class="mobile-section-title">My Account</span>
-            <a href="/account" class="mobile-account-link">Profile</a>
+            <a href="/profile" class="mobile-account-link">Profile</a>
             <a href="/orders" class="mobile-account-link">Orders</a>
             <form action="/logout" method="get">
                 <button class="mobile-logout-btn" type="submit">Logout</button>

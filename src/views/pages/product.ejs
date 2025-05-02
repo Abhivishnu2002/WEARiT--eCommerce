@@ -266,18 +266,18 @@
                         <div class="row product-row">
                             <% products.forEach(product => { %>
                                 <div class="col-6 col-md-4 col-lg-3 mb-4">
-                                    <a href="/products/<%= product._id %>" class="product-link" style="text-decoration: none;" >
-                                        <div class="product-card">
+                                    <div class="product-card">
+                                        <a href="/products/<%= product._id %>" class="product-link" style="text-decoration: none;">
                                             <div class="product-image">
                                                 <%
                                                     const mainImageObj = product.images && product.images.find(img => img.isMain);
                                                     const mainImageUrl = mainImageObj ? mainImageObj.url : '/images/shirt.jpg';
                                                 %>
-                                            <img
-                                                src="<%= mainImageUrl %>"
-                                                alt="<%= product.name %>"
-                                                class="img-fluid"
-                                            />
+                                                <img
+                                                    src="<%= mainImageUrl %>"
+                                                    alt="<%= product.name %>"
+                                                    class="img-fluid"
+                                                />
                                                 <% if (product.discount > 0) { %>
                                                     <div class="discount-tag">-<%= product.discount %>%</div>
                                                 <% } %>
@@ -316,14 +316,14 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <% if (product.variants && product.variants.some(v => v.varientquatity > 0)) { %>
-                                                    <button class="add-to-cart">Add to cart</button>
-                                                <% } else { %>
-                                                    <button class="add-to-cart sold-out">Out of stock</button>
-                                                <% } %>
                                             </div>
-                                        </div>
-                                    </a>
+                                        </a>
+                                        <% if (product.variants && product.variants.some(v => v.varientquatity > 0)) { %>
+                                            <button class="add-to-cart" data-product-id="<%= product._id %>">Add to cart</button>
+                                        <% } else { %>
+                                            <button class="add-to-cart sold-out">Out of stock</button>
+                                        <% } %>
+                                    </div>
                                 </div>
                             <% }) %>
                         </div>
@@ -426,6 +426,50 @@
                         document.getElementById('filterForm').submit();
                     });
                 });
+                const addToCartButtons = document.querySelectorAll('.add-to-cart:not(.sold-out)');
+                addToCartButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const productLink = this.closest('.product-link');
+                        const productId = productLink.href.split('/').pop();
+                        fetch('/cart/add', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                productId: productId,
+                                quantity: 1
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                if (response.status === 401) {
+                                    window.location.href = '/login';
+                                    return;
+                                }
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            alert('Product added to cart successfully!');
+                            updateCartCount(data.cartCount);
+                        })
+                        .catch(error => {
+                            console.error('Error adding product to cart:', error);
+                            alert('Failed to add product to cart. Please try again.');
+                        });
+                    });
+                });
+                function updateCartCount(count) {
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement) {
+                        cartCountElement.textContent = count;
+                    }
+                }
             });
         </script>
     </body>

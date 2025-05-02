@@ -1,146 +1,311 @@
-const User = require('../../models/userModel');
-const Address = require('../../models/addressModel');
-const Order = require('../../models/orderModel');
-const bcrypt = require('bcrypt');
+const User = require("../../models/userModel")
+const Address = require("../../models/addressModel")
+const Order = require("../../models/orderModel")
+const bcrypt = require("bcrypt")
+const { sendOTPEmail } = require("../../utils/emailService")
 
 const loadProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    const addresses = await Address.find({ user: req.user._id });
+    const user = await User.findById(req.user._id)
+    const addresses = await Address.find({ user: req.user._id })
     const orders = await Order.find({ user: req.user._id })
-      .populate('products.product')
+      .populate("products.product")
       .sort({ orderDate: -1 })
-      .limit(5);
-    
-    res.render('pages/profile', { user, addresses, orders });
+      .limit(5)
+
+    res.render("pages/profile", { user, addresses, orders })
   } catch (error) {
-    console.error('Load profile error:', error);
-    req.flash('error_msg', 'Failed to load profile');
-    res.redirect('/');
+    console.error("Load profile error:", error)
+    req.flash("error_msg", "Failed to load profile")
+    res.redirect("/")
   }
-};
+}
 
 const loadEditProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-    res.render('pages/edit-profile', { user });
+    const user = await User.findById(req.user._id)
+    res.render("pages/profile", { user })
   } catch (error) {
-    console.error('Load edit profile error:', error);
-    req.flash('error_msg', 'Failed to load edit profile');
-    res.redirect('/profile');
+    console.error("Load edit profile error:", error)
+    req.flash("error_msg", "Failed to load edit profile")
+    res.redirect("/profile")
   }
-};
+}
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, mobile } = req.body;
-    
-    await User.findByIdAndUpdate(req.user._id, { name, mobile });
-    
-    req.flash('success_msg', 'Profile updated successfully');
-    res.redirect('/profile');
+    const { name, mobile } = req.body
+
+    if (!name) {
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json({ success: false, message: "Name is required" })
+      }
+      req.flash("error_msg", "Name is required")
+      return res.redirect("/profile/edit")
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, { name, mobile }, { new: true })
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json({
+        success: true,
+        message: "Profile updated successfully",
+        user: {
+          name: updatedUser.name,
+          mobile: updatedUser.mobile || "",
+        },
+      })
+    }
+
+    req.flash("success_msg", "Profile updated successfully")
+    res.redirect("/profile")
   } catch (error) {
-    console.error('Update profile error:', error);
-    req.flash('error_msg', 'Failed to update profile');
-    res.redirect('/profile/edit');
+    console.error("Update profile error:", error)
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(500).json({ success: false, message: "Failed to update profile" })
+    }
+
+    req.flash("error_msg", "Failed to update profile")
+    res.redirect("/profile/edit")
   }
-};
+}
 
 const updateEmail = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.body
 
-    const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
-    if (existingUser) {
-      req.flash('error_msg', 'Email already in use by another account');
-      return res.redirect('/profile/edit');
+    if (!email) {
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json({ success: false, message: "Email is required" })
+      }
+      req.flash("error_msg", "Email is required")
+      return res.redirect("/profile")
+    }
+    if (email === req.user.email) {
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json({ success: false, message: "New email must be different from your current email" })
+      }
+      req.flash("error_msg", "New email must be different from your current email")
+      return res.redirect("/profile")
     }
 
-    const user = await User.findById(req.user._id);
-    const otp = user.generateOTP();
-    user.tempEmail = email;
-    await user.save();
+    const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } })
+    if (existingUser) {
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json({ success: false, message: "Email already in use by another account" })
+      }
+      req.flash("error_msg", "Email already in use by another account")
+      return res.redirect("/profile")
+    }
 
-    req.session.emailUpdatePending = true;
-    req.flash('info_msg', 'An OTP has been sent to your new email for verification');
-    res.redirect('/profile/verify-email');
+    const user = await User.findById(req.user._id)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000)
+    user.otp = otp
+    user.otpExpires = otpExpires
+    user.tempEmail = email
+    await user.save()
+
+    console.log(`Generated OTP: ${otp} for email change to ${email}`)
+    try {
+      await sendOTPEmail(email, otp)
+      console.log(`OTP email sent to ${email}`)
+    } catch (emailError) {
+      console.error("Error sending OTP email:", emailError)
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(500).json({ success: false, message: "Failed to send OTP email. Please try again." })
+      }
+      req.flash("error_msg", "Failed to send OTP email. Please try again.")
+      return res.redirect("/profile")
+    }
+
+    req.session.emailUpdatePending = true
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json({
+        success: true,
+        message: "An OTP has been sent to your new email for verification",
+      })
+    }
+
+    req.flash("info_msg", "An OTP has been sent to your new email for verification")
+    res.redirect("/profile/verify-email")
   } catch (error) {
-    console.error('Update email error:', error);
-    req.flash('error_msg', 'Failed to update email');
-    res.redirect('/profile/edit');
+    console.error("Update email error:", error)
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(500).json({ success: false, message: "Failed to update email" })
+    }
+    req.flash("error_msg", "Failed to update email")
+    res.redirect("/profile")
   }
-};
+}
 
 const loadVerifyEmail = async (req, res) => {
-  if (!req.session.emailUpdatePending) {
-    return res.redirect('/profile');
+  try {
+    if (!req.session.emailUpdatePending) {
+      return res.redirect("/profile")
+    }
+
+    const user = await User.findById(req.user._id)
+    if (!user.tempEmail || !user.otp) {
+      req.session.emailUpdatePending = false
+      req.flash("error_msg", "Email verification session expired")
+      return res.redirect("/profile")
+    }
+
+    res.render("pages/verify-email", { user })
+  } catch (error) {
+    console.error("Load verify email error:", error)
+    req.flash("error_msg", "Failed to load verification page")
+    res.redirect("/profile")
   }
-  
-  res.render('pages/verify-email');
-};
+}
 
 const verifyEmailOtp = async (req, res) => {
   try {
-    const { otp } = req.body;
-    const user = await User.findById(req.user._id);
-    
-    if (!user.verifyOTP(otp)) {
-      req.flash('error_msg', 'Invalid or expired OTP');
-      return res.redirect('/profile/verify-email');
+    const { otp } = req.body
+    console.log("Received OTP:", otp)
+
+    const user = await User.findById(req.user._id)
+    if (!user.otp || user.otp !== otp || !user.otpExpires || new Date() > user.otpExpires) {
+      console.log("OTP verification failed")
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or expired OTP",
+        })
+      }
+
+      req.flash("error_msg", "Invalid or expired OTP")
+      return res.redirect("/profile/verify-email")
+    }
+    const newEmail = user.tempEmail
+    user.email = user.tempEmail
+    user.tempEmail = undefined
+    user.otp = undefined
+    user.otpExpires = undefined
+    await user.save()
+
+    console.log("Email updated successfully")
+    req.session.emailUpdatePending = false
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.json({
+        success: true,
+        message: "Email updated successfully to " + newEmail,
+      })
     }
 
-    user.email = user.tempEmail;
-    user.tempEmail = undefined;
-    user.otp = undefined;
-    await user.save();
-    
-    req.session.emailUpdatePending = false;
-    req.flash('success_msg', 'Email updated successfully');
-    res.redirect('/profile');
+    req.flash("success_msg", "Email updated successfully")
+    res.redirect("/profile")
   } catch (error) {
-    console.error('Verify email OTP error:', error);
-    req.flash('error_msg', 'Failed to verify email');
-    res.redirect('/profile/verify-email');
+    console.error("Verify email OTP error:", error)
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to verify email",
+      })
+    }
+
+    req.flash("error_msg", "Failed to verify email")
+    res.redirect("/profile/verify-email")
   }
-};
+}
+
+const resendOtp = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+
+    if (!user.tempEmail) {
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(400).json({ success: false, message: "No pending email update found" })
+      }
+      req.flash("error_msg", "No pending email update found")
+      return res.redirect("/profile")
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000)
+
+    user.otp = otp
+    user.otpExpires = otpExpires
+    await user.save()
+
+    console.log(`Generated new OTP: ${otp} for email change to ${user.tempEmail}`)
+
+    try {
+      await sendOTPEmail(user.tempEmail, otp)
+      console.log(`OTP email resent to ${user.tempEmail}`)
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.json({ success: true, message: "OTP has been resent to your new email" })
+      }
+
+      req.flash("success_msg", "OTP has been resent to your new email")
+    } catch (emailError) {
+      console.error("Error resending OTP email:", emailError)
+
+      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+        return res.status(500).json({ success: false, message: "Failed to resend OTP email. Please try again." })
+      }
+
+      req.flash("error_msg", "Failed to resend OTP email. Please try again.")
+    }
+
+    if (!req.xhr && req.headers.accept.indexOf("json") === -1) {
+      res.redirect("/profile/verify-email")
+    }
+  } catch (error) {
+    console.error("Resend OTP error:", error)
+
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(500).json({ success: false, message: "Failed to resend OTP" })
+    }
+
+    req.flash("error_msg", "Failed to resend OTP")
+    res.redirect("/profile/verify-email")
+  }
+}
 
 const loadChangePassword = async (req, res) => {
-  res.render('pages/change-password');
-};
+  res.render("pages/change-password")
+}
 
 const updatePassword = async (req, res) => {
   try {
-    const { currentPassword, newPassword, confirmPassword } = req.body;
-    const user = await User.findById(req.user._id);
-    
-    const isMatch = await user.comparePassword(currentPassword);
+    const { currentPassword, newPassword, confirmPassword } = req.body
+    const user = await User.findById(req.user._id)
+
+    const isMatch = await user.comparePassword(currentPassword)
     if (!isMatch) {
-      req.flash('error_msg', 'Current password is incorrect');
-      return res.redirect('/profile/change-password');
-    }
-    
-    if (newPassword !== confirmPassword) {
-      req.flash('error_msg', 'New passwords do not match');
-      return res.redirect('/profile/change-password');
-    }
-    
-    const passwordCheck = User.validatePasswordComplexity(newPassword);
-    if (!passwordCheck.isValid) {
-      req.flash('error_msg', passwordCheck.message);
-      return res.redirect('/profile/change-password');
+      req.flash("error_msg", "Current password is incorrect")
+      return res.redirect("/profile/change-password")
     }
 
-    user.password = newPassword;
-    await user.save();
-    
-    req.flash('success_msg', 'Password updated successfully');
-    res.redirect('/profile');
+    if (newPassword !== confirmPassword) {
+      req.flash("error_msg", "New passwords do not match")
+      return res.redirect("/profile/change-password")
+    }
+
+    const passwordCheck = User.validatePasswordComplexity(newPassword)
+    if (!passwordCheck.isValid) {
+      req.flash("error_msg", passwordCheck.message)
+      return res.redirect("/profile/change-password")
+    }
+
+    user.password = newPassword
+    await user.save()
+
+    req.flash("success_msg", "Password updated successfully")
+    res.redirect("/profile")
   } catch (error) {
-    console.error('Update password error:', error);
-    req.flash('error_msg', 'Failed to update password');
-    res.redirect('/profile/change-password');
+    console.error("Update password error:", error)
+    req.flash("error_msg", "Failed to update password")
+    res.redirect("/profile/change-password")
   }
-};
+}
 
 module.exports = {
   loadProfile,
@@ -149,6 +314,7 @@ module.exports = {
   updateEmail,
   loadVerifyEmail,
   verifyEmailOtp,
+  resendOtp,
   loadChangePassword,
-  updatePassword
-};
+  updatePassword,
+}

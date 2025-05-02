@@ -1,43 +1,83 @@
+<link rel="stylesheet" href="/css/navbar.css" />
 <div class="user-profile-card">
     <div class="user-avatar">
-       
+        <span><%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %></span>
     </div>
-    <h3 class="user-name">
-        Abhijit S S
-    </h3>
+    <h3 class="user-name"><%= user.name || 'User' %></h3>
 
     <div class="sidebar-menu">
-        <a href="/profile" class="menu-item <%= activePage === 'profile' ? 'active' : '' %>">
+        <a
+            href="/profile"
+            class="menu-item <%= activePage === 'profile' ? 'active' : '' %>"
+        >
             <i class="fa-regular fa-user"></i>
             <span>My Profile</span>
         </a>
-        <a href="/profile/address" class="menu-item <%= activePage === 'address' ? 'active' : '' %>">
+        <a
+            href="/profile/addresses"
+            class="menu-item <%= activePage === 'addresses' ? 'active' : '' %>"
+        >
             <i class="fa-solid fa-location-dot"></i>
             <span>My Address</span>
         </a>
-        <a href="/profile/orders" class="menu-item <%= activePage === 'orders' ? 'active' : '' %>">
+        <a
+            href="/orders"
+            class="menu-item <%= activePage === 'orders' ? 'active' : '' %>"
+        >
             <i class="fa-solid fa-bag-shopping"></i>
             <span>My Order</span>
         </a>
-        <a href="/profile/wishlist" class="menu-item <%= activePage === 'wishlist' ? 'active' : '' %>">
+        <a
+            href="/wishlist"
+            class="menu-item <%= activePage === 'wishlist' ? 'active' : '' %>"
+        >
             <i class="fa-solid fa-heart"></i>
-            <span>My Wishlist</span>
+            <span
+                >My Wishlist <% if (typeof wishlistCount !== 'undefined') {
+                %>(<%= wishlistCount %>)<% } %></span
+            >
         </a>
-        <a href="/profile/wallet" class="menu-item <%= activePage === 'wallet' ? 'active' : '' %>">
+        <a
+            href="/cart"
+            class="menu-item <%= activePage === 'cart' ? 'active' : '' %>"
+        >
+            <i class="fa-solid fa-shopping-cart"></i>
+            <span
+                >My cart <% if (typeof cartCount !== 'undefined') { %>(<%=
+                cartCount %>)<% } %></span
+            >
+        </a>
+        <a
+            href="/wallet"
+            class="menu-item <%= activePage === 'wallet' ? 'active' : '' %>"
+        >
             <i class="fa-solid fa-wallet"></i>
             <span>My Wallet</span>
         </a>
-        <a href="/profile/coupons" class="menu-item <%= activePage === 'coupons' ? 'active' : '' %>">
+        <a
+            href="/coupons"
+            class="menu-item <%= activePage === 'coupons' ? 'active' : '' %>"
+        >
             <i class="fa-solid fa-ticket"></i>
             <span>My Coupon</span>
         </a>
-        <a href="/profile/change-password" class="menu-item <%= activePage === 'change-password' ? 'active' : '' %>">
+        <a
+            href="/profile/change-password"
+            class="menu-item <%= activePage === 'change-password' ? 'active' : '' %>"
+        >
             <i class="fa-solid fa-lock"></i>
             <span>Change password</span>
         </a>
         <a href="/logout" class="menu-item">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>Log out</span>
+        </a>
+        <a
+            href="/referral"
+            class="menu-item <%= activePage === 'referral' ? 'active' : '' %>"
+        >
+            <i class="fa-solid fa-users"></i>
+            <span>Referral Code</span>
         </a>
     </div>
 </div>

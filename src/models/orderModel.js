@@ -34,7 +34,9 @@ const orderSchema = new Schema({
         },
         cancellationReason: String,
         returnReason: String,
-        returnRequestDate: Date
+        returnRequestDate: Date,
+        trackingNumber: String,
+        trackingUrl: String
     }],
     address: {
         type: Schema.Types.ObjectId,
@@ -46,16 +48,16 @@ const orderSchema = new Schema({
         required: true
     },
     discount: {
-        type: Numeber,
+        type: Number,
         default: 0
     },
     finalAmount: {
         type: Number,
         required: true
     },
-    paymentMentod: {
+    paymentMethod: {
         type: String,
-        enum: [ 'COD', 'online'],
+        enum: ['COD', 'online'],
         required: true
     },
     orderStatus: {
@@ -66,6 +68,18 @@ const orderSchema = new Schema({
     orderDate: {
         type: Date,
         default: Date.now
+    },
+    trackingDetails: {
+        courier: String,
+        trackingNumber: String,
+        trackingUrl: String,
+        estimatedDelivery: Date,
+        updates: [{
+            status: String,
+            location: String,
+            timestamp: Date,
+            description: String
+        }]
     }
 }, { timestamps: true });
 

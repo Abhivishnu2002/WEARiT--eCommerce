@@ -5,6 +5,7 @@ const authController = require('../controllers/admin/authController')
 const productController = require('../controllers/admin/productController');
 const customerController = require('../controllers/admin/customerController');
 const categoryController = require('../controllers/admin/categoryController');
+const orderController = require('../controllers/admin/orderController')
 const { ensureAuthenticated, isAdminLoggedIn, isAdminLoggedOut, verifyAdminSession } = require('../middlewares/auth');
 const upload = require('../middlewares/uploadMiddleware');
 
@@ -52,5 +53,15 @@ router.post('/editproducts', verifyAdminSession, upload.fields([
 router.post("/update-product-offer", verifyAdminSession, productController.updateProductOffer);
 router.delete("/deleteproduct/:id", verifyAdminSession, productController.deleteProduct);
 router.put("/toggle-product-listing/:id", verifyAdminSession, productController.toggleProductListing);
+
+router.get('/orders', orderController.getAllOrders);
+router.get('/orders/clear-filters', orderController.clearFilters);
+router.get('/orders/:id', orderController.getOrderDetails);
+router.post('/orders/update-status/:id', orderController.updateOrderStatus);
+router.post('/orders/process-return', orderController.processReturnRequest);
+router.get('/orders/:id/invoice', orderController.generateInvoice);
+
+router.get('/inventory', orderController.getInventoryStatus);
+router.post('/inventory/update-stock', orderController.updateProductStock);
 
 module.exports = router;

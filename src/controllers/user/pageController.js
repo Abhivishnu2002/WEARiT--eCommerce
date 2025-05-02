@@ -6,14 +6,6 @@ const loadContact = (req, res) => {
     res.render("pages/contact");
 };
 
-const loadWishlist = (req, res) => {
-    res.render("pages/wishlist");
-};
-
-const loadCart = (req, res) => {
-    res.render("pages/cart");
-};
-
 const loadAbout = (req, res) => {
     res.render("pages/about");
 };
@@ -25,8 +17,6 @@ const loadError = (req, res) => {
 module.exports = {
     loadReferralCode,
     loadContact,
-    loadWishlist,
-    loadCart,
     loadAbout,
     loadError
 }

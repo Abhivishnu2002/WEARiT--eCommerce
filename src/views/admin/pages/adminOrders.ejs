@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Order Management</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+        <link rel="stylesheet" href="/css/admin-navbar.css">
+        <link rel="stylesheet" href="/css/admin-orders.css">
+    </head>
+    <body>
+        <%- include('../partials/navbar', {activePage: 'orders'}) %>
+        <main class="admin-main">
+            <div class="admin-content">
+                <% if (locals.success_msg && success_msg.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <%= success_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+
+                <% if (locals.error_msg && error_msg.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= error_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+
+                <div class="order-header">
+                    <h2>Order</h2>
+                    <div class="breadcrumb-nav">
+                        <a href="/admin/dashboard">Dashboard</a>
+                        <span class="separator">></span>
+                        <span class="current">Order List</span>
+                    </div>
+                </div>
+
+                <div class="search-filter-section">
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search Order..." class="form-control" id="searchOrder">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+
+                    <div class="filter-options">
+                        <div class="time-filters">
+                            <button class="filter-btn active" data-filter="all">All Time</button>
+                            <button class="filter-btn" data-filter="12months">12 Months</button>
+                            <button class="filter-btn" data-filter="30days">30 Days</button>
+                            <button class="filter-btn" data-filter="7days">7 Days</button>
+                            <button class="filter-btn" data-filter="24hour">24 Hour</button>
+                        </div>
+
+                        <div class="date-status-filters">
+                            <button class="date-filter-btn">
+                                <i class="far fa-calendar"></i>
+                                Select Dates
+                            </button>
+                            <button class="status-filter-btn">
+                                <i class="fas fa-filter"></i>
+                                Order status
+                                <i class="fas fa-chevron-down ms-2"></i>
+                            </button>
+                            <button class="filter-btn">
+                                <i class="fas fa-filter"></i>
+                                Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-table-container">
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID <i class="fas fa-sort"></i></th>
+                                <th>Date <i class="fas fa-sort"></i></th>
+                                <th>Customer <i class="fas fa-sort"></i></th>
+                                <th>Order</th>
+                                <th>Total <i class="fas fa-sort"></i></th>
+                                <th>Payment</th>
+                                <th>Status <i class="fas fa-sort"></i></th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (orders && orders.length > 0) { %>
+                                <% orders.forEach(order => { %>
+                                    <tr>
+                                      <td class="order-id-cell">
+                                        <a href="/admin/orders/<%= order._id %>" class="order-link">
+                                          <%= order.orderID %>
+                                        </a>
+                                      </td>
+                                      <td class="date-cell">
+                                        <%= new Date(order.orderDate).toLocaleDateString('en-US', { 
+                                          year: 'numeric', 
+                                          month: 'short', 
+                                          day: 'numeric' 
+                                        }) %>
+                                      </td>
+                                      <td class="customer-cell">
+                                        <div class="customer-info">
+                                          <div class="customer-name"><%= order.user.name %></div>
+                                          <div class="customer-email"><%= order.user.email %></div>
+                                        </div>
+                                      </td>
+                                      <td class="products-cell">
+                                        <div class="product-count">
+                                          <%= order.products.length %> item<%= order.products.length > 1 ? 's' : '' %>
+                                        </div>
+                                      </td>
+                                      <td class="total-cell">₹<%= order.finalAmount.toFixed(2) %></td>
+                                      <td class="payment-cell">
+                                        <span class="payment-method <%= order.paymentMethod === 'COD' ? 'payment-cod' : 'payment-online' %>">
+                                          <%= order.paymentMethod %>
+                                        </span>
+                                      </td>
+                                      <td class="status-cell">
+                                        <span class="status-badge status-<%= order.orderStatus.replace(/\s+/g, '-') %>">
+                                          <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                        </span>
+                                      </td>
+                                      <td class="action-cell">
+                                        <div class="action-buttons">
+                                          <a href="/admin/orders/<%= order._id %>" class="view-btn" title="View Order">
+                                            <i class="fas fa-eye"></i>
+                                          </a>
+                                          <a href="/admin/orders/<%= order._id %>/invoice" class="invoice-btn" title="Generate Invoice">
+                                            <i class="fas fa-file-invoice"></i>
+                                          </a>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8" class="no-orders">No orders found</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <div class="showing-info">
+                        Showing 1-10 from <%= totalOrders || 100 %>
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn prev-btn" <%= currentPage === 1 ? 'disabled' : '' %>>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <% 
+                            const totalPages = Math.ceil((totalOrders || 100) / (limit || 10));
+                            for(let i = 1; i <= totalPages; i++) { 
+                        %>
+                            <button class="pagination-btn number-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></button>
+                        <% } %>
+                        <button class="pagination-btn next-btn" <%= currentPage === totalPages ? 'disabled' : '' %>>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button class="pagination-btn more-btn">...</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+        <script src="/js/admin-navbar.js"></script>
+        <script src="/js/admin-orders.js"></script>
+    </body>
+</html>

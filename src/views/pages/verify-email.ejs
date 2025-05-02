@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Verify Email</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="/css/profile.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+        />
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <div class="container-fluid profile-container">
+            <div class="row">
+                <div class="col-lg-3 col-md-4">
+                    <%- include('../partials/navbar', { activePage: 'profile',
+                    user: user }) %>
+                </div>
+                <div class="col-lg-9 col-md-8">
+                    <div class="profile-content">
+                        <div class="profile-header">
+                            <h2 class="profile-title">Verify Email</h2>
+                        </div>
+
+                        <div class="verify-email-container">
+                            <div class="text-center mb-4">
+                                <i
+                                    class="fas fa-envelope-open-text fa-3x text-primary mb-3"
+                                ></i>
+                                <p class="lead">
+                                    We've sent a verification code to
+                                    <strong><%= user.tempEmail %></strong>
+                                </p>
+                            </div>
+
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Please enter the 6-digit code sent to your new
+                                email address to complete the verification.
+                            </div>
+
+                            <form id="otpForm" class="verify-form">
+                                <div class="mb-4">
+                                    <label for="otp" class="form-label"
+                                        >Enter Verification Code</label
+                                    >
+                                    <input
+                                        type="text"
+                                        class="form-control form-control-lg"
+                                        id="otp"
+                                        name="otp"
+                                        required
+                                        maxlength="6"
+                                        placeholder="Enter 6-digit code"
+                                        autocomplete="off"
+                                        inputmode="numeric"
+                                        pattern="[0-9]{6}"
+                                    />
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button
+                                        type="submit"
+                                        class="btn btn-dark btn-lg"
+                                        id="verifyBtn"
+                                    >
+                                        Verify Email
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary"
+                                        id="resendOtpBtn"
+                                    >
+                                        <i class="fas fa-sync-alt me-2"></i>
+                                        Resend Code
+                                    </button>
+                                    <a
+                                        href="/profile"
+                                        class="btn btn-link text-decoration-none"
+                                    >
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        Back to Profile
+                                    </a>
+                                </div>
+                            </form>
+
+                            <div class="text-center mt-4">
+                                <p class="text-muted small">
+                                    <i class="fas fa-clock me-1"></i> The
+                                    verification code will expire in 10 minutes
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                <% if(typeof messages !== 'undefined') { %>
+                    <% if(messages.success_msg) { %>
+                        Swal.fire({
+                            title: 'Success!',
+                            text: '<%= messages.success_msg %>',
+                            icon: 'success',
+                            confirmButtonColor: '#000000'
+                        });
+                    <% } %>
+                    <% if(messages.error_msg) { %>
+                        Swal.fire({
+                            title: 'Error!',
+                            text: '<%= messages.error_msg %>',
+                            icon: 'error',
+                            confirmButtonColor: '#000000'
+                        });
+                    <% } %>
+                    <% if(messages.info_msg) { %>
+                        Swal.fire({
+                            title: 'Information',
+                            text: '<%= messages.info_msg %>',
+                            icon: 'info',
+                            confirmButtonColor: '#000000'
+                        });
+                    <% } %>
+                <% } %>
+                document.getElementById("otp").focus();
+                document.getElementById("otpForm").addEventListener("submit", function(e) {
+                    e.preventDefault();
+
+                    const otp = document.getElementById("otp").value;
+                    if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+                        Swal.fire({
+                            title: 'Invalid OTP',
+                            text: 'Please enter a valid 6-digit OTP',
+                            icon: 'error',
+                            confirmButtonColor: '#000000'
+                        });
+                        return;
+                    }
+                    const verifyBtn = document.getElementById("verifyBtn");
+                    verifyBtn.disabled = true;
+                    verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verifying...';
+                    fetch('/profile/verify-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ otp: otp })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: data.message || 'Email verified successfully!',
+                                icon: 'success',
+                                confirmButtonColor: '#000000'
+                            }).then(() => {
+                                window.location.href = '/profile';
+                            });
+                        } else {
+                            verifyBtn.disabled = false;
+                            verifyBtn.textContent = 'Verify Email';
+
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Invalid or expired OTP',
+                                icon: 'error',
+                                confirmButtonColor: '#000000'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        verifyBtn.disabled = false;
+                        verifyBtn.textContent = 'Verify Email';
+
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'An error occurred. Please try again.',
+                            icon: 'error',
+                            confirmButtonColor: '#000000'
+                        });
+                    });
+                });
+                document.getElementById("resendOtpBtn").addEventListener("click", function() {
+                    const btn = this;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+
+                    fetch('/profile/resend-otp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Resend Code';
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'OTP Resent!',
+                                text: data.message || 'OTP has been resent to your new email',
+                                icon: 'success',
+                                confirmButtonColor: '#000000'
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Failed to resend OTP',
+                                icon: 'error',
+                                confirmButtonColor: '#000000'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Resend Code';
+
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to resend OTP. Please try again.',
+                            icon: 'error',
+                            confirmButtonColor: '#000000'
+                        });
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

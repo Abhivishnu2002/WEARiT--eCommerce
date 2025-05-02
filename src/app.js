@@ -15,7 +15,6 @@ require('./config/passport.js');
 
 dotenv.config();
 
-
 connectDB();
 
 const app = express();

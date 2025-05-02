@@ -38,11 +38,19 @@ const checkUserStatus = async (req, res, next) => {
 
 const ensureAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
-        return next();
+      return next()
     }
-    req.flash('error_msg', 'Please log in to view this resource');
-    res.redirect('/login');
-};
+    req.session.returnTo = req.originalUrl
+    if (req.xhr || req.headers.accept.indexOf("json") > -1) {
+      return res.status(401).json({
+        success: false,
+        message: "Please log in to view this resource",
+      })
+    }
+    req.flash("error_msg", "Please log in to view this resource")
+    res.redirect("/login")
+  }
+  
 
 const forwardAuthenticated = (req, res, next) => {
     if (!req.isAuthenticated()) {

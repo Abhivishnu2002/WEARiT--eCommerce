@@ -299,6 +299,7 @@ const addProduct = async (req, res) => {
 const loadEditProducts = async (req, res) => {
     try {
         const productId = req.query.id;
+        console.log(productId);
         const product = await Product.findById(productId).populate(
             "categoryId"
         );

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - Add New Address</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="/css/navbar.css" />
+        <link rel="stylesheet" href="/css/address.css" />
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <div class="container-fluid address-container">
+            <div class="row">
+                <div class="col-lg-3 col-md-4">
+                    <%- include('../partials/navbar', { activePage: 'address',
+                    user: user }) %>
+                </div>
+                <div class="col-lg-9 col-md-8">
+                    <div class="address-content">
+                        <div class="address-header">
+                            <h2 class="address-title">Add New Address</h2>
+                            <div class="address-actions">
+                                <a
+                                    href="/profile/addresses"
+                                    class="btn btn-outline-dark"
+                                >
+                                    <i class="fas fa-arrow-left me-2"></i> Back
+                                    to Addresses
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="address-form-container">
+                            <form
+                                action="/profile/addresses/add<%= returnTo === 'checkout' ? '?returnTo=checkout' : '' %>"
+                                method="POST"
+                                class="address-form"
+                            >
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="name" class="form-label"
+                                            >Full Name</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="name"
+                                            name="name"
+                                        />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="mobile" class="form-label"
+                                            >Mobile Number</label
+                                        >
+                                        <input
+                                            type="tel"
+                                            class="form-control"
+                                            id="mobile"
+                                            name="mobile"
+                                            pattern="[0-9]{10}"
+                                            title="Please enter a valid 10-digit mobile number"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="address" class="form-label"
+                                        >Address</label
+                                    >
+                                    <textarea
+                                        class="form-control"
+                                        id="address"
+                                        name="address"
+                                        rows="3"
+                                    ></textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="city" class="form-label"
+                                            >City</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="city"
+                                            name="city"
+                                        />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="state" class="form-label"
+                                            >State</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="state"
+                                            name="state"
+                                        />
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="pincode" class="form-label"
+                                            >Pincode</label
+                                        >
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="pincode"
+                                            name="pincode"
+                                            pattern="[0-9]{6}"
+                                            title="Please enter a valid 6-digit pincode"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            id="isDefault"
+                                            name="isDefault"
+                                            value="true"
+                                        />
+                                        <label
+                                            class="form-check-label"
+                                            for="isDefault"
+                                        >
+                                            Set as default address
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-dark">
+                                        Save Address
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% if(typeof messages !== 'undefined') { %> <% if(messages.success_msg)
+        { %>
+        <div class="alert-float alert-success"><%= messages.success_msg %></div>
+        <% } %> <% if(messages.error_msg) { %>
+        <div class="alert-float alert-danger"><%= messages.error_msg %></div>
+        <% } %> <% } %> <%- include('../partials/footer') %>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </body>
+</html>

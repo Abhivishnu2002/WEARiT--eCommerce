@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WEARiT - Track Order</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/header.css" />
+  <link rel="stylesheet" href="/css/footer.css" />
+  <link rel="stylesheet" href="/css/navbar.css" />
+  <link rel="stylesheet" href="/css/order-tracking.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <div class="container-fluid tracking-container">
+    <div class="row">
+      <div class="col-12 breadcrumb-container">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/profile">Profile</a></li>
+            <li class="breadcrumb-item"><a href="/orders">Orders</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Track Order</li>
+          </ol>
+        </nav>
+      </div>
+      <div class="col-lg-3 col-md-4">
+        <%- include('../partials/navbar', { activePage: 'orders', wishlistCount: wishlistCount || 0 }) %>
+      </div>
+      <div class="col-lg-9 col-md-8">
+        <div class="tracking-content">
+          <div class="tracking-header">
+            <h2 class="tracking-title">Track Order</h2>
+          </div>
+
+          <div class="order-info-section">
+            <div class="order-date-number">
+              <p>Ordered on <%= new Date(order.orderDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %> | Order# <%= order.orderID %></p>
+            </div>
+
+            <div class="row">
+              <div class="col-md-3 col-sm-12">
+                <div class="product-image-container">
+                  <% if (order.products && order.products.length > 0) { %>
+                  <% const product = order.products[0].product %>
+                  <% if (product && product.images && product.images.length > 0) { %>
+                  <img src="<%= product.images[0].url %>" alt="<%= product.name %>" class="product-image">
+                  <% } else { %>
+                  <img src="/images/placeholder.jpg" alt="Product" class="product-image">
+                  <% } %>
+                  <% } else { %>
+                  <img src="/images/placeholder.jpg" alt="Product" class="product-image">
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <div class="shipping-address">
+                  <h4>Shipping Address</h4>
+                  <% if (order.address) { %>
+                  <p class="address-name"><%= order.address.name %></p>
+                  <p class="address-line"><%= order.address.address || order.address.addressLine1 %></p>
+                  <% if (order.address.addressLine2) { %>
+                  <p class="address-line"><%= order.address.addressLine2 %></p>
+                  <% } %>
+                  <p class="address-city-state">
+                    <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %>
+                  </p>
+                  <p class="address-phone">Contact: <%= order.address.mobile %></p>
+                  <% } else { %>
+                  <p>Address information not available</p>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="col-md-5 col-sm-6">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="payment-method">
+                      <h4>Payment Method</h4>
+                      <p>
+                        <%= (order.paymentMethod || order.paymentMentod) === 'COD' ? 'Cash on Delivery' : 'Online Payment' %>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="order-summary">
+                      <h4>Order Summary</h4>
+                      <div class="summary-item">
+                        <span>Items Total:</span>
+                        <span>₹<%= order.totalAmount.toFixed(2) %></span>
+                      </div>
+                      <% if (order.discount > 0) { %>
+                      <div class="summary-item">
+                        <span>Discount:</span>
+                        <span>₹<%= order.discount.toFixed(2) %></span>
+                      </div>
+                      <% } %>
+                      <div class="summary-item grand-total">
+                        <span>Grand Total:</span>
+                        <span>₹<%= order.finalAmount.toFixed(2) %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-status-section">
+            <div class="status-header">
+              <h4>Status:</h4>
+              <span class="status-badge <%= getStatusClass(order.orderStatus || 'pending') %>">
+                <%= (order.orderStatus || 'pending').toUpperCase() %>
+              </span>
+            </div>
+
+            <div class="tracking-progress">
+              <div class="progress-step <%= isStepActive(order.orderStatus || 'pending', 'pending') ? 'active' : '' %> <%= isStepComplete(order.orderStatus || 'pending', 'pending') ? 'completed' : '' %>">
+                <div class="step-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="step-label">Order Confirmed</div>
+                <% if (order.orderDate) { %>
+                <div class="step-date"><%= new Date(order.orderDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                <% } %>
+              </div>
+              <div class="progress-line <%= isStepComplete(order.orderStatus || 'pending', 'pending') ? 'completed' : '' %>"></div>
+
+              <div class="progress-step <%= isStepActive(order.orderStatus || 'pending', 'shipped') ? 'active' : '' %> <%= isStepComplete(order.orderStatus || 'pending', 'shipped') ? 'completed' : '' %>">
+                <div class="step-icon">
+                  <i class="fas fa-shipping-fast"></i>
+                </div>
+                <div class="step-label">Shipped</div>
+                <% if ((order.orderStatus === 'shipped' || order.orderStatus === 'out for delivery' || order.orderStatus === 'delivered') && order.trackingDetails && order.trackingDetails.updates) { %>
+                <% const shippedUpdate = order.trackingDetails.updates.find(update => update.status === 'Order Shipped'); %>
+                <% if (shippedUpdate) { %>
+                <div class="step-date"><%= new Date(shippedUpdate.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                <% } else { %>
+                <div class="step-date"><%= new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                <% } %>
+                <% } %>
+              </div>
+              <div class="progress-line <%= isStepComplete(order.orderStatus || 'pending', 'shipped') ? 'completed' : '' %>"></div>
+
+              <div class="progress-step <%= isStepActive(order.orderStatus || 'pending', 'out for delivery') ? 'active' : '' %> <%= isStepComplete(order.orderStatus || 'pending', 'out for delivery') ? 'completed' : '' %>">
+                <div class="step-icon">
+                  <i class="fas fa-truck"></i>
+                </div>
+                <div class="step-label">Out for Delivery</div>
+                <% if ((order.orderStatus === 'out for delivery' || order.orderStatus === 'delivered') && order.trackingDetails && order.trackingDetails.updates) { %>
+                <% const outForDeliveryUpdate = order.trackingDetails.updates.find(update => update.status === 'Out for Delivery'); %>
+                <% if (outForDeliveryUpdate) { %>
+                <div class="step-date"><%= new Date(outForDeliveryUpdate.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                <% } else { %>
+                <div class="step-date"><%= new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                <% } %>
+                <% } %>
+              </div>
+              <div class="progress-line <%= isStepComplete(order.orderStatus || 'pending', 'out for delivery') ? 'completed' : '' %>"></div>
+
+              <div class="progress-step <%= isStepActive(order.orderStatus || 'pending', 'delivered') ? 'active' : '' %> <%= isStepComplete(order.orderStatus || 'pending', 'delivered') ? 'completed' : '' %>">
+                <div class="step-icon">
+                  <i class="fas fa-box-open"></i>
+                </div>
+                <div class="step-label">Delivered</div>
+                <% if (order.orderStatus === 'delivered' || order.orderStatus === 'return pending' || order.orderStatus === 'returned') { %>
+                <div class="progress-line <%= order.orderStatus === 'return pending' || order.orderStatus === 'returned' ? 'completed' : '' %>"></div>
+
+                <div class="progress-step <%= isStepActive(order.orderStatus, 'return pending') ? 'active' : '' %> <%= isStepComplete(order.orderStatus, 'return pending') ? 'completed' : '' %>">
+                  <div class="step-icon">
+                    <i class="fas fa-undo-alt"></i>
+                  </div>
+                  <div class="step-label">Return Requested</div>
+                  <% if (order.orderStatus === 'return pending' || order.orderStatus === 'returned') { %>
+                  <% const returnDate = order.products.find(p => p.returnRequestDate)?.returnRequestDate; %>
+                  <% if (returnDate) { %>
+                  <div class="step-date"><%= new Date(returnDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                  <% } %>
+                  <% } %>
+                </div>
+
+                <% if (order.orderStatus === 'returned') { %>
+                <div class="progress-line completed"></div>
+
+                <div class="progress-step active completed">
+                  <div class="step-icon">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <div class="step-label">Return Completed</div>
+                  <div class="step-date"><%= new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %></div>
+                </div>
+                <% } %>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="action-buttons mt-4">
+                <% if (canCancelOrder(order.orderStatus || 'pending')) { %>
+                    <button class="btn btn-danger cancel-order-btn" data-order-id="<%= order._id %>">
+                        Cancel Order
+                    </button>
+                <% } %>
+                
+                <% if (order.orderStatus === 'delivered') { %>
+                    <button class="btn btn-warning return-order-btn" data-order-id="<%= order._id %>">
+                        Return Order
+                    </button>
+                <% } %>
+                
+                <a href="/orders/invoice/<%= order._id %>" class="btn btn-primary">
+                    Download Invoice
+                </a>
+            </div>
+          </div>
+
+          <% if (order.trackingDetails && order.trackingDetails.updates && order.trackingDetails.updates.length > 0) { %>
+          <div class="tracking-updates-section mt-4">
+            <h4>Tracking Updates</h4>
+            <div class="tracking-timeline">
+              <% order.trackingDetails.updates.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(update => { %>
+              <div class="timeline-item">
+                <div class="timeline-date">
+                  <%= new Date(update.timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+                  <%= new Date(update.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %>
+                </div>
+                <div class="timeline-content">
+                  <h5><%= update.status %></h5>
+                  <p><%= update.description %></p>
+                  <% if (update.location) { %>
+                  <p class="text-muted"><i class="fas fa-map-marker-alt"></i> <%= update.location %></p>
+                  <% } %>
+                </div>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/order-tracking.js"></script>
+</body>
+
+</html>

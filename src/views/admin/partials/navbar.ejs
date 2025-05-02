@@ -143,11 +143,11 @@
             </li>
             <li class="nav-item">
                 <a
-                    href="/admin/settings"
-                    class="nav-link <%= activePage === 'settings' ? 'active' : '' %>"
+                    href="/admin/inventory"
+                    class="nav-link <%= activePage === 'inventory' ? 'active' : '' %>"
                 >
                     <div class="nav-icon"><i class="fas fa-cog"></i></div>
-                    <span class="nav-text">Settings</span>
+                    <span class="nav-text">Inventory</span>
                 </a>
             </li>
         </ul>
@@ -156,7 +156,7 @@
     <div class="sidebar-footer">
         <div class="user-profile" id="userDropdownToggle">
             <img
-                src="<%= admin.profileImage || '/images/admin-img.png' %>"
+                src="'/images/admin-img.png'"
                 alt="Admin"
                 class="user-avatar"
             />
@@ -198,7 +198,7 @@
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
             >
-                <img src=<%= admin.profileImage || '/images/admin-img.png' %>
+                <img src='/images/admin-img.png'
                 alt="Admin" class="user-avatar" style="width: 32px; height:
                 32px" />
             </button>
