@@ -1,8 +1,7 @@
-// controllers/admin/orderController.js
 const Order = require('../../models/orderModel');
 const User = require('../../models/userModel');
 const Product = require('../../models/productModel');
-const PDFDocument = require('pdfkit');
+const { generateInvoice } = require("../../utils/invoiceGenerator")
 const fs = require('fs');
 const path = require('path');
 
@@ -261,244 +260,178 @@ updateOrderStatus: async (req, res) => {
     });
   }
 },
-  processReturnRequest: async (req, res) => {
+processReturnRequest: async (req, res) => {
     try {
-        const { orderId, productId, action, reason } = req.body;
-        
-        if (!['approve', 'reject'].includes(action)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid action'
-            });
+      const { orderId, productId, action, reason } = req.body
+
+      if (!["approve", "reject"].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid action",
+        })
+      }
+
+      const order = await Order.findById(orderId).populate("user").populate({
+        path: "products.product",
+        select: "name variants",
+      })
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found",
+        })
+      }
+      const productItem = order.products.find((p) => p.product._id.toString() === productId)
+
+      if (!productItem) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found in order",
+        })
+      }
+
+      if (productItem.status !== "return pending") {
+        return res.status(400).json({
+          success: false,
+          message: "No return request found for this product",
+        })
+      }
+
+      if (action === "approve") {
+        productItem.status = "returned"
+
+        const refundAmount = productItem.variant.salePrice * productItem.quantity
+
+        if (!order.user.wallet) {
+          order.user.wallet = {
+            balance: 0,
+            transactions: [],
+          }
         }
-        
-        const order = await Order.findById(orderId)
-            .populate('user')
-            .populate({
-                path: 'products.product',
-                select: 'name variants'
-            });
-        
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order not found'
-            });
-        }
-        const productItem = order.products.find(p => p.product._id.toString() === productId);
-        
-        if (!productItem) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found in order'
-            });
-        }
-        
-        if (productItem.status !== 'return pending') {
-            return res.status(400).json({
-                success: false,
-                message: 'No return request found for this product'
-            });
+        order.user.wallet.balance += refundAmount
+        order.user.wallet.transactions.push({
+          amount: refundAmount,
+          type: "credit",
+          description: `Refund for returned item in order #${order.orderID}`,
+          date: new Date(),
+        })
+
+        await order.user.save()
+
+        try {
+          const product = await Product.findById(productId)
+          if (product) {
+            const variant = product.variants.find((v) => v.size === productItem.variant.size)
+            if (variant) {
+              variant.varientquatity += productItem.quantity
+              await product.save()
+            }
+          }
+        } catch (err) {
+          console.error(`Error restoring stock for product ${productId}:`, err)
         }
 
-        if (action === 'approve') {
-            productItem.status = 'returned';
-            
-            const refundAmount = productItem.variant.salePrice * productItem.quantity;
-            
-            if (!order.user.wallet) {
-                order.user.wallet = {
-                    balance: 0,
-                    transactions: []
-                };
-            }
-            
-            order.user.wallet.balance += refundAmount;
-            order.user.wallet.transactions.push({
-                amount: refundAmount,
-                type: 'credit',
-                description: `Refund for returned item in order #${order.orderID}`,
-                date: new Date()
-            });
-            
-            await order.user.save();
-            
-            try {
-                const product = await Product.findById(productId);
-                if (product) {
-                    const variant = product.variants.find(v => v.size === productItem.variant.size);
-                    if (variant) {
-                        variant.varientquatity += productItem.quantity;
-                        await product.save();
-                    }
-                }
-            } catch (err) {
-                console.error(`Error restoring stock for product ${productId}:`, err);
-            }
-            
-            if (!order.trackingDetails) {
-                order.trackingDetails = { updates: [] };
-            }
-            
-            order.trackingDetails.updates.push({
-                status: 'Return Approved',
-                location: 'Return Center',
-                timestamp: new Date(),
-                description: `Return request approved. Refund of ₹${refundAmount.toFixed(2)} issued to wallet.`
-            });
-            
+        if (!order.trackingDetails) {
+          order.trackingDetails = { updates: [] }
+        }
+
+        order.trackingDetails.updates.push({
+          status: "Return Approved",
+          location: "Return Center",
+          timestamp: new Date(),
+          description: `Return request approved. Refund of ₹${refundAmount.toFixed(2)} issued to wallet.`,
+        })
+      } else {
+        productItem.status = "delivered"
+
+        if (!order.trackingDetails) {
+          order.trackingDetails = { updates: [] }
+        }
+
+        order.trackingDetails.updates.push({
+          status: "Return Rejected",
+          location: "Return Center",
+          timestamp: new Date(),
+          description: `Return request rejected. Reason: ${reason || "No reason provided"}`,
+        })
+      }
+
+      if (reason) {
+        productItem.returnReason = reason
+      }
+      const pendingReturns = order.products.some((p) => p.status === "return pending")
+
+      if (!pendingReturns) {
+        const returnedProducts = order.products.filter((p) => p.status === "returned")
+
+        if (returnedProducts.length === order.products.length) {
+          order.orderStatus = "returned"
+        } else if (returnedProducts.length > 0) {
+          order.orderStatus = "delivered"
+
+          if (!order.trackingDetails) {
+            order.trackingDetails = { updates: [] }
+          }
+
+          order.trackingDetails.updates.push({
+            status: "Partial Return",
+            location: "System",
+            timestamp: new Date(),
+            description: `Some items in this order have been returned.`,
+          })
         } else {
-            productItem.status = 'delivered';
-            
-            if (!order.trackingDetails) {
-                order.trackingDetails = { updates: [] };
-            }
-            
-            order.trackingDetails.updates.push({
-                status: 'Return Rejected',
-                location: 'Return Center',
-                timestamp: new Date(),
-                description: `Return request rejected. Reason: ${reason || 'No reason provided'}`
-            });
+          order.orderStatus = "delivered"
         }
-        
-        if (reason) {
-            productItem.returnReason = reason;
-        }
-        
-        const pendingReturns = order.products.some(p => p.status === 'return pending');
-        if (!pendingReturns) {
-            const allReturned = order.products.every(p => p.status === 'returned');
-            if (allReturned) {
-                order.orderStatus = 'returned';
-            } else {
-                order.orderStatus = 'partially returned';
-            }
-        }
-        
-        await order.save();
-        
-        res.json({
-            success: true,
-            message: `Return request ${action === 'approve' ? 'approved' : 'rejected'} successfully`
-        });
+      }
+
+      await order.save()
+
+      res.json({
+        success: true,
+        message: `Return request ${action === "approve" ? "approved" : "rejected"} successfully`,
+      })
     } catch (error) {
-        console.error('Error processing return request:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to process return request'
-        });
+      console.error("Error processing return request:", error)
+      res.status(500).json({
+        success: false,
+        message: "Failed to process return request",
+      })
     }
-},
+  },
   
 generateInvoice: async (req, res) => {
-  try {
-    const orderId = req.params.id;
-    
-    const order = await Order.findById(orderId)
-      .populate('user', 'name email mobile')
-      .populate({
-        path: 'products.product',
-        select: 'name images color'
-      })
-      .populate('address');
-    
-    if (!order) {
-      return res.status(404).render('errors/404', {
-        error_msg: 'Order not found',
-        admin: req.session.admin
-      });
-    }
-    
-    const subtotal = order.products.reduce((total, item) => {
-      return total + (item.variant.salePrice * item.quantity);
-    }, 0);
+    try {
+      const orderId = req.params.id
 
-    const shippingCost = order.finalAmount - subtotal + (order.discount || 0);
-    const doc = new PDFDocument({ margin: 50 });
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderID}.pdf`);
-    doc.pipe(res);
-    doc.fontSize(20).text('WEARiT', { align: 'center' });
-    doc.fontSize(12).text('Invoice', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(14).text('Order Information', { underline: true });
-    doc.fontSize(10).text(`Order ID: ${order.orderID}`);
-    doc.fontSize(10).text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`);
-    doc.fontSize(10).text(`Payment Method: ${order.paymentMethod}`);
-    doc.fontSize(10).text(`Status: ${order.orderStatus}`);
-    doc.moveDown();
-    doc.fontSize(14).text('Customer Information', { underline: true });
-    doc.fontSize(10).text(`Name: ${order.user.name}`);
-    doc.fontSize(10).text(`Email: ${order.user.email}`);
-    doc.fontSize(10).text(`Phone: ${order.user.mobile || 'N/A'}`);
-    doc.moveDown();
-    doc.fontSize(14).text('Shipping Address', { underline: true });
-    doc.fontSize(10).text(`${order.address.name}`);
-    doc.fontSize(10).text(`${order.address.address}`);
-    doc.fontSize(10).text(`${order.address.city}, ${order.address.state} ${order.address.pincode}`);
-    doc.moveDown();
-    doc.fontSize(14).text('Order Items', { underline: true });
-    doc.moveDown();
+      const order = await Order.findById(orderId)
+        .populate("user", "name email mobile")
+        .populate({
+          path: "products.product",
+          select: "name images color variants",
+        })
+        .populate("address")
 
-    let y = doc.y;
-    doc.fontSize(10);
-    doc.text('Product', 50, y);
-    doc.text('Size', 250, y);
-    doc.text('Qty', 300, y);
-    doc.text('Price', 350, y);
-    doc.text('Total', 450, y);
-    
-    y += 15;
-    doc.moveTo(50, y).lineTo(550, y).stroke();
-    y += 10;
-    
-    order.products.forEach(item => {
-      doc.fontSize(10);
-      doc.text(item.product.name, 50, y, { width: 180 });
-      doc.text(item.variant.size, 250, y);
-      doc.text(item.quantity.toString(), 300, y);
-      doc.text(`₹${item.variant.salePrice.toFixed(2)}`, 350, y);
-      doc.text(`₹${(item.variant.salePrice * item.quantity).toFixed(2)}`, 450, y);
-      y += 20;
-      
-      if (y > 700) {
-        doc.addPage();
-        y = 50;
+      if (!order) {
+        return res.status(404).render("errors/404", {
+          error_msg: "Order not found",
+          admin: req.session.admin,
+        })
       }
-    });
-    
-    doc.moveTo(50, y).lineTo(550, y).stroke();
-    y += 10;
-    
-    doc.text('Subtotal:', 350, y);
-    doc.text(`₹${subtotal.toFixed(2)}`, 450, y);
-    y += 15;
-    
-    doc.text('Shipping:', 350, y);
-    doc.text(`₹${Math.max(0, shippingCost).toFixed(2)}`, 450, y);
-    y += 15;
-    
-    if (order.discount && order.discount > 0) {
-      doc.text('Discount:', 350, y);
-      doc.text(`-₹${order.discount.toFixed(2)}`, 450, y);
-      y += 15;
+      await generateInvoice({
+        order,
+        user: order.user,
+        res,
+        isAdmin: true,
+      })
+    } catch (error) {
+      console.error("Error generating invoice:", error)
+      res.status(500).render("errors/404", {
+        error_msg: "Failed to generate invoice",
+        admin: req.session.admin,
+      })
     }
-    
-    doc.fontSize(12).text('Total:', 350, y);
-    doc.fontSize(12).text(`₹${order.finalAmount.toFixed(2)}`, 450, y);
-    doc.fontSize(10).text('Thank you for shopping with WEARiT!', 50, 700, { align: 'center' });
-    doc.end();
-    
-  } catch (error) {
-    console.error('Error generating invoice:', error);
-    res.status(500).render('errors/404', {
-      error_msg: 'Failed to generate invoice',
-      admin: req.session.admin
-    });
-  }
-},
+  },
   clearFilters: (req, res) => {
     res.redirect('/admin/orders');
   },

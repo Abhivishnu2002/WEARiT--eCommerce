@@ -9,8 +9,11 @@ const wishlistController = require("../controllers/user/wishlistController")
 const profileController = require("../controllers/user/profileController")
 const addressController = require("../controllers/user/addressController")
 const checkoutController = require("../controllers/user/checkoutController")
-const orderController = require('../controllers/user/orderController')
-const walletController = require('../controllers/user/walletController');
+const orderController = require("../controllers/user/orderController")
+const walletController = require("../controllers/user/walletController")
+const couponController = require("../controllers/user/couponController")
+const paymentController = require("../controllers/user/paymentController")
+const referralController = require("../controllers/user/referralController")
 const { forwardAuthenticated, ensureAuthenticated } = require("../middlewares/auth")
 
 router.get("/", authController.loadHome)
@@ -23,7 +26,6 @@ router.get("/login", forwardAuthenticated, authController.loadLogin)
 router.post("/login", forwardAuthenticated, authController.loginUser)
 router.get("/signup", forwardAuthenticated, authController.loadSignup)
 router.post("/signup", forwardAuthenticated, authController.registerUser)
-router.get("/referral", forwardAuthenticated, pageController.loadReferralCode)
 router.get("/otp", authController.loadOtp)
 router.post("/verifyotp", authController.verifyOtp)
 router.post("/resendotp", authController.resendOtp)
@@ -49,10 +51,13 @@ router.get("/cart", ensureAuthenticated, cartController.loadCart)
 router.post("/cart/add", ensureAuthenticated, cartController.addToCart)
 router.post("/cart/update", ensureAuthenticated, cartController.updateCartQuantity)
 router.post("/cart/remove", ensureAuthenticated, cartController.removeFromCart)
+router.post("/cart/empty", ensureAuthenticated, cartController.emptyCart)
 
 router.get("/wishlist", ensureAuthenticated, wishlistController.loadWishlist)
 router.post("/wishlist/add", ensureAuthenticated, wishlistController.addToWishlist)
 router.post("/wishlist/remove", ensureAuthenticated, wishlistController.removeFromWishlist)
+router.get("/wishlist/check", ensureAuthenticated, wishlistController.checkWishlistStatus)
+router.post("/wishlist/empty", ensureAuthenticated, wishlistController.emptyWishlist)
 
 router.get("/profile", ensureAuthenticated, profileController.loadProfile)
 router.get("/profile/edit", ensureAuthenticated, profileController.loadEditProfile)
@@ -73,9 +78,21 @@ router.delete("/profile/addresses/delete/:id", ensureAuthenticated, addressContr
 router.get("/profile/addresses/set-default/:id", ensureAuthenticated, addressController.setDefaultAddress)
 
 router.get("/checkout", ensureAuthenticated, checkoutController.loadCheckout)
+router.get("/coupons", ensureAuthenticated, couponController.getUserCoupons)
+router.get("/checkout/available-coupons", ensureAuthenticated, couponController.getAvailableCoupons)
+router.post("/checkout/apply-coupon", ensureAuthenticated, couponController.applyCoupon)
+router.post("/checkout/remove-coupon", ensureAuthenticated, couponController.removeCoupon)
+router.get("/checkout/session-coupon", ensureAuthenticated, couponController.getSessionCoupon)
 router.get("/payment", ensureAuthenticated, checkoutController.loadPayment)
-router.post("/place-order", ensureAuthenticated, checkoutController.placeOrder)
-router.get("/order-success/:id", ensureAuthenticated, checkoutController.orderSuccess)
+router.post("/checkout/place-order", ensureAuthenticated, checkoutController.placeOrder)
+
+router.post("/payment/paypal/create", ensureAuthenticated, paymentController.createPaypalPayment)
+router.get("/payment/paypal/success", ensureAuthenticated, paymentController.executePaypalPayment)
+router.get("/payment/paypal/cancel", ensureAuthenticated, paymentController.cancelPaypalPayment)
+
+router.get("/order-success/:id", ensureAuthenticated, orderController.orderSuccess)
+router.get("/order-failure/:id", ensureAuthenticated, orderController.orderFailure)
+router.post("/order/retry-payment/:id", ensureAuthenticated, paymentController.retryPayment)
 
 router.get("/profile/orders", ensureAuthenticated, orderController.getOrdersPage)
 router.get("/orders", ensureAuthenticated, orderController.getOrdersPage)
@@ -83,14 +100,22 @@ router.get("/orders/details/:id", ensureAuthenticated, orderController.getOrderD
 router.get("/orders/invoice/:id", ensureAuthenticated, orderController.getOrderInvoice)
 router.post("/orders/cancel/:id", ensureAuthenticated, orderController.cancelOrder)
 router.post("/orders/return/:id", ensureAuthenticated, orderController.returnOrder)
+router.post("/orders/return-product/:orderId/:productId", ensureAuthenticated, orderController.returnProduct)
 router.get("/orders/:id/track", ensureAuthenticated, orderController.trackOrder)
-router.post("/orders/reorder/:id", ensureAuthenticated, orderController.reorder)
+router.post("/orders/reorder/:id", ensureAuthenticated, orderController.reorderItems)
 router.post("/orders/cancel-product/:orderId/:productId", ensureAuthenticated, orderController.cancelProduct)
 router.get("/orders/search", ensureAuthenticated, orderController.searchOrders)
 
-router.get('/wallet', ensureAuthenticated, walletController.getWalletPage);
-router.post('/wallet/add-money', ensureAuthenticated, walletController.addMoney);
-router.post('/wallet/use-balance', ensureAuthenticated, walletController.useWalletBalance);
+router.get("/wallet", ensureAuthenticated, walletController.getWalletPage)
+router.post("/wallet/add-money", ensureAuthenticated, walletController.addMoney)
+router.post("/wallet/use-balance", ensureAuthenticated, walletController.useWalletBalance)
+router.post("/wallet/paypal/create", ensureAuthenticated, walletController.createPaypalOrder)
+router.get("/wallet/paypal/success", ensureAuthenticated, walletController.executePaypalPayment)
+router.get("/wallet/paypal/cancel", ensureAuthenticated, walletController.cancelPaypalPayment)
+
+router.get("/referral", ensureAuthenticated, referralController.loadReferralPage)
+router.get("/referral-entry", forwardAuthenticated, referralController.loadReferralCodeEntry)
+router.post("/validate-referral", referralController.validateReferralCode)
 
 router.get("/404", pageController.loadError)
 

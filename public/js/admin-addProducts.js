@@ -1,250 +1,360 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     try {
-        if (
-            typeof locals !== "undefined" &&
-            locals.success_msg &&
-            success_msg.length > 0
-        ) {
-            Swal.fire({
-                icon: "success",
-                title: "Success",
-                text: success_msg,
-                confirmButtonColor: "#0d6efd",
-            });
-        }
-
-        if (
-            typeof locals !== "undefined" &&
-            locals.error_msg &&
-            error_msg.length > 0
-        ) {
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: error_msg,
-                confirmButtonColor: "#0d6efd",
-            });
-        }
+      if (typeof locals !== "undefined" && locals.success_msg && locals.success_msg.length > 0) {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: locals.success_msg,
+          confirmButtonColor: "#0d6efd",
+        })
+      }
+  
+      if (typeof locals !== "undefined" && locals.error_msg && locals.error_msg.length > 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: locals.error_msg,
+          confirmButtonColor: "#0d6efd",
+        })
+      }
     } catch (e) {
-        console.log("Flash message check error:", e);
+      console.log("Flash message check error:", e)
     }
-    const addVariantBtn = document.getElementById("addVariantBtn");
-    const variantsContainer =
-        document.getElementById("variantsContainer");
-    let variantCount = 1;
-
+    const addVariantBtn = document.getElementById("addVariantBtn")
+    const variantsContainer = document.getElementById("variantsContainer")
+    let variantCount = 1
+  
     if (addVariantBtn && variantsContainer) {
-        addVariantBtn.addEventListener("click", function () {
-            variantCount++;
-            const newVariant = document.createElement("div");
-            newVariant.className = "variant-section";
-            newVariant.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="variant-title mb-0">Variant ${variantCount}</h4>
-                    <span class="remove-variant" data-variant="${variantCount}">
-                        <i class="fas fa-times me-1"></i> Remove
-                    </span>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-3 mb-3 mb-md-0">
-                        <label class="form-label">Size</label>
-                        <input type="text" class="form-control" name="size" required placeholder="S, M, L, XL, etc.">
-                    </div>
-                    <div class="col-md-3 mb-3 mb-md-0">
-                        <label class="form-label">Regular Price (₹)</label>
-                        <input type="number" class="form-control" name="varientPrice" min="0" step="0.01" required>
-                    </div>
-                    <div class="col-md-3 mb-3 mb-md-0">
-                        <label class="form-label">Sale Price (₹)</label>
-                        <input type="number" class="form-control" name="salePrice" min="0" step="0.01" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Quantity</label>
-                        <input type="number" class="form-control" name="varientquatity" min="0" required>
-                    </div>
-                </div>
-            `;
-            variantsContainer.appendChild(newVariant);
-            const removeBtn = newVariant.querySelector(".remove-variant");
-            removeBtn.addEventListener("click", function () {
-                variantsContainer.removeChild(newVariant);
-            });
-        });
+      addVariantBtn.addEventListener("click", () => {
+        variantCount++
+        const newVariant = document.createElement("div")
+        newVariant.className = "variant-section"
+        newVariant.innerHTML = `
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h4 class="variant-title mb-0">Variant ${variantCount}</h4>
+                      <span class="remove-variant" data-variant="${variantCount}">
+                          <i class="fas fa-times me-1"></i> Remove
+                      </span>
+                  </div>
+                  <div class="row mb-3">
+                      <div class="col-md-3 mb-3 mb-md-0">
+                          <label class="form-label">Size</label>
+                          <input type="text" class="form-control" name="size" placeholder="S, M, L, XL, etc.">
+                      </div>
+                      <div class="col-md-3 mb-3 mb-md-0">
+                          <label class="form-label">Regular Price (₹)</label>
+                          <input type="number" class="form-control" name="varientPrice" min="0" step="0.01">
+                      </div>
+                      <div class="col-md-3 mb-3 mb-md-0">
+                          <label class="form-label">Sale Price (₹)</label>
+                          <input type="number" class="form-control" name="salePrice" min="0" step="0.01" >
+                      </div>
+                      <div class="col-md-3">
+                          <label class="form-label">Quantity</label>
+                          <input type="number" class="form-control" name="varientquatity" min="0" >
+                      </div>
+                  </div>
+              `
+        variantsContainer.appendChild(newVariant)
+        const removeBtn = newVariant.querySelector(".remove-variant")
+        removeBtn.addEventListener("click", () => {
+          variantsContainer.removeChild(newVariant)
+        })
+      })
     }
-    function setupImageUpload(
-        containerId,
-        inputId,
-        buttonId,
-        removeButtonId
-    ) {
-        const container = document.getElementById(containerId);
-        const fileInput = document.getElementById(inputId);
-        const uploadButton = document.getElementById(buttonId);
-        const removeButton =
-            document.getElementById(removeButtonId);
-
+    const cropperModalEl = document.getElementById("imageCropperModal")
+    const cropperModal = new bootstrap.Modal(cropperModalEl)
+    let cropper
+    let currentImageInput
+    let currentImageContainer
+    let currentRemoveButton
+    const cropperImage = document.getElementById("cropperImage")
+    const rotateLeftBtn = document.getElementById("rotateLeftBtn")
+    const rotateRightBtn = document.getElementById("rotateRightBtn")
+    const zoomInBtn = document.getElementById("zoomInBtn")
+    const zoomOutBtn = document.getElementById("zoomOutBtn")
+    const resetBtn = document.getElementById("resetBtn")
+    const cropImageBtn = document.getElementById("cropImageBtn")
+    function showError(inputElement, errorMessage) {
+      const errorElement = document.getElementById(inputElement.id + "Error")
+      if (errorElement) {
+        errorElement.textContent = errorMessage
+        errorElement.classList.add("show")
+        inputElement.classList.add("is-invalid")
+      }
+    }
+    function clearError(inputElement) {
+      const errorElement = document.getElementById(inputElement.id + "Error")
+      if (errorElement) {
+        errorElement.textContent = ""
+        errorElement.classList.remove("show")
+        inputElement.classList.remove("is-invalid")
+      }
+    }
+    function clearAllErrors() {
+      const errorElements = document.querySelectorAll(".invalid-feedback")
+      const invalidInputs = document.querySelectorAll(".is-invalid")
+  
+      errorElements.forEach((el) => {
+        el.textContent = ""
+        el.classList.remove("show")
+      })
+  
+      invalidInputs.forEach((input) => {
+        input.classList.remove("is-invalid")
+      })
+    }
+    function initializeImageUploader(inputId, containerId, removeBtnId, btnId) {
+      const inputElement = document.getElementById(inputId)
+      const containerElement = document.getElementById(containerId)
+      const removeBtnElement = document.getElementById(removeBtnId)
+      const btnElement = document.getElementById(btnId)
+  
+      if (!inputElement || !containerElement || !removeBtnElement || !btnElement) {
+        console.error(`Missing elements for image uploader: ${inputId}`)
+        return
+      }
+      btnElement.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        inputElement.click()
+      })
+      containerElement.addEventListener("click", (e) => {
         if (
-            !container ||
-            !fileInput ||
-            !uploadButton ||
-            !removeButton
+          e.target !== btnElement &&
+          !btnElement.contains(e.target) &&
+          e.target !== removeBtnElement &&
+          !removeBtnElement.contains(e.target)
         ) {
-            console.error(
-                `Missing elements for ${containerId}, ${inputId}, ${buttonId}, or ${removeButtonId}`
-            );
-            return;
+          inputElement.click()
         }
-        uploadButton.addEventListener("click", function (e) {
-            e.stopPropagation();
-            fileInput.click();
-        });
-        container.addEventListener("click", function (e) {
-            if (
-                e.target !== uploadButton &&
-                !uploadButton.contains(e.target) &&
-                e.target !== removeButton &&
-                !removeButton.contains(e.target)
-            ) {
-                fileInput.click();
-            }
-        });
-
-        fileInput.addEventListener("change", function () {
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    container.innerHTML = "";
-
-                    const img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.className = "image-preview";
-                    container.appendChild(img);
-
-                    removeButton.classList.remove("d-none");
-                };
-
-                reader.readAsDataURL(fileInput.files[0]);
-            }
-        });
-
-        removeButton.addEventListener("click", function (e) {
-            e.stopPropagation();
-
-            fileInput.value = "";
-
-            container.innerHTML = `
-                <i class="fas fa-image upload-icon"></i>
-                <p class="upload-text">Drag and drop image here, or click to add image</p>
-                <button type="button" class="btn-upload" id="${buttonId}">Add Image</button>
-            `;
-
-            const newButton = document.getElementById(buttonId);
-            if (newButton) {
-                newButton.addEventListener("click", function (e) {
-                    e.stopPropagation();
-                    fileInput.click();
-                });
-            }
-
-            removeButton.classList.add("d-none");
-        });
-
-        container.addEventListener("dragover", function (e) {
-            e.preventDefault();
-            container.style.borderColor = "#0d6efd";
-        });
-
-        container.addEventListener("dragleave", function (e) {
-            e.preventDefault();
-            container.style.borderColor = "#dee2e6";
-        });
-
-        container.addEventListener("drop", function (e) {
-            e.preventDefault();
-            container.style.borderColor = "#dee2e6";
-
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                fileInput.files = e.dataTransfer.files;
-
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    container.innerHTML = "";
-                    const img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.className = "image-preview";
-                    container.appendChild(img);
-                    removeButton.classList.remove("d-none");
-                };
-
-                reader.readAsDataURL(e.dataTransfer.files[0]);
-            }
-        });
+      })
+      inputElement.addEventListener("change", () => {
+        if (inputElement.files && inputElement.files[0]) {
+          currentImageInput = inputElement
+          currentImageContainer = containerElement
+          currentRemoveButton = removeBtnElement
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            cropperImage.src = e.target.result
+            cropperModal.show()
+            cropperModalEl.addEventListener(
+              "shown.bs.modal",
+              function initCropper() {
+                if (cropper) {
+                  cropper.destroy()
+                }
+                cropper = new Cropper(cropperImage, {
+                  aspectRatio: 4 / 5,
+                  viewMode: 1,
+                  dragMode: "move",
+                  autoCropArea: 0.8,
+                  restore: false,
+                  guides: true,
+                  center: true,
+                  highlight: false,
+                  cropBoxMovable: true,
+                  cropBoxResizable: true,
+                  toggleDragModeOnDblclick: false,
+                })
+                cropperModalEl.removeEventListener("shown.bs.modal", initCropper)
+              },
+              { once: true },
+            )
+          }
+          reader.readAsDataURL(inputElement.files[0])
+        }
+      })
+      removeBtnElement.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        inputElement.value = ""
+        containerElement.innerHTML = `
+          <i class="fas fa-image upload-icon"></i>
+          <p class="upload-text">Drag and drop image here, or click to add image</p>
+          <button type="button" class="btn-upload" id="${btnId}">Add Image</button>
+        `
+        const newBtn = document.getElementById(btnId)
+        if (newBtn) {
+          newBtn.addEventListener("click", (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            inputElement.click()
+          })
+        }
+        removeBtnElement.classList.add("d-none")
+        clearError(inputElement)
+      })
+      containerElement.addEventListener("dragover", (e) => {
+        e.preventDefault()
+        containerElement.style.borderColor = "#0d6efd"
+      })
+      containerElement.addEventListener("dragleave", (e) => {
+        e.preventDefault()
+        containerElement.style.borderColor = "#dee2e6"
+      })
+      containerElement.addEventListener("drop", (e) => {
+        e.preventDefault()
+        containerElement.style.borderColor = "#dee2e6"
+  
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          inputElement.files = e.dataTransfer.files
+          const changeEvent = new Event("change", { bubbles: true })
+          inputElement.dispatchEvent(changeEvent)
+        }
+      })
     }
-    setupImageUpload(
-        "mainPhotoUpload",
-        "mainImage",
-        "mainImageBtn",
-        "removeMainImage"
-    );
-    setupImageUpload(
-        "additionalPhoto1Container",
-        "additionalImage1",
-        "additionalImage1Btn",
-        "removeAdditionalPhoto1"
-    );
-    setupImageUpload(
-        "additionalPhoto2Container",
-        "additionalImage2",
-        "additionalImage2Btn",
-        "removeAdditionalPhoto2"
-    );
-    setupImageUpload(
-        "additionalPhoto3Container",
-        "additionalImage3",
-        "additionalImage3Btn",
-        "removeAdditionalPhoto3"
-    );
-    const form = document.getElementById("addProductForm");
-    if (form) {
-        form.addEventListener("submit", function (e) {
-            const productName = document
-                .getElementById("productName")
-                .value.trim();
-            const description = document
-                .getElementById("description")
-                .value.trim();
-            const category =
-                document.getElementById("category").value;
-            const mainImage =
-                document.getElementById("mainImage").files.length;
-
-            let isValid = true;
-            let errorMessage = "";
-
-            if (!productName) {
-                isValid = false;
-                errorMessage = "Product name is required";
-            } else if (!description) {
-                isValid = false;
-                errorMessage = "Product description is required";
-            } else if (!category) {
-                isValid = false;
-                errorMessage = "Category selection is required";
-            } else if (!mainImage) {
-                isValid = false;
-                errorMessage = "Main product image is required";
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: "error",
-                    title: "Validation Error",
-                    text: errorMessage,
-                    confirmButtonColor: "#0d6efd",
-                });
-            }
-        });
+    initializeImageUploader("mainImage", "mainPhotoUpload", "removeMainImage", "mainImageBtn")
+    initializeImageUploader(
+      "additionalImage1",
+      "additionalPhoto1Container",
+      "removeAdditionalImage1",
+      "additionalImage1Btn",
+    )
+    initializeImageUploader(
+      "additionalImage2",
+      "additionalPhoto2Container",
+      "removeAdditionalImage2",
+      "additionalImage2Btn",
+    )
+    initializeImageUploader(
+      "additionalImage3",
+      "additionalPhoto3Container",
+      "removeAdditionalImage3",
+      "additionalImage3Btn",
+    )
+    if (rotateLeftBtn) {
+      rotateLeftBtn.addEventListener("click", () => {
+        if (cropper) cropper.rotate(-90)
+      })
     }
-});
+  
+    if (rotateRightBtn) {
+      rotateRightBtn.addEventListener("click", () => {
+        if (cropper) cropper.rotate(90)
+      })
+    }
+  
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener("click", () => {
+        if (cropper) cropper.zoom(0.1)
+      })
+    }
+  
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener("click", () => {
+        if (cropper) cropper.zoom(-0.1)
+      })
+    }
+  
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        if (cropper) cropper.reset()
+      })
+    }
+    if (cropImageBtn) {
+      cropImageBtn.addEventListener("click", () => {
+        if (!cropper || !currentImageInput || !currentImageContainer || !currentRemoveButton) return
+        const canvas = cropper.getCroppedCanvas({
+          width: 800,
+          height: 1000,
+          fillColor: "#fff",
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: "high",
+        })
+  
+        if (!canvas) return
+        canvas.toBlob((blob) => {
+          const file = new File([blob], "cropped-image.png", { type: "image/png" })
+          const dataTransfer = new DataTransfer()
+          dataTransfer.items.add(file)
+          currentImageInput.files = dataTransfer.files
+          const imageUrl = URL.createObjectURL(blob)
+          currentImageContainer.innerHTML = ""
+          const img = document.createElement("img")
+          img.src = imageUrl
+          img.className = "image-preview"
+          currentImageContainer.appendChild(img)
+          currentRemoveButton.classList.remove("d-none")
+          clearError(currentImageInput)
+          cropperModal.hide()
+          cropper.destroy()
+          cropper = null
+        }, "image/png")
+      })
+    }
+    cropperModalEl.addEventListener("hidden.bs.modal", () => {
+      if (cropper) {
+        cropper.destroy()
+        cropper = null
+      }
+    })
+    const productForm = document.getElementById("addProductForm")
+  
+    if (productForm) {
+      productForm.addEventListener("submit", (e) => {
+        e.preventDefault()
+        clearAllErrors()
+        let isValid = true
+        const productName = document.getElementById("productName")
+        const description = document.getElementById("description")
+        const category = document.getElementById("category")
+        const color = document.getElementById("color")
+        const fabric = document.getElementById("fabric")
+        const mainImage = document.getElementById("mainImage")
+        if (!productName.value.trim()) {
+          showError(productName, "Product name is required")
+          isValid = false
+        }
+        if (!description.value.trim()) {
+          showError(description, "Product description is required")
+          isValid = false
+        }
+        if (!category.value) {
+          showError(category, "Category selection is required")
+          isValid = false
+        }
+        if (!color.value.trim()) {
+          showError(color, "Product color is required")
+          isValid = false
+        }
+        if (!fabric.value.trim()) {
+          showError(fabric, "Fabric type is required")
+          isValid = false
+        }
+        if (!mainImage.files || !mainImage.files.length) {
+          document.getElementById("mainPhotoUpload").classList.add("is-invalid")
+          document.getElementById("mainImageError").textContent = "Main product image is required"
+          document.getElementById("mainImageError").classList.add("show")
+          isValid = false
+        }
+        const variantPrices = document.querySelectorAll('input[name="varientPrice"]')
+        const variantQuantities = document.querySelectorAll('input[name="varientquatity"]')
+        let hasValidVariant = false
+  
+        for (let i = 0; i < variantPrices.length; i++) {
+          const price = variantPrices[i].value.trim()
+          const quantity = variantQuantities[i].value.trim()
+  
+          if (price && quantity) {
+            hasValidVariant = true
+          }
+        }
+  
+        if (!hasValidVariant) {
+          showError(variantPrices[0], "At least one variant must have price and quantity")
+          showError(variantQuantities[0], "At least one variant must have price and quantity")
+          isValid = false
+        }
+        if (isValid) {
+          productForm.submit()
+        } else {
+          const firstError = document.querySelector(".invalid-feedback.show")
+          if (firstError) {
+            firstError.scrollIntoView({ behavior: "smooth", block: "center" })
+          }
+        }
+      })
+    }
+  })
+  

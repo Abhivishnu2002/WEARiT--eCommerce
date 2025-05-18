@@ -6,165 +6,193 @@
   <title>Payment - WEARIT</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/footer.css" />
-  <link rel="stylesheet" href="/css/checkout.css" />
+  <link rel="stylesheet" href="/css/order-flow.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
-  <div class="checkout-container">
+  
+  <div class="order-flow-container">
+    <!-- Page Title -->
+    <div class="checkout-title-container text-center">
+      <h1 class="checkout-title">Checkout</h1>
+      <p class="checkout-subtitle">Complete your purchase by selecting a payment method</p>
+    </div>
+    
     <div class="row">
-      <div class="col-lg-8">
-        <div class="checkout-content mb-4">
-          <div class="checkout-header">
-            <h2 class="checkout-title">
-              Payment Method
-            </h2>
+      <!-- Payment Options (Left Column) -->
+      <div class="col-lg-7 mb-4 mb-lg-0">
+        <div class="order-flow-card">
+          <div class="order-flow-header">
+            <div class="status-icon payment">
+              <i class="bi bi-credit-card"></i>
+            </div>
+            <h2 class="order-flow-title">Select Payment Method</h2>
+            <p class="order-flow-subtitle">Choose your preferred payment option</p>
           </div>
-          <form id="payment-form" action="/place-order" method="POST">
-            <input type="hidden" name="addressId" value="<%= addressId %>" />
 
-            <div class="mb-4">
-              <p class="mb-3">Select any payment methods</p>
-
-              <div class="payment-method-card">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="card" value="card" checked />
-                  <label class="form-check-label d-flex justify-content-between align-items-center" for="card">
-                    <span>Debit Card / Credit Card</span>
-                    <div class="payment-icons">
-                      <img src="/images/payment/rupay.png" alt="RuPay" height="25" />
-                      <img src="/images/payment/visa.png" alt="Visa" height="25" />
-                      <img src="/images/payment/mastercard.png" alt="Mastercard" height="25" />
-                      <img src="/images/payment/freecharge.png" alt="Freecharge" height="25" />
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="payment-method-card">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="bank" value="bank" />
-                  <label class="form-check-label" for="bank">
-                    Bank
-                  </label>
-                </div>
-              </div>
-
-              <div class="payment-method-card">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi" />
-                  <label class="form-check-label" for="upi">
-                    UPI Method
-                  </label>
-                </div>
-              </div>
-
-              <div class="payment-method-card">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" />
-                  <label class="form-check-label" for="cod">
-                    Cash on delivery
-                  </label>
-                </div>
-              </div>
-
-              <div class="payment-method-card">
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet" />
-                  <label class="form-check-label" for="wallet">
-                    Wallet
-                  </label>
-                </div>
-              </div>
+          <!-- Display flash messages -->
+          <% if (typeof messages !== 'undefined' && messages.error_msg && messages.error_msg.length > 0) { %>
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-circle me-2"></i>
+              <%= messages.error_msg[0] %>
             </div>
+          <% } %>
 
-            <div class="d-flex justify-content-between mt-4">
-              <a href="/checkout" class="btn btn-outline">Back to Address</a>
-              <button type="submit" class="btn btn-checkout">
-                Place Order
-              </button>
-            </div>
-          </form>
+          <div class="payment-methods">
+            <form id="order-form" action="/checkout/place-order" method="POST">
+              <input type="hidden" name="addressId" value="<%= addressId %>">
+              <!-- This hidden input will hold the selected payment method -->
+              <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod" value="COD">
+              <input type="hidden" id="hiddenOrderId" name="orderId" value="<%= typeof orderId !== 'undefined' ? orderId : '' %>">
+              
+              <div class="payment-method-selection">
+                <div class="payment-method-card mb-3" data-method="COD">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" checked>
+                    <label class="form-check-label" for="paymentMethodCOD">
+                      <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>
+                        <div>
+                          <span class="d-block fw-bold">Cash on Delivery</span>
+                          <small class="text-muted">Pay when you receive your order</small>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="payment-method-card mb-3" data-method="paypal">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal">
+                    <label class="form-check-label" for="paymentMethodPaypal">
+                      <div class="d-flex align-items-center">
+                        <i class="fa-brands fa-paypal me-3 fs-4 text-primary"></i>
+                        <div>
+                          <span class="d-block fw-bold">PayPal</span>
+                          <small class="text-muted">Pay securely with PayPal</small>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <% if (user && user.wallet && user.wallet.balance > 0) { %>
+                <div class="payment-method-card mb-3" data-method="wallet">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodWallet" value="wallet" 
+                      <%= user.wallet.balance < totals.finalAmount ? 'disabled' : '' %>>
+                    <label class="form-check-label <%= user.wallet.balance < totals.finalAmount ? 'text-muted' : '' %>" for="paymentMethodWallet">
+                      <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-wallet me-3 fs-4"></i>
+                        <div>
+                          <span class="d-block fw-bold">Wallet Balance</span>
+                          <small class="<%= user.wallet.balance < totals.finalAmount ? 'text-danger' : 'text-success' %>">
+                            Available: ₹<%= user.wallet.balance.toFixed(2) %>
+                            <% if (user.wallet.balance < totals.finalAmount) { %>
+                              (Insufficient balance)
+                            <% } %>
+                          </small>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                <% } %>
+              </div>
+
+              <div id="paypal-button-container" class="mt-4 d-none"></div>
+              <div id="paypal-error" class="alert alert-danger mt-3 d-none"></div>
+
+              <div class="action-buttons">
+                <a href="/checkout" class="btn btn-outline-primary">
+                  <i class="bi bi-arrow-left me-2"></i> Back
+                </a>
+                <button type="submit" id="place-order-btn" class="btn btn-primary">
+                  <i class="bi bi-check-circle me-2"></i> Place Order
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="order-summary">
+      <!-- Order Summary (Right Column) -->
+      <div class="col-lg-5">
+        <div class="order-summary h-100">
           <div class="order-summary-header">
             <h5 class="order-summary-title">ORDER SUMMARY</h5>
           </div>
           <div class="order-summary-content">
             <% if (cart && cart.products) { %> 
               <% cart.products.forEach(item => { %>
-            <div class="order-item">
-              <% const variant = item.product.variants.find(v=> v.size === item.size); 
-                 const mainImage = item.product.images.find(img => img.isMain) || item.product.images[0]; %>
-              <div class="order-item-image">
-                <img src="<%= mainImage ? mainImage.thumbnail : '/images/placeholder.jpg' %>" alt="<%= item.product.name %>" />
+                <div class="order-item">
+                  <% const variant = item.product.variants.find(v=> v.size === item.size); 
+                     const mainImage = item.product.images.find(img => img.isMain) || item.product.images[0]; %>
+                  <div class="order-item-image">
+                    <img src="<%= mainImage ? mainImage.thumbnail : '/images/placeholder.jpg' %>" alt="<%= item.product.name %>" />
+                  </div>
+                  <div class="order-item-details">
+                    <div class="order-item-title">
+                      <%= item.product.name %>
+                    </div>
+                    <div class="order-item-meta">
+                      Qty: <%= item.quantity %> | Size: <%= item.size %>
+                    </div>
+                  </div>
+                  <div class="order-item-price">
+                    <% if (variant) { %> 
+                      <% if (variant.varientPrice !== variant.salePrice){ %>
+                        <div class="price-original">
+                          ₹<%= variant.varientPrice %>
+                        </div>
+                        <div class="price-final">
+                          ₹<%= variant.salePrice %>
+                        </div>
+                      <% } else { %>
+                        <div class="price-final">
+                          ₹<%= variant.salePrice %>
+                        </div>
+                      <% } %> 
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+
+              <div class="order-summary-row">
+                <span>Subtotal:</span>
+                <span id="subtotal-value">₹<%= totals.subtotal.toFixed(2) %></span>
               </div>
-              <div class="order-item-details">
-                <div class="order-item-title">
-                  <%= item.product.name %>
-                </div>
-                <div class="order-item-meta">
-                  Qty: <%= item.quantity %> | Size: <%= item.size %>
-                </div>
+
+              <div class="order-summary-row">
+                <span>Discount:</span>
+                <span class="discount-text" id="discount-value">-₹<%= totals.discount.toFixed(2) %></span>
               </div>
-              <div class="order-item-price">
-                <% if (variant) { %> <% if (variant.varientPrice !== variant.salePrice){ %>
-                <div class="price-original">
-                  ₹<%= variant.varientPrice %>
-                </div>
-                <div class="price-final">
-                  ₹<%= variant.salePrice %>
-                </div>
-                <% } else { %>
-                <div class="price-final">
-                  ₹<%= variant.salePrice %>
-                </div>
-                <% } %> <% } %>
+
+              <% if (couponDiscount && couponDiscount > 0) { %>
+              <div class="order-summary-row">
+                <span>Coupon Discount:</span>
+                <span class="discount-text" id="coupon-discount-value">-₹<%= couponDiscount.toFixed(2) %></span>
               </div>
-            </div>
-            <% }); %>
-
-            <div class="order-summary-row">
-              <span>Subtotal:</span>
-              <span>₹<%= totals.subtotal.toFixed(2) %></span>
-            </div>
-
-            <div class="order-summary-row">
-              <span>Discount:</span>
-              <span class="discount-text">-₹<%= totals.discount.toFixed(2) %></span>
-            </div>
-
-            <div class="order-summary-row">
-              <span>Tax (5%):</span>
-              <span>₹<%= totals.tax.toFixed(2) %></span>
-            </div>
-
-            <div class="order-summary-row">
-              <span>Shipping:</span>
-              <% if (totals.shipping === 0) { %>
-              <span class="discount-text">Free</span>
-              <% } else { %>
-              <span>₹<%= totals.shipping.toFixed(2) %></span>
               <% } %>
-            </div>
 
-            <% if (couponDiscount && couponDiscount > 0) { %>
-            <div class="order-summary-row">
-              <span>Coupon discount:</span>
-              <span class="discount-text">-₹<%= couponDiscount.toFixed(2) %></span>
-            </div>
-            <% } %>
+              <div class="order-summary-row">
+                <span>Shipping:</span>
+                <% if (totals.shipping === 0) { %>
+                  <span class="discount-text" id="shipping-value">Free</span>
+                <% } else { %>
+                  <span id="shipping-value">₹<%= totals.shipping.toFixed(2) %></span>
+                <% } %>
+              </div>
 
-            <div class="order-summary-row total">
-              <span>Total:</span>
-              <span>₹<%= totals.finalAmount %></span>
-            </div>
+              <div class="order-summary-row total">
+                <span>Total:</span>
+                <span id="finalAmount">₹<%= totals.finalAmount %></span>
+              </div>
             <% } %>
           </div>
         </div>
@@ -172,24 +200,23 @@
     </div>
   </div>
 
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background-color: rgba(0,0,0,0.7); z-index: 9999;">
+    <div class="position-absolute top-50 start-50 translate-middle text-white text-center">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2" id="loading-message">Processing your order...</p>
+      <p class="small text-white-50">Please do not close this window</p>
+    </div>
+  </div>
+
   <%- include('../partials/footer') %>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="/js/header.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const paymentMethodCards = document.querySelectorAll(".payment-method-card");
 
-      paymentMethodCards.forEach((card) => {
-        card.addEventListener("click", function() {
-          const radio = this.querySelector('input[type="radio"]');
-          if (radio) {
-            radio.checked = true;
-          }
-        });
-      });
-    });
-  </script>
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=<%= process.env.PAYPAL_CLIENT_ID %>&currency=USD"></script>
+  <script src="/js/payment.js"></script>
 </body>
-
 </html>

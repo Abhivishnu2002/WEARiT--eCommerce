@@ -1,4 +1,3 @@
-<!-- views/pages/wallet.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,115 +14,228 @@
 </head>
 <body>
     <%- include('../partials/header') %>
-    <div class="container my-4">
-        <div class="breadcrumb-container">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/profile">profile</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">wallet</li>
-                </ol>
-            </nav>
-        </div>
-
+    
+    <div class="container-fluid wallet-container">
         <div class="row">
-            <div class="col-lg-3 mb-4">
+            <div class="col-lg-3 col-md-4">
                 <%- include('../partials/navbar', { activePage: 'wallet', wishlistCount: wishlistCount || 0 }) %>
             </div>
-            <div class="col-lg-9">
-                <div class="wallet-card">
-                    <h2 class="wallet-title">My Wallet</h2>
-                    <div class="wallet-balance-card mt-4">
+
+            <div class="col-lg-9 col-md-8">
+                <!-- Flash Messages -->
+                <% if (messages && messages.success_msg && messages.success_msg.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i> <%= messages.success_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+                
+                <% if (messages && messages.error_msg && messages.error_msg.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> <%= messages.error_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+
+                <!-- Wallet Content -->
+                <div class="wallet-content">
+                    <div class="wallet-header">
+                        <h1 class="wallet-title">MY WALLET</h1>
+                        <button class="btn add-money-btn" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                            <i class="fas fa-plus me-2"></i> Add Money
+                        </button>
+                    </div>
+
+                    <!-- Wallet Balance -->
+                    <div class="wallet-balance-card">
                         <div class="wallet-balance">
-                            <h5>Available wallet balance : </h5>
-                            <h5 class="balance-amount">₹<%= user.wallet ? user.wallet.balance.toFixed(2) : '0.00' %></h5>
+                            <div class="balance-label">Available Balance</div>
+                            <div class="balance-amount">₹<%= user.wallet ? user.wallet.balance.toFixed(2) : '0.00' %></div>
                         </div>
                     </div>
 
-                    <div class="wallet-transactions mt-4">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Transaction ID</th>
-                                        <th>Transaction Date</th>
-                                        <th>Amount</th>
-                                        <th>Description</th>
-                                        <th>Debit / Credit</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% if (user.wallet && user.wallet.transactions && user.wallet.transactions.length > 0) { %>
-                                        <% user.wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(transaction => { %>
+                    <!-- Transaction History -->
+                    <h2 class="h5 mb-3">Transaction History</h2>
+                    <div class="wallet-transactions">
+                        <% if (transactions && transactions.length > 0) { %>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Transaction ID</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Description</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% transactions.forEach(transaction => { %>
                                             <tr>
-                                                <td><%= transaction._id %></td>
-                                                <td><%= new Date(transaction.date).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></td>
-                                                <td><%= transaction.amount.toFixed(2) %></td>
-                                                <td><%= transaction.description %></td>
-                                                <td class="<%= transaction.type === 'debit' ? 'text-danger' : 'text-success' %>">
-                                                    <%= transaction.type === 'debit' ? 'Amount Debited' : 'Amount Credited' %>
+                                                <td class="transaction-id"><%= transaction.transactionId %></td>
+                                                <td class="transaction-date"><%= new Date(transaction.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
+                                                <td class="transaction-amount">
+                                                    <% if (transaction.paymentDetails && transaction.paymentDetails.type === 'wallet_add') { %>
+                                                        <span class="text-success">+₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } else if (transaction.paymentDetails && transaction.paymentDetails.type === 'order_payment') { %>
+                                                        <span class="text-danger">-₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } else if (transaction.paymentMethod === 'wallet') { %>
+                                                        <span class="text-danger">-₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } else { %>
+                                                        <span>₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } %>
+                                                </td>
+                                                <td class="transaction-description">
+                                                    <% if (transaction.paymentDetails && transaction.paymentDetails.description) { %>
+                                                        <%= transaction.paymentDetails.description %>
+                                                    <% } else { %>
+                                                        <%= transaction.paymentMethod %> transaction
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (transaction.status === 'completed') { %>
+                                                        <span class="badge bg-success">Completed</span>
+                                                    <% } else if (transaction.status === 'pending') { %>
+                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                    <% } else if (transaction.status === 'failed') { %>
+                                                        <span class="badge bg-danger">Failed</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary"><%= transaction.status %></span>
+                                                    <% } %>
                                                 </td>
                                             </tr>
                                         <% }); %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="5" class="text-center">No transactions found</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-4">
-                        <button class="btn btn-dark add-money-btn" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
-                            ADD Money
-                        </button>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <% if (totalPages > 1) { %>
+                                <div class="pagination-container">
+                                    <ul class="pagination">
+                                        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/wallet?page=<%= currentPage - 1 %>" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        
+                                        <% for(let i = 1; i <= totalPages; i++) { %>
+                                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                                <a class="page-link" href="/wallet?page=<%= i %>"><%= i %></a>
+                                            </li>
+                                        <% } %>
+                                        
+                                        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/wallet?page=<%= currentPage + 1 %>" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            <% } %>
+                        <% } else { %>
+                            <div class="empty-transactions">
+                                <i class="fas fa-history fa-3x mb-3"></i>
+                                <h3>No transactions yet</h3>
+                                <p>Your transaction history will appear here once you start using your wallet.</p>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Add Money Modal -->
     <div class="modal fade" id="addMoneyModal" tabindex="-1" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="addMoneyForm" action="/wallet/add-money" method="POST">
-                        <div class="mb-3">
+                    <form id="addMoneyForm">
+                        <div class="mb-4">
                             <label for="amount" class="form-label">Amount (₹)</label>
-                            <input type="number" class="form-control" id="amount" name="amount" min="1" required>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="amount" name="amount" min="1" step="0.01" required>
+                            </div>
+                            <small class="text-muted">Minimum amount: ₹1.00</small>
                         </div>
-                        <div class="mb-3">
+                        
+                        <div class="mb-4">
                             <label class="form-label">Payment Method</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="creditCard" checked>
-                                <label class="form-check-label" for="creditCard">
-                                    Credit/Debit Card
-                                </label>
+                            <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod" value="paypal">
+                            
+                            <div class="payment-method-card selected" data-method="paypal">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal" checked>
+                                    <label class="form-check-label" for="paymentMethodPaypal">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fab fa-paypal me-3 fs-4 text-primary"></i>
+                                            <div>
+                                                <span class="d-block fw-bold">PayPal</span>
+                                                <small class="text-muted">Pay securely with PayPal</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi">
-                                <label class="form-check-label" for="upi">
-                                    UPI
-                                </label>
+                            
+                            <div class="payment-method-card" data-method="creditCard">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCreditCard" value="creditCard">
+                                    <label class="form-check-label" for="paymentMethodCreditCard">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-credit-card me-3 fs-4"></i>
+                                            <div>
+                                                <span class="d-block fw-bold">Credit/Debit Card</span>
+                                                <small class="text-muted">Pay with your card</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="netBanking" value="netBanking">
-                                <label class="form-check-label" for="netBanking">
-                                    Net Banking
-                                </label>
+                            
+                            <div class="payment-method-card" data-method="upi">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodUpi" value="upi">
+                                    <label class="form-check-label" for="paymentMethodUpi">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-mobile-alt me-3 fs-4"></i>
+                                            <div>
+                                                <span class="d-block fw-bold">UPI</span>
+                                                <small class="text-muted">Pay using UPI</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <div id="paypal-button-container"></div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="proceed-btn" class="btn btn-dark d-none">
+                                Proceed to Payment
+                            </button>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="addMoneyForm" class="btn btn-dark">Proceed to Payment</button>
-                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay d-none">
+        <div class="loading-content">
+            <div class="spinner-border text-dark mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p id="loading-message" class="mb-0">Processing your payment...</p>
+            <p class="small text-muted mt-2">Please do not close this window</p>
         </div>
     </div>
 
@@ -131,6 +243,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=<%= process.env.PAYPAL_CLIENT_ID %>&currency=USD"></script>
     <script src="/js/wallet.js"></script>
 </body>
 </html>

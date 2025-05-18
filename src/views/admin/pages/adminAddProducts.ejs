@@ -25,6 +25,12 @@
             href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css"
         />
 
+        <!-- Add Cropper.js CSS -->
+        <link 
+            rel="stylesheet" 
+            href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+        />
+
         <link rel="stylesheet" href="/css/admin-navbar.css" />
         <link rel="stylesheet" href="/css/admin-add-products.css" />
     </head>
@@ -106,6 +112,7 @@
                                 name="name"
                                 placeholder="Type product name here..."
                             />
+                            <div class="invalid-feedback" id="productNameError"></div>
                         </div>
 
                         <div class="mb-3">
@@ -119,6 +126,7 @@
                                 rows="4"
                                 placeholder="Type product description here..."
                             ></textarea>
+                            <div class="invalid-feedback" id="descriptionError"></div>
                         </div>
 
                         <div class="row mb-3">
@@ -142,6 +150,7 @@
                                     </option>
                                     <% }); %> <% } %>
                                 </select>
+                                <div class="invalid-feedback" id="categoryError"></div>
                             </div>
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <label for="brand" class="form-label"
@@ -169,6 +178,7 @@
                                     name="color"
                                     placeholder="Product color..."
                                 />
+                                <div class="invalid-feedback" id="colorError"></div>
                             </div>
                             <div class="col-md-6 mb-3 mb-md-0">
                                 <label for="fabric" class="form-label"
@@ -181,6 +191,7 @@
                                     name="fabric"
                                     placeholder="Fabric type..."
                                 />
+                                <div class="invalid-feedback" id="fabricError"></div>
                             </div>
                         </div>
 
@@ -255,6 +266,7 @@
                                     min="0"
                                     step="0.01"
                                 />
+                                <div class="invalid-feedback" id="priceError<%= index %>"></div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Quantity</label>
@@ -264,6 +276,7 @@
                                     name="varientquatity"
                                     min="0"
                                 />
+                                <div class="invalid-feedback" id="quantityError<%= index %>"></div>
                             </div>
                         </div>
                         <% }) %>
@@ -307,6 +320,7 @@
                                     <i class="fas fa-times"></i>
                                 </div>
                             </div>
+                            <div class="invalid-feedback d-block" id="mainImageError"></div>
                             <small class="form-text"
                                 >Recommended size: 800x1000 pixels. Max file
                                 size: 2MB.</small
@@ -348,7 +362,7 @@
                                         />
                                         <div
                                             class="remove-image-btn d-none"
-                                            id="removeAdditionalPhoto1"
+                                            id="removeAdditionalImage1"
                                         >
                                             <i class="fas fa-times"></i>
                                         </div>
@@ -384,7 +398,7 @@
                                         />
                                         <div
                                             class="remove-image-btn d-none"
-                                            id="removeAdditionalPhoto2"
+                                            id="removeAdditionalImage2"
                                         >
                                             <i class="fas fa-times"></i>
                                         </div>
@@ -420,7 +434,7 @@
                                         />
                                         <div
                                             class="remove-image-btn d-none"
-                                            id="removeAdditionalPhoto3"
+                                            id="removeAdditionalImage3"
                                         >
                                             <i class="fas fa-times"></i>
                                         </div>
@@ -440,8 +454,53 @@
                 </form>
             </div>
         </main>
+
+        <!-- Image Cropper Modal -->
+        <div class="modal fade" id="imageCropperModal" tabindex="-1" aria-labelledby="imageCropperModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageCropperModalLabel">Crop Image</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="img-container">
+                            <img id="cropperImage" src="/placeholder.svg" alt="Image to crop">
+                        </div>
+                        <div class="crop-controls mt-3">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-outline-secondary" id="rotateLeftBtn">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="rotateRightBtn">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                            </div>
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-outline-secondary" id="zoomInBtn">
+                                    <i class="fas fa-search-plus"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="zoomOutBtn">
+                                    <i class="fas fa-search-minus"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                                <i class="fas fa-sync-alt"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="cropImageBtn">Crop & Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+        <!-- Add Cropper.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
         <script src="/js/admin-navbar.js"></script>
         <script src="/js/admin-addProducts.js"></script>
     </body>

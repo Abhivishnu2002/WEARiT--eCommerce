@@ -106,11 +106,8 @@ const updateEmail = async (req, res) => {
     user.otpExpires = otpExpires
     user.tempEmail = email
     await user.save()
-
-    console.log(`Generated OTP: ${otp} for email change to ${email}`)
     try {
       await sendOTPEmail(email, otp)
-      console.log(`OTP email sent to ${email}`)
     } catch (emailError) {
       console.error("Error sending OTP email:", emailError)
       if (req.xhr || req.headers.accept.indexOf("json") > -1) {
@@ -165,11 +162,9 @@ const loadVerifyEmail = async (req, res) => {
 const verifyEmailOtp = async (req, res) => {
   try {
     const { otp } = req.body
-    console.log("Received OTP:", otp)
 
     const user = await User.findById(req.user._id)
     if (!user.otp || user.otp !== otp || !user.otpExpires || new Date() > user.otpExpires) {
-      console.log("OTP verification failed")
 
       if (req.xhr || req.headers.accept.indexOf("json") > -1) {
         return res.status(400).json({
@@ -187,8 +182,6 @@ const verifyEmailOtp = async (req, res) => {
     user.otp = undefined
     user.otpExpires = undefined
     await user.save()
-
-    console.log("Email updated successfully")
     req.session.emailUpdatePending = false
 
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
@@ -233,12 +226,8 @@ const resendOtp = async (req, res) => {
     user.otpExpires = otpExpires
     await user.save()
 
-    console.log(`Generated new OTP: ${otp} for email change to ${user.tempEmail}`)
-
     try {
       await sendOTPEmail(user.tempEmail, otp)
-      console.log(`OTP email resent to ${user.tempEmail}`)
-
       if (req.xhr || req.headers.accept.indexOf("json") > -1) {
         return res.json({ success: true, message: "OTP has been resent to your new email" })
       }

@@ -1,14 +1,17 @@
-
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/admin/authController')
 const productController = require('../controllers/admin/productController');
 const customerController = require('../controllers/admin/customerController');
 const categoryController = require('../controllers/admin/categoryController');
-const orderController = require('../controllers/admin/orderController')
+const orderController = require('../controllers/admin/orderController');
+const couponController = require('../controllers/admin/couponController');
+const salesReportController = require('../controllers/admin/salesReportController');
 const { ensureAuthenticated, isAdminLoggedIn, isAdminLoggedOut, verifyAdminSession } = require('../middlewares/auth');
+const csrf = require("../middlewares/csrfMiddleware")
 const upload = require('../middlewares/uploadMiddleware');
 
+router.use(csrf.generateToken)
 
 router.get("/login", isAdminLoggedOut, authController.loadLogin);
 router.post("/login", isAdminLoggedOut, authController.verifyLogin);
@@ -54,14 +57,26 @@ router.post("/update-product-offer", verifyAdminSession, productController.updat
 router.delete("/deleteproduct/:id", verifyAdminSession, productController.deleteProduct);
 router.put("/toggle-product-listing/:id", verifyAdminSession, productController.toggleProductListing);
 
-router.get('/orders', orderController.getAllOrders);
-router.get('/orders/clear-filters', orderController.clearFilters);
-router.get('/orders/:id', orderController.getOrderDetails);
-router.post('/orders/update-status/:id', orderController.updateOrderStatus);
-router.post('/orders/process-return', orderController.processReturnRequest);
-router.get('/orders/:id/invoice', orderController.generateInvoice);
+router.get('/orders', verifyAdminSession, orderController.getAllOrders);
+router.get('/orders/clear-filters', verifyAdminSession, orderController.clearFilters);
+router.get('/orders/:id', verifyAdminSession, orderController.getOrderDetails);
+router.post('/orders/update-status/:id', verifyAdminSession, orderController.updateOrderStatus);
+router.post('/orders/process-return', verifyAdminSession, orderController.processReturnRequest);
+router.get('/orders/:id/invoice', verifyAdminSession, orderController.generateInvoice);
 
-router.get('/inventory', orderController.getInventoryStatus);
-router.post('/inventory/update-stock', orderController.updateProductStock);
+router.get("/coupons", verifyAdminSession, couponController.getAllCoupons)
+router.get("/coupons/add", verifyAdminSession, couponController.loadAddCoupon)
+router.post("/coupons/add", verifyAdminSession, couponController.createCoupon)
+router.get("/coupons/edit/:id", verifyAdminSession, couponController.loadEditCoupon)
+router.post("/coupons/edit/:id", verifyAdminSession, couponController.updateCoupon)
+router.post("/coupons/toggle-status/:id", verifyAdminSession, couponController.toggleCouponStatus)
+router.delete("/coupons/delete/:id", verifyAdminSession, couponController.deleteCoupon)
+
+router.get("/sales-report", verifyAdminSession, salesReportController.getSalesReport)
+router.get("/sales-report/download-pdf", verifyAdminSession, salesReportController.downloadPDF)
+router.get("/sales-report/download-excel", verifyAdminSession, salesReportController.downloadExcel)
+
+router.get('/inventory', verifyAdminSession, orderController.getInventoryStatus);
+router.post('/inventory/update-stock', verifyAdminSession, orderController.updateProductStock);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const User = require("../../models/userModel")
 const Product = require("../../models/productModel")
 const Category = require("../../models/categoryModel")
+const { calculateBestPrice, determineBestOffer } = require("../../utils/offerUtils")
 
 const loadCategory = async (req, res) => {
   try {
@@ -89,11 +90,31 @@ const addCategory = async (req, res) => {
       description,
       offer: Number(offer),
       maxRedeemable: Number(maxRedeemable),
-      stock: 0, 
+      stock: 0,
       isListed: isDeleted === "false",
     })
 
     await newCategory.save()
+    if (Number(offer) > 0) {
+      const products = await Product.find({ categoryId: newCategory._id })
+
+      for (const product of products) {
+        const bestOffer = determineBestOffer(product.offer, Number(offer))
+        product.variants = product.variants.map((variant) => {
+          const originalPrice = variant.varientPrice
+          const { salePrice } = calculateBestPrice(originalPrice, product.offer, Number(offer))
+          return {
+            ...variant,
+            salePrice,
+          }
+        })
+        product.displayOffer = bestOffer.offerValue
+        product.offerSource = bestOffer.offerSource
+
+        await product.save()
+      }
+    }
+
     req.flash("success_msg", "Category added successfully")
     res.redirect("/admin/category")
   } catch (error) {
@@ -171,22 +192,22 @@ const updateCategory = async (req, res) => {
     }
 
     await Category.findByIdAndUpdate(categoryId, updateData, { new: true })
-
     if (oldOffer !== newOffer) {
       const products = await Product.find({ categoryId: categoryId })
-      
+
       for (const product of products) {
-        product.variants = product.variants.map(variant => {
+        const bestOffer = determineBestOffer(product.offer, newOffer)
+        product.variants = product.variants.map((variant) => {
           const originalPrice = variant.varientPrice
-          const discount = (originalPrice * newOffer) / 100
+          const { salePrice } = calculateBestPrice(originalPrice, product.offer, newOffer)
           return {
             ...variant,
-            salePrice: Math.round(originalPrice - discount)
+            salePrice,
           }
         })
+        product.displayOffer = bestOffer.offerValue
+        product.offerSource = bestOffer.offerSource
 
-        product.offer = newOffer
-        
         await product.save()
       }
     }
@@ -237,10 +258,7 @@ const toggleCategoryListing = async (req, res) => {
     category.isListed = newListingStatus
     await category.save()
 
-    await Product.updateMany(
-      { categoryId: categoryId },
-      { isActive: newListingStatus }
-    )
+    await Product.updateMany({ categoryId: categoryId }, { isActive: newListingStatus })
 
     req.flash("success_msg", `Category ${category.isListed ? "listed" : "unlisted"} successfully`)
     res.redirect("/admin/category")

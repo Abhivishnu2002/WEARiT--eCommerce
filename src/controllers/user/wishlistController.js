@@ -43,7 +43,7 @@ const addToWishlist = async (req, res) => {
     const { productId } = req.body
 
     const product = await Product.findById(productId).populate("categoryId")
-
+    
     if (!product || !product.isActive || !product.categoryId || !product.categoryId.isListed) {
       return res.status(400).json({
         success: false,
@@ -51,7 +51,7 @@ const addToWishlist = async (req, res) => {
       })
     }
     let wishlist = await Wishlist.findOne({ user: req.user._id })
-
+    
     if (!wishlist) {
       wishlist = new Wishlist({ user: req.user._id, products: [] })
     }
@@ -117,8 +117,73 @@ const removeFromWishlist = async (req, res) => {
   }
 }
 
+const checkWishlistStatus = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Please sign in to check your wishlist",
+      })
+    }
+
+    const wishlist = await Wishlist.findOne({ user: req.user._id })
+
+    if (!wishlist) {
+      return res.status(200).json({
+        success: true,
+        wishlistItems: [],
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      wishlistItems: wishlist.products.map((id) => id.toString()),
+    })
+  } catch (error) {
+    console.error("Check wishlist status error:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
+const emptyWishlist = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Please sign in to empty your wishlist",
+      })
+    }
+
+    const wishlist = await Wishlist.findOne({ user: req.user._id })
+    if (!wishlist) {
+      return res.status(404).json({
+        success: false,
+        message: "Wishlist not found",
+      })
+    }
+    wishlist.products = []
+    await wishlist.save()
+
+    return res.status(200).json({
+      success: true,
+      message: "Wishlist emptied successfully",
+    })
+  } catch (error) {
+    console.error("Empty wishlist error:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
 module.exports = {
   loadWishlist,
   addToWishlist,
   removeFromWishlist,
+  checkWishlistStatus,
+  emptyWishlist
 }

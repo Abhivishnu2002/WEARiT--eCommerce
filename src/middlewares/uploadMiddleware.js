@@ -22,7 +22,7 @@ const storage = new CloudinaryStorage({
             public_id: `${productId}-${fieldName}-${uniqueId}`,
             format: 'webp',
             transformation: [
-                { width: 800, height: 800, crop: 'fill' },
+                { width: 800, height: 1000, crop: 'fill' },
                 { quality: 80 }
             ],
             overwrite: true

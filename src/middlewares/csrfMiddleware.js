@@ -1,0 +1,37 @@
+const crypto = require("crypto")
+const generateRandomToken = () => {
+  return crypto.randomBytes(32).toString("hex")
+}
+const generateToken = (req, res, next) => {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = generateRandomToken()
+  }
+  res.locals.csrfToken = req.session.csrfToken
+  next()
+}
+const validateToken = (req, res, next) => {
+  if (req.method === "GET") {
+    return next()
+  }
+
+  const sessionToken = req.session.csrfToken
+  const requestToken = req.headers["x-csrf-token"] || req.body._csrf || req.query._csrf
+  if (!sessionToken || !requestToken) {
+    return res.status(403).json({
+      success: false,
+      message: "CSRF token validation failed",
+    })
+  }
+  if (sessionToken !== requestToken) {
+    return res.status(403).json({
+      success: false,
+      message: "CSRF token validation failed",
+    })
+  }
+  next()
+}
+
+module.exports = {
+  generateToken,
+  validateToken,
+}

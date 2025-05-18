@@ -1,6 +1,9 @@
 const Product = require("../../models/productModel")
 const Category = require("../../models/categoryModel")
+const User = require("../../models/userModel")
+const Wishlist = require("../../models/wishlistModel")
 const mongoose = require("mongoose")
+const { calculateBestPrice, determineBestOffer } = require("../../utils/offerUtils");
 
 const getAllProducts = async (req, res, next) => {
   try {
@@ -75,13 +78,30 @@ const getAllProducts = async (req, res, next) => {
     }
 
     const products = await Product.find(query).populate("categoryId").sort(sortOption).skip(skip).limit(limit).lean()
+    
     const processedProducts = products.map((product) => {
       const hasStock = product.variants.some((variant) => variant.varientquatity > 0)
-
+      
+      const productOffer = product.offer || 0
+      const categoryOffer = product.categoryId ? product.categoryId.offer || 0 : 0
+      const bestOffer = determineBestOffer(productOffer, categoryOffer)
+      
+      const updatedVariants = product.variants.map(variant => {
+        const { salePrice } = calculateBestPrice(variant.varientPrice, productOffer, categoryOffer)
+        return {
+          ...variant,
+          salePrice
+        }
+      })
+      
       return {
         ...product,
+        variants: updatedVariants,
         inStock: hasStock,
         stockCount: product.variants.reduce((total, variant) => total + variant.varientquatity, 0),
+        displayOffer: bestOffer.offerValue,
+        offerSource: bestOffer.offerSource,
+        appliedOffer: bestOffer.offerValue
       }
     })
 
@@ -171,20 +191,59 @@ const getProductDetails = async (req, res, next) => {
       req.flash("error_msg", "Product not available")
       return res.redirect("/products")
     }
+    
+    const productOffer = product.offer || 0
+    const categoryOffer = product.categoryId ? product.categoryId.offer || 0 : 0
+    const bestOffer = determineBestOffer(productOffer, categoryOffer)
+    
+    const updatedVariants = product.variants.map(variant => {
+      const { salePrice } = calculateBestPrice(variant.varientPrice, productOffer, categoryOffer)
+      return {
+        ...variant,
+        salePrice
+      }
+    })
+    
+    const enhancedProduct = {
+      ...product,
+      variants: updatedVariants,
+      displayOffer: bestOffer.offerValue,
+      offerSource: bestOffer.offerSource,
+      appliedOffer: bestOffer.offerValue
+    }
 
     const relatedProducts = await Product.find({
       categoryId: product.categoryId._id,
       _id: { $ne: product._id },
       isActive: true,
     })
+      .populate("categoryId")
       .limit(4)
       .lean()
+    
     const processedRelatedProducts = relatedProducts.map((relProduct) => {
       const hasStock = relProduct.variants.some((variant) => variant.varientquatity > 0)
+      
+      const relProductOffer = relProduct.offer || 0
+      const relCategoryOffer = relProduct.categoryId ? relProduct.categoryId.offer || 0 : 0
+      const relBestOffer = determineBestOffer(relProductOffer, relCategoryOffer)
+      
+      const relUpdatedVariants = relProduct.variants.map(variant => {
+        const { salePrice } = calculateBestPrice(variant.varientPrice, relProductOffer, relCategoryOffer)
+        return {
+          ...variant,
+          salePrice
+        }
+      })
+      
       return {
         ...relProduct,
+        variants: relUpdatedVariants,
         inStock: hasStock,
         stockCount: relProduct.variants.reduce((total, variant) => total + variant.varientquatity, 0),
+        displayOffer: relBestOffer.offerValue,
+        offerSource: relBestOffer.offerSource,
+        appliedOffer: relBestOffer.offerValue
       }
     })
 
@@ -194,14 +253,33 @@ const getProductDetails = async (req, res, next) => {
         _id: { $in: req.session.recentlyViewed, $ne: product._id },
         isActive: true,
       })
+        .populate("categoryId")
         .limit(4)
         .lean()
+      
       recentlyViewed = recentlyViewed.map((viewedProduct) => {
         const hasStock = viewedProduct.variants.some((variant) => variant.varientquatity > 0)
+        
+        const viewedProductOffer = viewedProduct.offer || 0
+        const viewedCategoryOffer = viewedProduct.categoryId ? viewedProduct.categoryId.offer || 0 : 0
+        const viewedBestOffer = determineBestOffer(viewedProductOffer, viewedCategoryOffer)
+        
+        const viewedUpdatedVariants = viewedProduct.variants.map(variant => {
+          const { salePrice } = calculateBestPrice(variant.varientPrice, viewedProductOffer, viewedCategoryOffer)
+          return {
+            ...variant,
+            salePrice
+          }
+        })
+        
         return {
           ...viewedProduct,
+          variants: viewedUpdatedVariants,
           inStock: hasStock,
           stockCount: viewedProduct.variants.reduce((total, variant) => total + variant.varientquatity, 0),
+          displayOffer: viewedBestOffer.offerValue,
+          offerSource: viewedBestOffer.offerSource,
+          appliedOffer: viewedBestOffer.offerValue
         }
       })
     }
@@ -216,14 +294,14 @@ const getProductDetails = async (req, res, next) => {
         ...req.session.recentlyViewed.filter((id) => id !== product._id.toString()),
       ].slice(0, 10)
     }
-    const sizeOptions = product.variants.map((variant) => variant.size)
 
-    const colorOption = product.color
-    const inStock = product.variants.some((variant) => variant.varientquatity > 0)
-    const defaultVariant = product.variants[0] || null
+    const sizeOptions = enhancedProduct.variants.map((variant) => variant.size)
+    const colorOption = enhancedProduct.color
+    const inStock = enhancedProduct.variants.some((variant) => variant.varientquatity > 0)
+    const defaultVariant = enhancedProduct.variants[0] || null
 
     res.render("pages/product-details", {
-      product,
+      product: enhancedProduct,
       relatedProducts: processedRelatedProducts,
       recentlyViewed,
       sizeOptions,

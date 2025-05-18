@@ -1,0 +1,151 @@
+.coupon-table {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.coupon-table th {
+  background-color: #0d6efd;
+  color: #fff;
+  font-weight: 500;
+  padding: 12px 15px;
+}
+
+.coupon-table td {
+  padding: 15px;
+  vertical-align: middle;
+}
+
+.coupon-code {
+  font-weight: 600;
+  font-family: "Courier New", monospace;
+  background-color: #f8f9fa;
+  padding: 5px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.validity-dates {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.usage-count {
+  font-weight: 500;
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 60px;
+}
+
+.action-btn {
+  background-color: transparent;
+  border: none;
+  color: #6c757d;
+  padding: 5px;
+  margin: 0 3px;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  color: #000;
+}
+
+.delete-btn:hover {
+  color: #dc3545;
+}
+
+.coupon-filters {
+  flex-wrap: wrap;
+}
+
+.pagination .page-item .page-link {
+  color: #0d6efd;
+  border: none;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 3px;
+  border-radius: 5px;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* Toggle Switch Styling */
+.form-check-input.coupon-status-toggle {
+  width: 3em;
+  height: 1.5em;
+  margin-top: 0;
+  cursor: pointer;
+}
+
+.form-check-input.coupon-status-toggle:checked {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.form-check-input.coupon-status-toggle:not(:checked) {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.form-check-input.coupon-status-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767.98px) {
+  .breadcrumb-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .breadcrumb-section .btn {
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .search-section {
+    flex-direction: column;
+  }
+
+  .search-section > div {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .coupon-filters {
+    flex-direction: column;
+  }
+
+  .coupon-filters > div {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .coupon-table th,
+  .coupon-table td {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .table-responsive {
+    border: none;
+  }
+
+  .pagination .page-item .page-link {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+}

@@ -1,80 +1,107 @@
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Inter", sans-serif;
-    }
-
-    body {
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #ffffff;
-    }
-
-    .container {
-        width: 100%;
-        max-width: 600px;
-        padding: 20px;
-        text-align: center;
-    }
-
-    h1 {
-        font-size: 28px;
-        margin-bottom: 20px;
-        font-weight: 700;
-    }
-
-    p {
-        font-size: 16px;
-        line-height: 1.5;
-        color: #333;
-        margin-bottom: 30px;
-    }
-
-    input {
-        width: 100%;
-        padding: 15px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        margin-bottom: 25px;
-    }
-
-    button {
-        background-color: #000;
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        font-size: 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        width: 100%;
-        transition: background-color 0.3s;
-    }
-
-    button:hover {
-        background-color: #333;
-    }
-
-    @media (max-width: 480px) {
-        .container {
-            padding: 15px;
-        }
-    }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WEARiT - Referral Program</title>
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/css/referral.css" />
+</head>
 <body>
-    <div class="container">
-        <h1>Enter the Refferal Code</h1>
-        <p>
-            Enter your friend's referral code to unlock exclusive rewards! When
-            you sign up using a referral code, both you and your friend will
-            receive a bonus. Don't miss out on this opportunity to start with
-            extra benefits!
-        </p>
-        <input type="text" value="IT3BCE4GH" />
-        <button>submit</button>
+    <%- include('../partials/header') %>
+    <div class="container-fluid referral-container">
+        <div class="row">
+            <div class="col-lg-3 col-md-4">
+                <%- include('../partials/navbar', { 
+                    activePage: 'referral',
+                    cartCount: typeof cartCount !== 'undefined' ? cartCount : 0,
+                    user: user 
+                }) %>
+            </div>
+
+            <div class="col-lg-9 col-md-8">
+                <div class="referral-content">
+                    <div class="referral-header">
+                        <h1 class="referral-title">REFERRAL PROGRAM</h1>
+                    </div>
+                    
+                    <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+                        <div class="alert alert-success"><%= success_msg %></div>
+                    <% } %>
+                    
+                    <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+                        <div class="alert alert-danger"><%= error_msg %></div>
+                    <% } %>
+                    
+                    <div class="referral-info">
+                        <p>Share your unique referral code with friends and family. When they sign up using your code, you'll receive ₹500 in your wallet!</p>
+                    </div>
+                    
+                    <div class="referral-code-container">
+                        <h4 class="mb-3">Your Referral Code</h4>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="referralCode" value="<%= referralCode %>" readonly>
+                            <button class="btn" id="copyButton" onclick="copyReferralCode()">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="referral-share">
+                        <h4 class="mb-3">Share Your Code</h4>
+                        <div class="d-flex flex-wrap">
+                            <a href="https://wa.me/?text=Use%20my%20referral%20code%20<%= referralCode %>%20to%20get%20exclusive%20benefits%20at%20WEARiT!%20Sign%20up%20here:%20http://localhost:3000/referral-entry?code=<%= referralCode %>" 
+                               class="btn btn-success" target="_blank">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="mailto:?subject=Join%20WEARiT%20with%20my%20referral%20code&body=Use%20my%20referral%20code%20<%= referralCode %>%20to%20get%20exclusive%20benefits%20at%20WEARiT!%20Sign%20up%20here:%20http://localhost:3000/referral-entry?code=<%= referralCode %>" 
+                               class="btn btn-primary">
+                                <i class="fas fa-envelope"></i> Email
+                            </a>
+                            <a href="sms:?body=Use%20my%20referral%20code%20<%= referralCode %>%20to%20get%20exclusive%20benefits%20at%20WEARiT!%20Sign%20up%20here:%20http://localhost:3000/referral-entry?code=<%= referralCode %>" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-sms"></i> SMS
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="referral-stats">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Your Referral Statistics</h5>
+                                <p class="card-text">Total successful referrals: <strong><%= referralCount %></strong></p>
+                                <p class="card-text">Total earned: <span class="total-earned">₹<%= referralCount * 500 %></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    <%- include('../partials/footer') %>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function copyReferralCode() {
+        const referralCode = document.getElementById('referralCode');
+        referralCode.select();
+        document.execCommand('copy');
+        
+        const copyButton = document.getElementById('copyButton');
+        const originalText = copyButton.innerHTML;
+        
+        copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+            copyButton.innerHTML = originalText;
+        }, 2000);
+    }
+    </script>
 </body>
+</html>

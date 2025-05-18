@@ -1,8 +1,5 @@
-// admin-customerDetails.js
-
 document.addEventListener("DOMContentLoaded", function () {
     const toggleForm = document.querySelector(".toggle-form");
-
     if (toggleForm) {
         toggleForm.addEventListener("submit", function (e) {
             e.preventDefault();

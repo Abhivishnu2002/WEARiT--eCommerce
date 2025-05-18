@@ -1,7 +1,3 @@
-const loadReferralCode = (req, res) => {
-    res.render("pages/referral");
-};
-
 const loadContact = (req, res) => {
     res.render("pages/contact");
 };
@@ -15,7 +11,6 @@ const loadError = (req, res) => {
 };
 
 module.exports = {
-    loadReferralCode,
     loadContact,
     loadAbout,
     loadError

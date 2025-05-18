@@ -96,62 +96,76 @@ const loadSignup = (req, res) => {
     if(req.session.userId){
         return res.redirect('/')
     }
-    res.render("pages/signup");
+    const referralCode = req.query.ref || req.session.validReferralCode || ""
+
+  res.render("pages/signup", {
+    referralCode,
+    user: null,
+  })
 };
 
 const registerUser = async (req, res) => {
   try {
-      const {name, email, mobile, password, confirmPassword} = req.body;
+    const { name, email, mobile, password, confirmPassword, referralCode } = req.body
 
-      if(!name || !email || !password || !confirmPassword){
-          return res.render('pages/signup', {error: "All fields are required"});
+    if (!name || !email || !password || !confirmPassword) {
+      return res.render("pages/signup", { error: "All fields are required" })
+    }
+
+    if (password !== confirmPassword) {
+      return res.render("pages/signup", { error: "Passwords do not match." })
+    }
+
+    const passwordValidation = User.validatePasswordComplexity(password)
+    if (!passwordValidation.isValid) {
+      return res.render("pages/signup", { error: passwordValidation.message })
+    }
+
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      return res.render("pages/signup", { error: "User already exists" })
+    }
+
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode })
+      if (referrer) {
+        req.session.validReferralCode = referralCode
+        req.session.referrerId = referrer._id
+      }
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    req.session.userRegistration = {
+      tempUser: {
+        name,
+        email,
+        mobile,
+        password,
+        referralCode: req.session.validReferralCode || null,
+        referrerId: req.session.referrerId || null,
+      },
+      tempOTP: otp,
+      tempOTPExpiry: Date.now() + 10 * 60 * 1000,
+      tempEmail: email,
+    }
+
+    req.session.save(async (err) => {
+      if (err) {
+        console.error("Session save error:", err)
+        return res.render("pages/signup", {
+          error: "An error occurred during registration",
+        })
       }
 
-      if(password !== confirmPassword){
-          return res.render('pages/signup', {error: 'Passwords do not match.'});
-      }
-
-      const passwordValidation = User.validatePasswordComplexity(password);
-      if(!passwordValidation.isValid){
-        return res.render('pages/signup', { error: passwordValidation.message});
-      }
-
-      const existingUser = await User.findOne({email});
-      if(existingUser){
-          return res.render('pages/signup', {error: "User already exists"});
-      }
-
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-      req.session.userRegistration = {
-          tempUser: {
-              name,
-              email,
-              mobile,
-              password
-          },
-          tempOTP: otp,
-          tempOTPExpiry: Date.now() + 10 * 60 * 1000,
-          tempEmail: email
-      };
-      
-      req.session.save(async (err) => {
-          if (err) {
-              console.error('Session save error:', err);
-              return res.render('pages/signup', {
-                  error: 'An error occurred during registration',
-              });
-          }
-          
-          await sendOTPEmail(email, otp);
-          req.flash('success_msg', 'OTP sent successfully.');
-          res.redirect('/otp');
-      });
+      await sendOTPEmail(email, otp)
+      req.flash("success_msg", "OTP sent successfully.")
+      res.redirect("/otp")
+    })
   } catch (error) {
-      console.error('Registration Error: ', error);
-      res.render('pages/signup', {
-          error: 'An error occurred during registration',
-      });
+    console.error("Registration Error: ", error)
+    res.render("pages/signup", {
+      error: "An error occurred during registration",
+    })
   }
 }
 
@@ -166,51 +180,73 @@ const loadOtp = (req, res) => {
 
 const verifyOtp = async (req, res, next) => {
   try {
-      const { email, otp } = req.body;
+    const { email, otp } = req.body
 
-      if (!req.session.userRegistration) {
-          req.flash('error_msg', 'Registration session expired. Please sign up again.');
-          return res.redirect('/signup');
+    if (!req.session.userRegistration) {
+      req.flash("error_msg", "Registration session expired. Please sign up again.")
+      return res.redirect("/signup")
+    }
+
+    const userReg = req.session.userRegistration
+
+    if (email !== userReg.tempEmail) {
+      req.flash("error_msg", "Email mismatch. Please try again.")
+      return res.redirect("/otp")
+    }
+
+    const currentTime = new Date()
+    if (otp !== userReg.tempOTP || currentTime > new Date(userReg.tempOTPExpiry)) {
+      req.flash("error_msg", "Invalid or expired OTP")
+      return res.redirect("/otp")
+    }
+
+    const userData = userReg.tempUser
+
+    const { generateReferralCode } = require("../../utils/referralCodeGenerator")
+    const newReferralCode = await generateReferralCode()
+
+    const newUser = new User({
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      mobile: userData.mobile,
+      isVerified: true,
+      isBlocked: false,
+      referralCode: newReferralCode,
+      referredBy: userData.referrerId || null,
+    })
+
+    await newUser.save()
+
+    if (userData.referrerId) {
+      const referrer = await User.findById(userData.referrerId)
+      if (referrer) {
+        referrer.wallet.balance += 500
+        referrer.wallet.transactions.push({
+          amount: 500,
+          type: "credit",
+          description: `Referral bonus for user ${newUser.email}`,
+          date: new Date(),
+        })
+        await referrer.save()
       }
+    }
 
-      const userReg = req.session.userRegistration;
-      
-      if (email !== userReg.tempEmail) {
-          req.flash('error_msg', 'Email mismatch. Please try again.');
-          return res.redirect('/otp');
+    delete req.session.userRegistration
+    delete req.session.validReferralCode
+    delete req.session.referrerId
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err)
       }
-
-      const currentTime = new Date();
-      if (otp !== userReg.tempOTP || currentTime > new Date(userReg.tempOTPExpiry)) {
-          req.flash('error_msg', 'Invalid or expired OTP');
-          return res.redirect('/otp');
-      }
-
-      const userData = userReg.tempUser;
-      const newUser = new User({
-          name: userData.name,
-          email: userData.email,
-          password: userData.password,
-          mobile: userData.mobile,
-          isVerified: true,
-          isBlocked: false
-      });
-      
-      await newUser.save();
-
-      delete req.session.userRegistration;
-      
-      req.session.save(err => {
-          if (err) {
-              console.error('Session save error:', err);
-          }
-          req.flash('success_msg', 'Email verified successfully! You can now log in.');
-          res.redirect('/login');
-      });
+      req.flash("success_msg", "Email verified successfully! You can now log in.")
+      res.redirect("/login")
+    })
   } catch (error) {
-      console.error('OTP verification error:', error);
-      req.flash('error_msg', 'Verification failed. Please try again.');
-      res.redirect('/otp');
+    console.error("OTP verification error:", error)
+    req.flash("error_msg", "Verification failed. Please try again.")
+    res.redirect("/otp")
   }
 };
 

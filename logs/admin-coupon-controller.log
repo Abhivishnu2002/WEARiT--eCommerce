@@ -1,0 +1,3 @@
+{"level":"info","message":"Coupon ABHI20 deactivated instead of deleted (has been used)","service":"admin-coupon-controller","timestamp":"2025-05-14 12:49:35"}
+{"level":"info","message":"New coupon created: 7YDP9U6S","service":"admin-coupon-controller","timestamp":"2025-05-14 12:50:44"}
+{"level":"info","message":"Coupon ABHI20 (682416d47476440953687c79) deactivated instead of deleted (has been used)","service":"admin-coupon-controller","timestamp":"2025-05-14 12:59:38"}

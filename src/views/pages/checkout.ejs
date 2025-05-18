@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/footer.css" />
   <link rel="stylesheet" href="/css/checkout.css" />
+  <link rel="stylesheet" href="/css/toast-notification.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
@@ -113,33 +114,76 @@
 
             <div class="order-summary-row">
               <span>Subtotal:</span>
-              <span>₹<%= totals.subtotal.toFixed(2) %></span>
+              <span id="subtotal-value">₹<%= totals.subtotal.toFixed(2) %></span>
             </div>
 
             <div class="order-summary-row">
               <span>Discount:</span>
-              <span class="discount-text">-₹<%= totals.discount.toFixed(2) %></span>
+              <span class="discount-text" id="discount-value">-₹<%= totals.discount.toFixed(2) %></span>
             </div>
 
-            <div class="order-summary-row">
-              <span>Tax (5%):</span>
-              <span>₹<%= totals.tax.toFixed(2) %></span>
+            <!-- Coupon Section -->
+            <div class="coupon-section">
+              <div class="coupon-input-wrapper">
+                <input type="text" id="couponCode" class="coupon-input" placeholder="Enter Coupon Code">
+                <button type="button" id="applyCouponBtn" class="coupon-button">APPLY</button>
+              </div>
+              <div class="view-coupons-link">
+                <a href="javascript:void(0)" id="viewAvailableCoupons">View Available Coupons</a>
+              </div>
+              
+              <!-- Applied coupon info (initially hidden) -->
+              <div id="appliedCouponInfo" class="applied-coupon-info" style="display: none;">
+                <div class="applied-coupon-details">
+                  <span id="appliedCouponCode" class="applied-coupon-code"></span>
+                  <span id="appliedCouponDiscount" class="applied-coupon-discount"></span>
+                </div>
+                <button type="button" id="removeCouponBtn" class="remove-coupon-btn">
+                  <i class="bi bi-x"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Coupon discount row (initially hidden) -->
+            <div id="couponDiscountRow" class="order-summary-row" style="display: none;">
+              <span>Coupon Discount:</span>
+              <span id="couponDiscountValue" class="discount-text">-₹0.00</span>
             </div>
 
             <div class="order-summary-row">
               <span>Shipping:</span>
               <% if (totals.shipping === 0) { %>
-              <span class="discount-text">Free</span>
+              <span class="discount-text" id="shipping-value">Free</span>
               <% } else { %>
-              <span>₹<%= totals.shipping.toFixed(2) %></span>
+              <span id="shipping-value">₹<%= totals.shipping.toFixed(2) %></span>
               <% } %>
             </div>
 
             <div class="order-summary-row total">
               <span>Total:</span>
-              <span>₹<%= totals.finalAmount %></span>
+              <span id="finalAmount">₹<%= totals.finalAmount %></span>
             </div>
             <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Available Coupons Modal -->
+  <div class="modal fade" id="couponsModal" tabindex="-1" aria-labelledby="couponsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="couponsModalLabel">Available Coupons</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="availableCouponsContainer">
+          <div class="loading-coupons">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading available coupons...</p>
           </div>
         </div>
       </div>
@@ -150,6 +194,8 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="/js/header.js"></script>
+  <script src="/js/toast-notification.js"></script>
+  <script src="/js/checkout-coupon.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const addressCards = document.querySelectorAll(".address-card");

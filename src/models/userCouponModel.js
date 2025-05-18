@@ -1,0 +1,36 @@
+const mongoose = require("mongoose")
+const Schema = mongoose.Schema
+
+const userCouponSchema = new Schema(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    coupon: {
+      type: Schema.Types.ObjectId,
+      ref: "Coupon",
+      required: true,
+    },
+    usedCount: {
+      type: Number,
+      default: 0,
+    },
+    lastUsed: {
+      type: Date,
+    },
+    orders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Order",
+      },
+    ],
+  },
+  { timestamps: true },
+)
+
+userCouponSchema.index({ user: 1, coupon: 1 }, { unique: true })
+
+const UserCoupon = mongoose.model("UserCoupon", userCouponSchema)
+module.exports = UserCoupon

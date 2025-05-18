@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WEARiT - My Coupons</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="/css/user-coupons.css" />
+    </head>
+    <body>
+        <%- include('../partials/header') %>
+        <div class="container-fluid coupon-container">
+            <div class="row">
+                <div class="col-lg-3 col-md-4">
+                    <%- include('../partials/navbar', { activePage: 'coupons', user: user }) %>
+                </div>
+
+                <div class="col-lg-9 col-md-8">
+                    <div class="coupon-content">
+                        <div class="coupon-header">
+                            <h1 class="coupon-title">MY COUPONS</h1>
+                        </div>
+
+                        <!-- Coupon Items -->
+                        <div class="coupon-items">
+                            <% if (!coupons || coupons.length === 0) { %>
+                                <div class="empty-coupons text-center py-5">
+                                    <i class="fa-solid fa-ticket-alt fa-3x mb-3"></i>
+                                    <h3>No Coupons Available</h3>
+                                    <p>You don't have any available coupons at the moment.</p>
+                                    <p>Check back later for special offers and discounts!</p>
+                                    <a href="/products" class="btn btn-dark mt-3">Continue Shopping</a>
+                                </div>
+                            <% } else { %>
+                                <div class="row">
+                                    <% coupons.forEach(coupon => { %>
+                                        <div class="col-lg-6 col-md-12 mb-4">
+                                            <div class="coupon-card">
+                                                <div class="coupon-card-header">
+                                                    <div class="coupon-code"><%= coupon.code %></div>
+                                                    <span class="badge <%= coupon.isUsable ? 'bg-success' : 'bg-secondary' %>">
+                                                        <%= coupon.isUsable ? 'Available' : 'Used' %>
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="coupon-card-body">
+                                                    <p class="coupon-description"><%= coupon.description %></p>
+                                                    
+                                                    <div class="coupon-details">
+                                                        <div class="coupon-detail">
+                                                            <i class="fas fa-tag"></i>
+                                                            <span>
+                                                                <strong>Discount:</strong> 
+                                                                <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue %>
+                                                                <% if (coupon.discountType === 'percentage' && coupon.maximumDiscount) { %>
+                                                                    (up to ₹<%= coupon.maximumDiscount %>)
+                                                                <% } %>
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <% if (coupon.minimumPurchase > 0) { %>
+                                                            <div class="coupon-detail">
+                                                                <i class="fas fa-shopping-cart"></i>
+                                                                <span><strong>Min. Purchase:</strong> ₹<%= coupon.minimumPurchase %></span>
+                                                            </div>
+                                                        <% } %>
+                                                        
+                                                        <div class="coupon-detail">
+                                                            <i class="fas fa-calendar-alt"></i>
+                                                            <span><strong>Valid Until:</strong> <%= new Date(coupon.endDate).toLocaleDateString() %></span>
+                                                        </div>
+                                                        
+                                                        <div class="coupon-detail">
+                                                            <i class="fas fa-sync-alt"></i>
+                                                            <span><strong>Uses:</strong> <%= coupon.usedCount %>/<%= coupon.usageLimit %></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="coupon-card-footer">
+                                                    <button class="btn btn-copy copy-coupon" data-coupon="<%= coupon.code %>">
+                                                        <i class="fas fa-copy"></i> Copy Code
+                                                    </button>
+                                                    <% if (coupon.isUsable) { %>
+                                                        <a href="/checkout" class="btn btn-use">
+                                                            <i class="fas fa-shopping-bag"></i> Use Now
+                                                        </a>
+                                                    <% } %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <%- include('../partials/footer') %>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/js/user-coupons.js"></script>
+    </body>
+</html>

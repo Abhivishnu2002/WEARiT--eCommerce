@@ -329,9 +329,43 @@ const removeFromCart = async (req, res) => {
   }
 }
 
+const emptyCart = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Please sign in to empty your cart",
+      })
+    }
+
+    const cart = await Cart.findOne({ user: req.user._id })
+    if (!cart) {
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      })
+    }
+
+    cart.products = []
+    await cart.save()
+
+    return res.status(200).json({
+      success: true,
+      message: "Cart emptied successfully",
+    })
+  } catch (error) {
+    console.error("Empty cart error:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    })
+  }
+}
+
 module.exports = {
   loadCart,
   addToCart,
   updateCartQuantity,
   removeFromCart,
+  emptyCart
 }
