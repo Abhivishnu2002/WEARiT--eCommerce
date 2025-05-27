@@ -1,4 +1,5 @@
 const PDFDocument = require("pdfkit")
+const PriceCalculator = require("./priceCalculator")
 
 const generateInvoice = async (options) => {
   const { order, user, res, isAdmin = false } = options
@@ -6,123 +7,124 @@ const generateInvoice = async (options) => {
     margin: 40,
     size: "A4",
     bufferPages: true,
+    info: {
+      Title: `Invoice ${order.orderID}`,
+      Author: "WEARiT",
+      Subject: "Order Invoice",
+      Creator: "WEARiT Invoice System",
+    },
   })
   res.setHeader("Content-Type", "application/pdf")
   res.setHeader("Content-Disposition", `attachment; filename=invoice-${order.orderID}.pdf`)
   doc.pipe(res)
   const colors = {
-    primary: "#000000",
-    secondary: "#555555",
-    accent: "#0066cc",
-    light: "#f2f2f2",
-    border: "#cccccc",
-    highlight: "#f9f9f9",
+    primary: "#1a1a1a",
+    secondary: "#4a4a4a",
+    accent: "#2563eb",
+    success: "#059669",
+    warning: "#d97706",
+    light: "#f8fafc",
+    border: "#e2e8f0",
+    highlight: "#f1f5f9",
+    text: "#374151",
   }
+  const validProducts = order.products.filter((item) => item.status !== "cancelled" && item.status !== "returned")
+  const invoiceTotals = PriceCalculator.calculateInvoiceTotals(order, validProducts)
+  drawHeader(doc, colors, order)
+  drawCompanyInfo(doc, colors)
+  drawInvoiceDetails(doc, colors, order)
+  drawCustomerInfo(doc, colors, order, user, isAdmin)
+  drawProductsTable(doc, colors, validProducts, invoiceTotals)
+  drawTotalsSection(doc, colors, invoiceTotals, order)
+  drawPaymentInfo(doc, colors, order)
+  drawTermsAndConditions(doc, colors)
+  drawFooter(doc, colors)
 
-  const taxRate = 0.18 
-  let subtotal = 0
-  let totalTax = 0
-  let totalAmount = 0
+  doc.end()
+}
+function drawHeader(doc, colors, order) {
+  doc.fontSize(24).font("Helvetica-Bold").fillColor(colors.primary).text("INVOICE", { align: "center" })
 
-  order.products.forEach((item) => {
-    const itemPrice = item.variant.salePrice
-    const itemTotal = itemPrice * item.quantity
-    const preTaxPrice = itemPrice / (1 + taxRate)
-    const preTaxTotal = preTaxPrice * item.quantity
-    const itemTax = itemTotal - preTaxTotal
-
-    subtotal += preTaxTotal
-    totalTax += itemTax
-    totalAmount += itemTotal
-  })
-
-  const shippingCost = subtotal > 2000 ? 0 : 50
-  const discount = order.discount || 0
-  const finalAmount = order.finalAmount || totalAmount + shippingCost - discount
-  doc.fontSize(20).font("Helvetica-Bold").fillColor(colors.primary).text("INVOICE", { align: "center" })
-  doc.moveDown(0.25)
+  doc.moveDown(0.3)
   doc
     .moveTo(40, doc.y)
     .lineTo(doc.page.width - 40, doc.y)
     .strokeColor(colors.accent)
+    .lineWidth(2)
     .stroke()
-  doc.moveDown(0.5)
+
+  doc.moveDown(0.8)
+}
+
+function drawCompanyInfo(doc, colors) {
   const startY = doc.y
-  doc.font("Helvetica-Bold").fontSize(12).fillColor(colors.primary).text("WEARiT", 40, startY)
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(colors.secondary)
-    .text("123 Fashion Street", 40, doc.y + 2)
-    .text("Fashion City, FC 12345", 40, doc.y + 2)
-    .text("Phone: +91 9876543210", 40, doc.y + 2)
-    .text("Email: support@wearit.com", 40, doc.y + 2)
-    .text("GSTIN: 29AABCW1234R1Z5", 40, doc.y + 2)
-  const rightColumnX = doc.page.width / 2 + 20
-  doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.primary).text("Invoice No:", rightColumnX, startY)
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(colors.secondary)
-    .text(order.orderID, rightColumnX + 80, startY)
+  doc.font("Helvetica-Bold").fontSize(14).fillColor(colors.primary).text("WEARiT", 40, startY)
 
   doc
-    .font("Helvetica-Bold")
-    .fontSize(10)
-    .fillColor(colors.primary)
-    .text("Invoice Date:", rightColumnX, startY + 15)
-  doc
     .font("Helvetica")
-    .fontSize(9)
+    .fontSize(10)
     .fillColor(colors.secondary)
-    .text(
-      new Date().toLocaleDateString("en-US", {
+    .text("Premium Fashion Store", 40, doc.y + 5)
+    .text("123 Fashion Street, Style District", 40, doc.y + 3)
+    .text("Fashion City, FC 12345", 40, doc.y + 3)
+    .text("Phone: +91 9876543210", 40, doc.y + 3)
+    .text("Email: support@wearit.com", 40, doc.y + 3)
+    .text("GSTIN: 29AABCW1234R1Z5", 40, doc.y + 3)
+}
+
+function drawInvoiceDetails(doc, colors, order) {
+  const rightColumnX = doc.page.width - 200
+  const labelWidth = 80
+  const startY = doc.y - 120
+  const details = [
+    { label: "Invoice No:", value: order.orderID },
+    {
+      label: "Invoice Date:",
+      value: new Date().toLocaleDateString("en-IN", {
         year: "numeric",
-        month: "long",
+        month: "short",
         day: "numeric",
       }),
-      rightColumnX + 80,
-      startY + 15,
-    )
-
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(10)
-    .fillColor(colors.primary)
-    .text("Order Date:", rightColumnX, startY + 30)
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(colors.secondary)
-    .text(
-      new Date(order.orderDate || order.createdAt).toLocaleDateString("en-US", {
+    },
+    {
+      label: "Order Date:",
+      value: new Date(order.orderDate || order.createdAt).toLocaleDateString("en-IN", {
         year: "numeric",
-        month: "long",
+        month: "short",
         day: "numeric",
       }),
-      rightColumnX + 80,
-      startY + 30,
-    )
+    },
+    { label: "Payment Method:", value: (order.paymentMethod || order.paymentMentod || "COD").toUpperCase() },
+    { label: "Order Status:", value: order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) },
+  ]
 
-  doc
-    .font("Helvetica-Bold")
-    .fontSize(10)
-    .fillColor(colors.primary)
-    .text("Payment Method:", rightColumnX, startY + 45)
-  doc
-    .font("Helvetica")
-    .fontSize(9)
-    .fillColor(colors.secondary)
-    .text(order.paymentMethod || order.paymentMentod || "N/A", rightColumnX + 80, startY + 45)
-  doc.y = Math.max(doc.y, startY + 70)
+  details.forEach((detail, index) => {
+    const y = startY + index * 18
+
+    doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.primary).text(detail.label, rightColumnX, y)
+
+    doc
+      .font("Helvetica")
+      .fontSize(10)
+      .fillColor(colors.text)
+      .text(detail.value, rightColumnX + labelWidth, y)
+  })
+
+  doc.y = Math.max(doc.y, startY + details.length * 18 + 20)
+}
+
+function drawCustomerInfo(doc, colors, order, user, isAdmin) {
   doc
     .moveTo(40, doc.y)
     .lineTo(doc.page.width - 40, doc.y)
     .strokeColor(colors.border)
+    .lineWidth(1)
     .stroke()
-  doc.moveDown(0.5)
-  doc.font("Helvetica-Bold").fontSize(12).fillColor(colors.primary).text("Bill To", 40, doc.y)
-  doc.moveDown(0.25)
+
+  doc.moveDown(0.8)
+  doc.font("Helvetica-Bold").fontSize(12).fillColor(colors.primary).text("BILL TO", 40, doc.y)
+
+  doc.moveDown(0.4)
 
   const customerUser = isAdmin ? order.user : user
   const address = order.address
@@ -130,150 +132,235 @@ const generateInvoice = async (options) => {
   if (address) {
     doc
       .font("Helvetica")
-      .fontSize(9)
-      .fillColor(colors.secondary)
-      .text(`${customerUser.name}`, 40, doc.y)
-      .text(`${address.address || address.addressLine1 || ""}`, 40, doc.y + 2)
+      .fontSize(10)
+      .fillColor(colors.text)
+      .text(customerUser.name, 40, doc.y)
+      .text(address.address || address.addressLine1 || "", 40, doc.y + 3)
 
     if (address.addressLine2) {
-      doc.text(`${address.addressLine2}`, 40, doc.y + 2)
+      doc.text(address.addressLine2, 40, doc.y + 3)
     }
 
     doc
-      .text(`${address.city}, ${address.state} - ${address.pincode || address.zipCode || ""}`, 40, doc.y + 2)
-      .text(`Phone: ${address.mobile || address.phone || customerUser.mobile || "N/A"}`, 40, doc.y + 2)
-      .text(`Email: ${customerUser.email}`, 40, doc.y + 2)
+      .text(`${address.city}, ${address.state} - ${address.pincode || address.zipCode || ""}`, 40, doc.y + 3)
+      .text(`Phone: ${address.mobile || address.phone || customerUser.mobile || "N/A"}`, 40, doc.y + 3)
+      .text(`Email: ${customerUser.email}`, 40, doc.y + 3)
   } else {
     doc
       .font("Helvetica")
-      .fontSize(9)
-      .fillColor(colors.secondary)
-      .text(`${customerUser.name}`, 40, doc.y)
-      .text(`Email: ${customerUser.email}`, 40, doc.y + 2)
+      .fontSize(10)
+      .fillColor(colors.text)
+      .text(customerUser.name, 40, doc.y)
+      .text(`Email: ${customerUser.email}`, 40, doc.y + 3)
+      .text(`Phone: ${customerUser.mobile || "N/A"}`, 40, doc.y + 3)
   }
 
-  doc.moveDown(1)
+  doc.moveDown(1.2)
+}
+
+function drawProductsTable(doc, colors, validProducts, totals) {
   const tableTop = doc.y
-  const tableHeaders = ["Sl.", "Description", "Size", "Qty", "Rate (₹)", "Amount (₹)"]
-  const tableWidth = doc.page.width - 80 // 40px margin on each side
-  const columnWidths = [30, tableWidth - 270, 50, 40, 70, 80]
-  doc.rect(40, tableTop, tableWidth, 18).fill(colors.light)
-  doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.primary)
+  const tableWidth = doc.page.width - 80
+  const tableHeaders = ["#", "Product Details", "Size", "Qty", "Unit Price", "Total"]
+  const columnWidths = [30, tableWidth - 280, 50, 40, 80, 80]
+  doc.rect(40, tableTop, tableWidth, 25).fill(colors.accent)
+  doc.font("Helvetica-Bold").fontSize(10).fillColor("white")
   let xPosition = 40
   tableHeaders.forEach((header, i) => {
-    const textOptions = { width: columnWidths[i], align: i > 2 ? "right" : "left" }
-    doc.text(header, xPosition + 5, tableTop + 5, textOptions)
+    const textOptions = {
+      width: columnWidths[i] - 10,
+      align: i > 2 ? "center" : "left",
+    }
+    doc.text(header, xPosition + 5, tableTop + 8, textOptions)
     xPosition += columnWidths[i]
   })
-  let y = tableTop + 18
-  const maxProductsToShow = Math.min(order.products.length, 10)
-  const productsToShow = order.products.slice(0, maxProductsToShow)
-
-  doc.font("Helvetica").fontSize(8).fillColor(colors.secondary)
-  productsToShow.forEach((item, index) => {
+  let y = tableTop + 25
+  doc.font("Helvetica").fontSize(9).fillColor(colors.text)
+  validProducts.forEach((item, index) => {
     const product = item.product
     const variant = item.variant
-    const itemPrice = variant.salePrice
-    const itemTotal = itemPrice * item.quantity
-    const preTaxPrice = (itemPrice / (1 + taxRate)).toFixed(2)
+    const unitPrice = variant.salePrice
+    const totalPrice = unitPrice * item.quantity
     if (index % 2 === 1) {
-      doc.rect(40, y, tableWidth, 16).fill(colors.highlight)
+      doc.rect(40, y, tableWidth, 20).fill(colors.highlight)
     }
     xPosition = 40
-    doc.text((index + 1).toString(), xPosition + 5, y + 4)
-
+    doc.fillColor(colors.text).text((index + 1).toString(), xPosition + 5, y + 6, {
+      width: columnWidths[0] - 10,
+      align: "center",
+    })
     xPosition += columnWidths[0]
-    doc.text(product.name, xPosition + 5, y + 4, { width: columnWidths[1] - 10, ellipsis: true })
+    let productName = product.name
+    if (item.status && item.status !== "pending") {
+      productName += ` [${item.status.toUpperCase()}]`
+    }
 
+    doc.text(productName, xPosition + 5, y + 6, {
+      width: columnWidths[1] - 10,
+      ellipsis: true,
+    })
     xPosition += columnWidths[1]
-    doc.text(variant.size, xPosition + 5, y + 4)
-
+    doc.text(variant.size, xPosition + 5, y + 6, {
+      width: columnWidths[2] - 10,
+      align: "center",
+    })
     xPosition += columnWidths[2]
-    doc.text(item.quantity.toString(), xPosition + 5, y + 4, { align: "right", width: columnWidths[3] - 10 })
-
+    doc.text(item.quantity.toString(), xPosition + 5, y + 6, {
+      width: columnWidths[3] - 10,
+      align: "center",
+    })
     xPosition += columnWidths[3]
-    doc.text(preTaxPrice, xPosition + 5, y + 4, { align: "right", width: columnWidths[4] - 10 })
-
-    xPosition += columnWidths[4]
-    doc.text((preTaxPrice * item.quantity).toFixed(2), xPosition + 5, y + 4, {
+    doc.text(`₹${unitPrice.toFixed(2)}`, xPosition + 5, y + 6, {
+      width: columnWidths[4] - 10,
       align: "right",
+    })
+    xPosition += columnWidths[4]
+    doc.text(`₹${totalPrice.toFixed(2)}`, xPosition + 5, y + 6, {
       width: columnWidths[5] - 10,
+      align: "right",
     })
 
-    y += 16
+    y += 20
   })
-  if (order.products.length > maxProductsToShow) {
-    doc.rect(40, y, tableWidth, 16).fill(colors.highlight)
-    doc.text(`... and ${order.products.length - maxProductsToShow} more item(s)`, 45, y + 4)
-    y += 16
-  }
   doc
     .moveTo(40, y)
     .lineTo(40 + tableWidth, y)
     .strokeColor(colors.border)
+    .lineWidth(1)
     .stroke()
-  y += 15
-  const summaryX = doc.page.width - 200
-  const valueX = doc.page.width - 60
 
-  doc.font("Helvetica").fontSize(9).fillColor(colors.secondary)
-  doc.text("Subtotal:", summaryX, y, { align: "right" })
-  doc.text(`₹${subtotal.toFixed(2)}`, valueX, y, { align: "right" })
+  doc.y = y + 20
+}
 
-  y += 15
-  doc.text("GST (18%):", summaryX, y, { align: "right" })
-  doc.text(`₹${totalTax.toFixed(2)}`, valueX, y, { align: "right" })
-
-  y += 15
-  doc.text("Shipping:", summaryX, y, { align: "right" })
-  doc.text(`₹${shippingCost.toFixed(2)}`, valueX, y, { align: "right" })
-
-  if (discount > 0) {
-    y += 15
-    doc.text("Discount:", summaryX, y, { align: "right" })
-    doc.text(`-₹${discount.toFixed(2)}`, valueX, y, { align: "right" })
-  }
-  y += 20
+function drawTotalsSection(doc, colors, totals, order) {
+  const summaryX = doc.page.width - 220
+  const labelX = summaryX + 20
+  const valueX = doc.page.width - 80
   doc
-    .moveTo(summaryX - 50, y - 5)
-    .lineTo(valueX + 20, y - 5)
-    .strokeColor(colors.border)
+    .rect(summaryX, doc.y - 10, 200, 120)
+    .fill(colors.light)
     .stroke()
-  doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.primary)
-  doc.text("Total Amount:", summaryX, y, { align: "right" })
-  doc.text(`₹${finalAmount.toFixed(2)}`, valueX, y, { align: "right" })
-  y += 30
+
+  let y = doc.y
+  const totalsData = [
+    { label: "Subtotal:", value: `₹${totals.subtotal.toFixed(2)}`, bold: false },
+    { label: "Product Discount:", value: `-₹${totals.productDiscount.toFixed(2)}`, bold: false },
+    { label: "Shipping Charge:", value: `₹${totals.shippingCharge.toFixed(2)}`, bold: false },
+  ]
+  if (totals.couponDiscount > 0) {
+    totalsData.push({
+      label: "Coupon Discount:",
+      value: `-₹${totals.couponDiscount.toFixed(2)}`,
+      bold: false,
+    })
+  }
+  totalsData.forEach((item, index) => {
+    doc
+      .font("Helvetica")
+      .fontSize(10)
+      .fillColor(colors.secondary)
+      .text(item.label, labelX, y, { align: "left" })
+      .text(item.value, valueX - 60, y, { align: "right", width: 60 })
+    y += 18
+  })
+
+  doc
+    .moveTo(labelX, y - 5)
+    .lineTo(valueX, y - 5)
+    .strokeColor(colors.border)
+    .lineWidth(1)
+    .stroke()
+
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(12)
+    .fillColor(colors.primary)
+    .text("TOTAL AMOUNT:", labelX, y + 5, { align: "left" })
+    .text(`₹${totals.finalAmount.toFixed(2)}`, valueX - 60, y + 5, {
+      align: "right",
+      width: 100,
+    })
+
+  doc.y = y + 40
+}
+
+function drawPaymentInfo(doc, colors, order) {
   const leftColX = 40
   const rightColX = doc.page.width / 2 + 20
-  doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.primary).text("Payment Information", leftColX, y)
-  doc.moveDown(0.25)
-  doc.font("Helvetica").fontSize(8).fillColor(colors.secondary)
+  const startY = doc.y + 20
 
-  if (order.paymentMethod === "COD" || order.paymentMentod === "COD") {
-    doc.text("Payment Method: Cash on Delivery", leftColX, doc.y)
-    doc.text("Status: Payment pending", leftColX, doc.y + 2)
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.primary).text("PAYMENT INFORMATION", leftColX, startY)
+
+  doc.moveDown(0.4)
+  doc.font("Helvetica").fontSize(9).fillColor(colors.text)
+
+  const paymentMethod = order.paymentMethod || order.paymentMentod || "COD"
+  const paymentStatus = order.paymentStatus || "pending"
+
+  if (paymentMethod.toUpperCase() === "COD") {
+    doc
+      .text("• Payment Method: Cash on Delivery", leftColX, doc.y)
+      .text("• Status: Payment due on delivery", leftColX, doc.y + 3)
+      .text("• Please keep exact change ready", leftColX, doc.y + 3)
   } else {
-    doc.text("Payment Method: Online Payment", leftColX, doc.y)
-    doc.text("Status: Paid", leftColX, doc.y + 2)
+    doc
+      .text(`• Payment Method: ${paymentMethod.toUpperCase()}`, leftColX, doc.y)
+      .text(`• Status: ${paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)}`, leftColX, doc.y + 3)
+
+    if (order.paymentDetails?.transactionId) {
+      doc.text(`• Transaction ID: ${order.paymentDetails.transactionId}`, leftColX, doc.y + 3)
+    }
   }
-  doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.primary).text("Terms & Conditions", rightColX, y)
-  doc.moveDown(0.25)
-  doc.font("Helvetica").fontSize(8).fillColor(colors.secondary)
-  doc.text("1. Returns accepted within 7 days of delivery.", rightColX, doc.y)
-  doc.text("2. Damaged items must be reported within 48 hours.", rightColX, doc.y + 2)
-  doc.text("3. For queries, contact our customer support.", rightColX, doc.y + 2)
+}
+
+function drawTermsAndConditions(doc, colors) {
+  const rightColX = doc.page.width / 2 + 20
+  const startY = doc.y - 60
+
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.primary).text("TERMS & CONDITIONS", rightColX, startY)
+
+  doc.moveDown(0.4)
+  doc.font("Helvetica").fontSize(9).fillColor(colors.text)
+
+  const terms = [
+    "• Returns accepted within 7 days of delivery",
+    "• Items must be in original condition with tags",
+    "• Damaged items must be reported within 48 hours",
+    "• Refunds processed within 5-7 business days",
+    "• For support: support@wearit.com",
+  ]
+
+  let y = startY + 15
+  terms.forEach((term) => {
+    doc.text(term, rightColX, y)
+    y += 12
+  })
+
+  doc.y = Math.max(doc.y, y + 20)
+}
+
+function drawFooter(doc, colors) {
   const pageHeight = doc.page.height - doc.page.margins.bottom
   doc
-    .moveTo(40, pageHeight - 40)
-    .lineTo(doc.page.width - 40, pageHeight - 40)
+    .moveTo(40, pageHeight - 50)
+    .lineTo(doc.page.width - 40, pageHeight - 50)
     .strokeColor(colors.border)
+    .lineWidth(1)
     .stroke()
-  doc.font("Helvetica").fontSize(8).fillColor(colors.secondary)
-  doc.text("Thank you for shopping with WEARiT!", 40, pageHeight - 30, { align: "center" })
-  doc.text("This is a computer-generated invoice and does not require a physical signature.", 40, pageHeight - 20, {
-    align: "center",
-  })
-  doc.end()
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .fillColor(colors.accent)
+    .text("Thank you for shopping with WEARiT!", 40, pageHeight - 35, {
+      align: "center",
+    })
+  doc
+    .font("Helvetica")
+    .fontSize(8)
+    .fillColor(colors.secondary)
+    .text("This is a computer-generated invoice and does not require a physical signature.", 40, pageHeight - 20, {
+      align: "center",
+    })
 }
 
 module.exports = { generateInvoice }

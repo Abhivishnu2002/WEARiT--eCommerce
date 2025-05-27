@@ -47,10 +47,12 @@
             <form id="order-form" action="/checkout/place-order" method="POST">
               <input type="hidden" name="addressId" value="<%= addressId %>">
               <!-- This hidden input will hold the selected payment method -->
-              <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod" value="COD">
+              <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod" value="">
               <input type="hidden" id="hiddenOrderId" name="orderId" value="<%= typeof orderId !== 'undefined' ? orderId : '' %>">
               
               <div class="payment-method-selection">
+                <!-- COD Payment Method -->
+                <% if (totals.canUseCOD) { %>
                 <div class="payment-method-card mb-3" data-method="COD">
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" checked>
@@ -59,16 +61,33 @@
                         <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>
                         <div>
                           <span class="d-block fw-bold">Cash on Delivery</span>
-                          <small class="text-muted">Pay when you receive your order</small>
+                          <small class="text-muted">Pay when you receive your order (Available for orders under ₹1000)</small>
                         </div>
                       </div>
                     </label>
                   </div>
                 </div>
+                <% } else { %>
+                <div class="payment-method-card mb-3 disabled" data-method="COD">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" disabled>
+                    <label class="form-check-label text-muted" for="paymentMethodCOD">
+                      <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>
+                        <div>
+                          <span class="d-block fw-bold">Cash on Delivery</span>
+                          <small class="text-danger">Not available for orders ₹1000 and above</small>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                <% } %>
 
+                <!-- PayPal Payment Method -->
                 <div class="payment-method-card mb-3" data-method="paypal">
                   <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal" <%= !totals.canUseCOD ? 'checked' : '' %>>
                     <label class="form-check-label" for="paymentMethodPaypal">
                       <div class="d-flex align-items-center">
                         <i class="fa-brands fa-paypal me-3 fs-4 text-primary"></i>
@@ -81,6 +100,7 @@
                   </div>
                 </div>
 
+                <!-- Wallet Payment Method -->
                 <% if (user && user.wallet && user.wallet.balance > 0) { %>
                 <div class="payment-method-card mb-3" data-method="wallet">
                   <div class="form-check">
@@ -193,6 +213,14 @@
                 <span>Total:</span>
                 <span id="finalAmount">₹<%= totals.finalAmount %></span>
               </div>
+
+              <!-- COD Availability Notice -->
+              <% if (!totals.canUseCOD) { %>
+              <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <small>Cash on Delivery is only available for orders under ₹1000. Please choose an online payment method.</small>
+              </div>
+              <% } %>
             <% } %>
           </div>
         </div>

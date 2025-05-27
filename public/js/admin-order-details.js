@@ -1,4 +1,81 @@
 document.addEventListener("DOMContentLoaded", () => {
+  function updatePriceSummary(updatedTotals) {
+    if (!updatedTotals) return
+
+    const priceSummaryCard = document.getElementById("priceSummaryCard")
+    if (priceSummaryCard) {
+      priceSummaryCard.classList.add("update-animation")
+      setTimeout(() => {
+        priceSummaryCard.classList.remove("update-animation")
+      }, 2000)
+    }
+    const elementsToUpdate = [
+      { id: "regularTotal", value: `₹${updatedTotals.regularTotal.toFixed(2)}` },
+      { id: "itemsTotal", value: `₹${updatedTotals.itemsTotal.toFixed(2)}` },
+      { id: "productDiscount", value: `-₹${updatedTotals.productDiscount.toFixed(2)}` },
+      { id: "couponDiscount", value: `-₹${updatedTotals.couponDiscount.toFixed(2)}` },
+      { id: "grandTotal", value: `₹${updatedTotals.grandTotal.toFixed(2)}` },
+      { id: "activeProductsCount", value: updatedTotals.activeProductsCount },
+    ]
+
+    elementsToUpdate.forEach(({ id, value }) => {
+      const element = document.getElementById(id)
+      if (element) {
+        element.style.transition = "all 0.3s ease"
+        element.style.transform = "scale(1.1)"
+        element.style.color = "#4ade80"
+
+        setTimeout(() => {
+          element.textContent = value
+          element.style.transform = "scale(1)"
+          element.style.color = ""
+        }, 150)
+      }
+    })
+    const shippingElement = document.getElementById("shippingCharge")
+    if (shippingElement) {
+      shippingElement.style.transition = "all 0.3s ease"
+      shippingElement.style.transform = "scale(1.1)"
+
+      setTimeout(() => {
+        if (updatedTotals.shippingCharge === 0) {
+          shippingElement.textContent = "Free"
+          shippingElement.className = "summary-value free-shipping"
+        } else {
+          shippingElement.textContent = `₹${updatedTotals.shippingCharge.toFixed(2)}`
+          shippingElement.className = "summary-value"
+        }
+        shippingElement.style.transform = "scale(1)"
+      }, 150)
+    }
+    showNotification("Price summary updated successfully!", "success")
+  }
+  function showNotification(message, type = "info") {
+    const notification = document.createElement("div")
+    notification.className = `alert alert-${type === "success" ? "success" : type === "error" ? "danger" : "info"} alert-dismissible fade show position-fixed`
+    notification.style.cssText = `
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `
+
+    notification.innerHTML = `
+      <i class="fas fa-${type === "success" ? "check-circle" : type === "error" ? "exclamation-circle" : "info-circle"} me-2"></i>
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `
+
+    document.body.appendChild(notification)
+
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove()
+      }
+    }, 5000)
+  }
+
   const updateStatusBtns = document.querySelectorAll(".update-status-btn")
   if (updateStatusBtns.length > 0) {
     updateStatusBtns.forEach((btn) => {
@@ -7,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const productId = this.dataset.productId || ""
         const currentStatus = this.dataset.currentStatus
 
+        const Swal = window.Swal
         Swal.fire({
           title: "Update Status",
           html: `
@@ -60,6 +138,10 @@ document.addEventListener("DOMContentLoaded", () => {
               .then((response) => response.json())
               .then((data) => {
                 if (data.success) {
+                  if (data.updatedTotals) {
+                    updatePriceSummary(data.updatedTotals)
+                  }
+
                   Swal.fire({
                     icon: "success",
                     title: "Success",
@@ -91,6 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
+
   const processReturnBtns = document.querySelectorAll(".process-return-btn")
   if (processReturnBtns.length > 0) {
     processReturnBtns.forEach((btn) => {
@@ -99,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const productId = this.dataset.productId
         const productName = this.dataset.productName
 
+        const Swal = window.Swal
         Swal.fire({
           title: "Process Return Request",
           html: `
@@ -151,6 +235,10 @@ document.addEventListener("DOMContentLoaded", () => {
               .then((response) => response.json())
               .then((data) => {
                 if (data.success) {
+                  if (data.updatedTotals) {
+                    updatePriceSummary(data.updatedTotals)
+                  }
+
                   Swal.fire({
                     icon: "success",
                     title: "Success",
@@ -182,11 +270,13 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
+
   const cancelOrderBtn = document.querySelector(".cancel-order-btn")
   if (cancelOrderBtn) {
     cancelOrderBtn.addEventListener("click", function () {
       const orderId = this.dataset.orderId
 
+      const Swal = window.Swal
       Swal.fire({
         title: "Cancel Order",
         text: "Are you sure you want to cancel this order?",
@@ -220,6 +310,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
+                if (data.updatedTotals) {
+                  updatePriceSummary(data.updatedTotals)
+                }
+
                 Swal.fire({
                   icon: "success",
                   title: "Success",
@@ -249,5 +343,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
     })
+  }
+  function initializePriceSummaryUpdates() {
+    const productRows = document.querySelectorAll("[data-product-id]")
+
+    productRows.forEach((row) => {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === "attributes" && mutation.attributeName === "class") {
+            console.log("Product status change detected")
+          }
+        })
+      })
+
+      observer.observe(row, { attributes: true, attributeFilter: ["class"] })
+    })
+  }
+  initializePriceSummaryUpdates()
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "r") {
+      e.preventDefault()
+      showNotification("Price summary refreshed", "info")
+      window.location.reload()
+    }
+  })
+
+  const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  if (tooltipElements.length > 0) {
+    const bootstrap = window.bootstrap 
+    if (typeof bootstrap !== "undefined") {
+      tooltipElements.forEach((el) => new bootstrap.Tooltip(el))
+    }
   }
 })

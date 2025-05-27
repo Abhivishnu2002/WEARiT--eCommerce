@@ -13,6 +13,73 @@
         <link rel="stylesheet" href="/css/admin-navbar.css">
         <link rel="stylesheet" href="/css/admin-orders.css">
         <link rel="stylesheet" href="/css/admin-order-details.css">
+        <style>
+            .price-summary-card {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+            .price-summary-header {
+                background: rgba(255,255,255,0.1);
+                border-radius: 15px 15px 0 0;
+                backdrop-filter: blur(10px);
+            }
+            .summary-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 0;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .summary-row:last-child {
+                border-bottom: none;
+            }
+            .summary-row.total {
+                background: rgba(255,255,255,0.1);
+                margin: 0 -1.5rem;
+                padding: 1rem 1.5rem;
+                border-radius: 0 0 15px 15px;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+            .summary-label {
+                font-weight: 500;
+                opacity: 0.9;
+            }
+            .summary-value {
+                font-weight: 600;
+            }
+            .discount-value {
+                color: #4ade80 !important;
+            }
+            .coupon-badge {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                padding: 0.25rem 0.5rem;
+                border-radius: 0.5rem;
+                font-size: 0.75rem;
+                margin-left: 0.5rem;
+            }
+            .free-shipping {
+                color: #4ade80 !important;
+                font-weight: 600;
+            }
+            .price-breakdown-item {
+                background: rgba(255,255,255,0.05);
+                border-radius: 8px;
+                padding: 0.75rem;
+                margin-bottom: 0.5rem;
+            }
+            .update-animation {
+                animation: highlightUpdate 2s ease-in-out;
+            }
+            @keyframes highlightUpdate {
+                0% { background-color: rgba(255,255,255,0.2); }
+                50% { background-color: rgba(255,255,255,0.3); }
+                100% { background-color: transparent; }
+            }
+        </style>
     </head>
     <body>
         <% if (typeof admin !== 'undefined') { %>
@@ -155,29 +222,110 @@
                             </div>
                         </div>
 
-                        <div class="card mb-4 shadow-sm">
-                            <div class="card-header bg-white">
-                                <h5 class="mb-0">Order Summary</h5>
+                        <!-- Enhanced Price Summary Section -->
+                        <div class="card price-summary-card mb-4 shadow-lg" id="priceSummaryCard">
+                            <div class="card-header price-summary-header">
+                                <h5 class="mb-0 text-white">
+                                    <i class="fas fa-calculator me-2"></i>
+                                    Price Summary
+                                </h5>
+                                <small class="text-white-50">
+                                    <span id="activeProductsCount"><%= orderSummary.activeProductsCount %></span> of 
+                                    <span id="totalProductsCount"><%= orderSummary.totalProductsCount %></span> items active
+                                </small>
                             </div>
                             <div class="card-body">
-                                <div class="summary-item d-flex justify-content-between mb-2">
-                                    <span>Subtotal:</span>
-                                    <span>₹<%= orderSummary.subtotal.toFixed(2) %></span>
+                                <!-- Product Subtotal -->
+                                <div class="summary-row">
+                                    <span class="summary-label">
+                                        <i class="fas fa-shopping-bag me-2"></i>
+                                        Items Subtotal:
+                                    </span>
+                                    <span class="summary-value" id="regularTotal">₹<%= orderSummary.regularTotal.toFixed(2) %></span>
                                 </div>
-                                <div class="summary-item d-flex justify-content-between mb-2">
-                                    <span>Shipping:</span>
-                                    <span>₹<%= orderSummary.shippingCost.toFixed(2) %></span>
-                                </div>
-                                <% if (order.discount && order.discount > 0) { %>
-                                <div class="summary-item d-flex justify-content-between mb-2">
-                                    <span>Discount:</span>
-                                    <span class="text-danger">-₹<%= order.discount.toFixed(2) %></span>
+
+                                <!-- Product Discount -->
+                                <% if (orderSummary.productDiscount > 0) { %>
+                                <div class="summary-row">
+                                    <span class="summary-label">
+                                        <i class="fas fa-tag me-2"></i>
+                                        Product Discount:
+                                    </span>
+                                    <span class="summary-value discount-value" id="productDiscount">-₹<%= orderSummary.productDiscount.toFixed(2) %></span>
                                 </div>
                                 <% } %>
-                                <hr>
-                                <div class="summary-item d-flex justify-content-between fw-bold">
-                                    <span>Total:</span>
-                                    <span class="text-primary">₹<%= order.finalAmount.toFixed(2) %></span>
+
+                                <!-- Items Total After Discount -->
+                                <div class="summary-row">
+                                    <span class="summary-label">
+                                        <i class="fas fa-receipt me-2"></i>
+                                        Items Total:
+                                    </span>
+                                    <span class="summary-value" id="itemsTotal">₹<%= orderSummary.itemsTotal.toFixed(2) %></span>
+                                </div>
+
+                                <!-- Coupon Discount -->
+                                <% if (orderSummary.couponDiscount > 0) { %>
+                                <div class="summary-row">
+                                    <span class="summary-label">
+                                        <i class="fas fa-ticket-alt me-2"></i>
+                                        Coupon Discount:
+                                        <% if (orderSummary.couponInfo) { %>
+                                            <span class="coupon-badge"><%= orderSummary.couponInfo.code %></span>
+                                        <% } %>
+                                    </span>
+                                    <span class="summary-value discount-value" id="couponDiscount">-₹<%= orderSummary.couponDiscount.toFixed(2) %></span>
+                                </div>
+                                <% } %>
+
+                                <!-- Shipping Charges -->
+                                <div class="summary-row">
+                                    <span class="summary-label">
+                                        <i class="fas fa-shipping-fast me-2"></i>
+                                        Shipping:
+                                        <% if (orderSummary.itemsTotal >= 1000) { %>
+                                            <small class="text-white-50">(Free for orders ≥₹1000)</small>
+                                        <% } else { %>
+                                            <small class="text-white-50">(₹200 for orders <₹1000)</small>
+                                        <% } %>
+                                    </span>
+                                    <span class="summary-value <%= orderSummary.shippingCharge === 0 ? 'free-shipping' : '' %>" id="shippingCharge">
+                                        <% if (orderSummary.shippingCharge === 0) { %>
+                                            Free
+                                        <% } else { %>
+                                            ₹<%= orderSummary.shippingCharge.toFixed(2) %>
+                                        <% } %>
+                                    </span>
+                                </div>
+
+                                <!-- Grand Total -->
+                                <div class="summary-row total">
+                                    <span class="summary-label">
+                                        <i class="fas fa-money-check-alt me-2"></i>
+                                        Grand Total:
+                                    </span>
+                                    <span class="summary-value" id="grandTotal">₹<%= orderSummary.grandTotal.toFixed(2) %></span>
+                                </div>
+
+                                <!-- Payment Method Info -->
+                                <div class="mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="summary-label">
+                                            <i class="fas fa-credit-card me-2"></i>
+                                            Payment Method:
+                                        </span>
+                                        <span class="summary-value">
+                                            <%= order.paymentMethod === 'COD' ? 'Cash on Delivery' : 
+                                                order.paymentMethod === 'wallet' ? 'Wallet' : 
+                                                order.paymentMethod === 'paypal' ? 'PayPal' : 'Online Payment' %>
+                                        </span>
+                                    </div>
+                                    <% if (order.paymentMethod === 'COD') { %>
+                                        <small class="text-white-50 d-block mt-1">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            COD available for orders under ₹1000
+                                        </small>
+                                    <% } %>
                                 </div>
                             </div>
                         </div>
@@ -207,7 +355,7 @@
                                         </thead>
                                         <tbody>
                                             <% order.products.forEach(item => { %>
-                                            <tr>
+                                            <tr class="<%= item.isActive ? '' : 'table-secondary' %>" data-product-id="<%= item.product._id %>">
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <img src="<%= item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/images/placeholder.jpg' %>" 
@@ -217,11 +365,24 @@
                                                         <div>
                                                             <h6 class="mb-0"><%= item.product.name %></h6>
                                                             <small class="text-muted"><%= item.product.color || 'N/A' %></small>
+                                                            <% if (!item.isActive) { %>
+                                                                <small class="text-danger d-block">
+                                                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                                                    Excluded from totals
+                                                                </small>
+                                                            <% } %>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td><%= item.variant.size %></td>
-                                                <td>₹<%= item.variant.salePrice.toFixed(2) %></td>
+                                                <td>
+                                                    <% if (item.regularPrice > item.salePrice) { %>
+                                                        <span class="text-decoration-line-through text-muted small">₹<%= item.regularPrice.toFixed(2) %></span><br>
+                                                        <span class="text-success fw-bold">₹<%= item.salePrice.toFixed(2) %></span>
+                                                    <% } else { %>
+                                                        ₹<%= item.salePrice.toFixed(2) %>
+                                                    <% } %>
+                                                </td>
                                                 <td><%= item.quantity %></td>
                                                 <td>₹<%= (item.variant.salePrice * item.quantity).toFixed(2) %></td>
                                                 <td>

@@ -8,6 +8,9 @@ const Coupon = require("../../models/couponModel")
 const UserCoupon = require("../../models/userCouponModel")
 const getWishlistCount = require("../../utils/wishlistCount")
 const couponController = require("./couponController")
+const PriceCalculator = require("../../utils/priceCalculator")
+
+const priceCalculator = new PriceCalculator()
 
 function generateOrderID() {
   const date = new Date()
@@ -56,32 +59,18 @@ const loadCheckout = async (req, res) => {
       req.flash("error_msg", "No valid products in your cart")
       return res.redirect("/cart")
     }
-
-    let subtotal = 0
-    let totalDiscount = 0
-
-    validProducts.forEach((item) => {
-      const variant = item.product.variants.find((v) => v.size === item.size)
-      if (variant) {
-        const itemTotal = variant.varientPrice * item.quantity
-        const discountAmount = (variant.varientPrice - variant.salePrice) * item.quantity
-
-        subtotal += itemTotal
-        totalDiscount += discountAmount
-      }
-    })
-
-    const couponDiscount = req.session.couponDiscount || 0
+    const couponDiscount = Number(req.session.couponDiscount) || 0
     const appliedCoupon = req.session.coupon || null
-    const shippingCharge = subtotal - totalDiscount > 500 ? 0 : 50
-    const finalAmount = (subtotal - totalDiscount - couponDiscount + shippingCharge).toFixed(2)
+
+    const totals = priceCalculator.calculateCheckoutTotals(validProducts, couponDiscount)
+
     const currentDate = new Date()
     const availableCouponsCount = await Coupon.countDocuments({
       isActive: true,
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate },
       $or: [{ userSpecific: false }, { userSpecific: true, applicableUsers: req.user._id }],
-      minimumPurchase: { $lte: subtotal - totalDiscount },
+      minimumPurchase: { $lte: totals.saleTotal },
     })
 
     const wishlistCount = await getWishlistCount(req.user._id)
@@ -92,10 +81,11 @@ const loadCheckout = async (req, res) => {
         products: validProducts,
       },
       totals: {
-        subtotal,
-        discount: totalDiscount,
-        shipping: shippingCharge,
-        finalAmount,
+        subtotal: totals.subtotal,
+        discount: totals.totalDiscount,
+        shipping: totals.shippingCharge,
+        finalAmount: totals.finalAmount,
+        canUseCOD: totals.canUseCOD,
       },
       user: req.user,
       wishlistCount,
@@ -172,26 +162,10 @@ const loadPayment = async (req, res) => {
         }
       }
     }
-
-    let subtotal = 0
-    let totalDiscount = 0
-
-    validProducts.forEach((item) => {
-      const variant = item.product.variants.find((v) => v.size === item.size)
-      if (variant) {
-        const itemTotal = variant.varientPrice * item.quantity
-        const discountAmount = (variant.varientPrice - variant.salePrice) * item.quantity
-
-        subtotal += itemTotal
-        totalDiscount += discountAmount
-      }
-    })
-
-    const couponDiscount = req.session.couponDiscount || 0
+    const couponDiscount = Number(req.session.couponDiscount) || 0
     const appliedCoupon = req.session.coupon || null
 
-    const shippingCharge = subtotal - totalDiscount > 500 ? 0 : 50
-    const finalAmount = (subtotal - totalDiscount - couponDiscount + shippingCharge).toFixed(2)
+    const totals = priceCalculator.calculateCheckoutTotals(validProducts, couponDiscount)
 
     const wishlistCount = await getWishlistCount(req.user._id)
 
@@ -202,10 +176,11 @@ const loadPayment = async (req, res) => {
         products: validProducts,
       },
       totals: {
-        subtotal,
-        discount: totalDiscount,
-        shipping: shippingCharge,
-        finalAmount,
+        subtotal: totals.subtotal,
+        discount: totals.totalDiscount,
+        shipping: totals.shippingCharge,
+        finalAmount: totals.finalAmount,
+        canUseCOD: totals.canUseCOD,
       },
       couponDiscount,
       appliedCoupon,
@@ -284,11 +259,18 @@ const placeOrder = async (req, res) => {
         status: "pending",
       })
     }
-    const couponDiscount = req.session.couponDiscount || 0
-    const appliedCoupon = req.session.coupon || null
 
-    const shippingCharge = subtotal - totalDiscount > 500 ? 0 : 50
-    const finalAmount = subtotal - totalDiscount - couponDiscount + shippingCharge
+    const couponDiscount = Number(req.session.couponDiscount) || 0
+    const appliedCoupon = req.session.coupon || null
+    const saleTotal = subtotal - totalDiscount
+    const shippingCharge = saleTotal >= 1000 ? 0 : 200
+    const finalAmount = saleTotal - couponDiscount + shippingCharge
+    const paymentValidation = priceCalculator.validatePaymentMethod(paymentMethod, saleTotal)
+    if (!paymentValidation.valid) {
+      req.flash("error_msg", paymentValidation.message)
+      return res.redirect("/payment?addressId=" + addressId)
+    }
+
     const orderID = generateOrderID()
     const orderData = {
       user: req.user._id,
@@ -297,7 +279,7 @@ const placeOrder = async (req, res) => {
       address: addressId,
       totalAmount: subtotal,
       discount: totalDiscount,
-      finalAmount: finalAmount,
+      finalAmount: Math.round(finalAmount * 100) / 100,
       paymentMethod: paymentMethod,
       paymentStatus: "pending",
       orderStatus: "pending",
@@ -332,6 +314,7 @@ const placeOrder = async (req, res) => {
         }
       }
       await Promise.all(stockUpdateOperations)
+
       await Transaction.create({
         user: req.user._id,
         order: order._id,
@@ -344,9 +327,11 @@ const placeOrder = async (req, res) => {
           description: `Cash on Delivery payment for order #${orderID}`,
         },
       })
+
       if (appliedCoupon) {
         await couponController.processCouponUsage(req.user._id, appliedCoupon.id, order._id)
       }
+
       if (req.session.coupon) {
         delete req.session.coupon
       }
@@ -389,7 +374,7 @@ const placeOrder = async (req, res) => {
       await user.save()
 
       order.paymentStatus = "completed"
-      order.isTemporary = false 
+      order.isTemporary = false
       order.paymentDetails = {
         transactionId: `WALLET-${Date.now()}`,
         paymentMethod: "wallet",
@@ -400,6 +385,7 @@ const placeOrder = async (req, res) => {
       }
 
       await order.save()
+
       await Transaction.create({
         user: req.user._id,
         order: order._id,
@@ -412,6 +398,7 @@ const placeOrder = async (req, res) => {
           description: `Payment for order #${orderID}`,
         },
       })
+
       if (appliedCoupon) {
         await couponController.processCouponUsage(req.user._id, appliedCoupon.id, order._id)
       }
@@ -442,7 +429,7 @@ const orderSuccess = async (req, res) => {
     const order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
-      paymentStatus: { $ne: "failed" }, 
+      paymentStatus: { $ne: "failed" },
     }).populate("address")
 
     if (!order) {

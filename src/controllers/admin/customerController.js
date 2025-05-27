@@ -1,6 +1,7 @@
 const User = require('../../models/userModel');
 const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
+const Order = require('../../models/orderModel');
 
 const loadCustomer = async (req, res) => {
     try {
@@ -26,7 +27,20 @@ const loadCustomer = async (req, res) => {
         const totalPages = Math.ceil(totalUsers / limit);
 
         const users = await User.find(filter).sort({createdAt: -1}).skip(skip).limit(limit);
-        
+
+        const orderCount = await Order.aggregate([
+            {
+                $group: {
+                    _id: "$user",
+                    orderCount: { $sum: 1 }
+                }, 
+            }, {
+                $project:{
+                    _id: 0,
+                    orderCount: 1
+                }
+            }
+        ])
         const admin = {
             name: req.session.admin.name,
             email: req.session.admin.email,
@@ -39,6 +53,7 @@ const loadCustomer = async (req, res) => {
             currentPage: page,
             limit,
             totalPages,
+            orderCount,
             totalUsers,
             searchQuery
         });

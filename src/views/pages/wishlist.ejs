@@ -73,6 +73,7 @@
                                 <div
                                     class="wishlist-item"
                                     data-product-id="<%= product._id %>"
+                                    data-stock-status="<%= product.stockInfo.stockStatus %>"
                                 >
                                     <div class="product-image">
                                         <% const mainImage =
@@ -85,11 +86,28 @@
                                             />
                                         </a>
                                     </div>
+                                    
+                                    <!-- Stock Status Badge -->
+                                    <div class="stock-status-badge mb-2">
+                                        <% if (product.stockInfo.hasStock) { %>
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                In Stock (<%= product.stockInfo.totalStock %> available)
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>
+                                                Out of Stock
+                                            </span>
+                                        <% } %>
+                                    </div>
+
                                     <h4 class="product-title">
                                         <a href="/products/<%= product._id %>"
                                             ><%= product.name %></a
                                         >
                                     </h4>
+                                    
                                     <div class="product-price">
                                         <% if (product.variants &&
                                         product.variants.length > 0) { %>
@@ -108,19 +126,59 @@
                                         >
                                         <% } %> <% } %>
                                     </div>
-                                    <button
-                                        class="btn btn-dark add-to-cart-btn"
-                                        data-product-id="<%= product._id %>"
-                                        data-size="<%= product.variants && product.variants.length > 0 ? product.variants[0].size : '' %>"
-                                    >
-                                        Add To Cart
-                                    </button>
+
+                                    <!-- Size Selection for In-Stock Items -->
+                                    <% if (product.stockInfo.hasStock && product.stockInfo.availableVariants.length > 0) { %>
+                                    <div class="size-selection mb-3">
+                                        <label class="form-label small">Available Sizes:</label>
+                                        <select class="form-select form-select-sm size-selector" data-product-id="<%= product._id %>">
+                                            <% product.stockInfo.availableVariants.forEach((variant, index) => { %>
+                                                <option value="<%= variant.size %>" <%= index === 0 ? 'selected' : '' %>>
+                                                    <%= variant.size %> (<%= variant.stock %> left)
+                                                </option>
+                                            <% }); %>
+                                        </select>
+                                    </div>
+                                    <% } %>
+
+                                    <!-- Conditional Add to Cart Button -->
+                                    <% if (product.stockInfo.hasStock) { %>
+                                        <button
+                                            class="btn btn-dark add-to-cart-btn"
+                                            data-product-id="<%= product._id %>"
+                                            data-size="<%= product.stockInfo.availableVariants.length > 0 ? product.stockInfo.availableVariants[0].size : '' %>"
+                                        >
+                                            <i class="fas fa-shopping-cart me-2"></i>
+                                            Add To Cart
+                                        </button>
+                                    <% } else { %>
+                                        <button
+                                            class="btn btn-secondary out-of-stock-btn"
+                                            disabled
+                                            data-product-id="<%= product._id %>"
+                                        >
+                                            <i class="fas fa-times me-2"></i>
+                                            Out of Stock
+                                        </button>
+                                    <% } %>
+
                                     <button
                                         class="btn btn-danger remove-btn"
                                         data-product-id="<%= product._id %>"
                                     >
+                                        <i class="fas fa-trash me-2"></i>
                                         Remove from wishlist
                                     </button>
+
+                                    <!-- Stock Alert for Out of Stock Items -->
+                                    <% if (!product.stockInfo.hasStock) { %>
+                                    <div class="stock-alert mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-bell me-1"></i>
+                                            We'll notify you when this item is back in stock
+                                        </small>
+                                    </div>
+                                    <% } %>
                                 </div>
                             </div>
                             <% }); %> <% } %>

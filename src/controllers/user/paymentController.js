@@ -8,6 +8,9 @@ const Coupon = require("../../models/couponModel")
 const paypal = require("@paypal/checkout-server-sdk")
 const Address = require("../../models/addressModel")
 const couponController = require("./couponController")
+const PriceCalculator = require("../../utils/priceCalculator")
+
+const priceCalculator = new PriceCalculator()
 
 function getPayPalClient() {
   const clientId = process.env.PAYPAL_CLIENT_ID
@@ -114,13 +117,13 @@ const createPaypalPayment = async (req, res) => {
           status: "pending",
         })
       }
+
       const couponDiscount = req.session.couponDiscount || 0
       const appliedCoupon = req.session.coupon || null
+      const saleTotal = subtotal - totalDiscount
+      const shippingCharge = saleTotal >= 1000 ? 0 : 200
+      const finalAmount = saleTotal - couponDiscount + shippingCharge
 
-      const taxRate = 0.05
-      const taxAmount = (subtotal - totalDiscount) * taxRate
-      const shippingCharge = subtotal - totalDiscount > 500 ? 0 : 50
-      const finalAmount = subtotal - totalDiscount - couponDiscount + taxAmount + shippingCharge
       const date = new Date()
       const year = date.getFullYear().toString().slice(-2)
       const month = ("0" + (date.getMonth() + 1)).slice(-2)
@@ -129,6 +132,7 @@ const createPaypalPayment = async (req, res) => {
         .toString()
         .padStart(4, "0")
       const orderID = `ORD${year}${month}${day}${random}`
+
       const orderData = {
         user: userId,
         orderID: orderID,
@@ -136,7 +140,7 @@ const createPaypalPayment = async (req, res) => {
         address: addressId,
         totalAmount: subtotal,
         discount: totalDiscount,
-        finalAmount: finalAmount,
+        finalAmount: Math.round(finalAmount * 100) / 100,
         paymentMethod: "paypal",
         paymentStatus: "pending",
         orderStatus: "pending",
@@ -162,6 +166,7 @@ const createPaypalPayment = async (req, res) => {
         message: "Missing required parameters",
       })
     }
+
     const existingTransaction = await Transaction.findOne({
       order: order._id,
       status: "pending",
@@ -243,6 +248,7 @@ const executePaypalPayment = async (req, res) => {
       req.flash("error_msg", "Invalid payment information")
       return res.redirect(`/order-failure/${orderId || ""}`)
     }
+
     order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
@@ -253,6 +259,7 @@ const executePaypalPayment = async (req, res) => {
       req.flash("error_msg", "Order not found or already paid")
       return res.redirect(`/order-failure/${orderId}`)
     }
+
     transaction = await Transaction.findOne({
       order: orderId,
       status: "pending",
@@ -273,6 +280,7 @@ const executePaypalPayment = async (req, res) => {
       })
       await transaction.save()
     }
+
     const paypalClient = getPayPalClient()
     const request = new paypal.orders.OrdersCaptureRequest(token)
     request.requestBody({})
@@ -373,6 +381,7 @@ const cancelPaypalPayment = async (req, res) => {
       req.flash("error_msg", "Order ID is missing")
       return res.redirect("/orders")
     }
+
     const transaction = await Transaction.findOne({
       order: orderId,
       status: "pending",
@@ -385,6 +394,7 @@ const cancelPaypalPayment = async (req, res) => {
       transaction.paymentDetails.cancelReason = "User cancelled the payment"
       await transaction.save()
     }
+
     const order = await Order.findById(orderId)
     if (order) {
       order.paymentStatus = "failed"
@@ -405,6 +415,7 @@ const retryPayment = async (req, res) => {
     const orderId = req.params.id
     const { paymentMethod } = req.body
     const baseUrl = getBaseUrl(req)
+
     const order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
@@ -417,10 +428,21 @@ const retryPayment = async (req, res) => {
         message: "Order not found or already paid",
       })
     }
+    if (paymentMethod) {
+      const paymentValidation = priceCalculator.validatePaymentMethod(paymentMethod, order.finalAmount)
+      if (!paymentValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: paymentValidation.message,
+        })
+      }
+    }
+
     if (paymentMethod && ["online", "paypal", "wallet", "COD"].includes(paymentMethod)) {
       order.paymentMethod = paymentMethod
       await order.save()
     }
+
     if (order.paymentMethod === "paypal") {
       const existingTransaction = await Transaction.findOne({
         order: order._id,
@@ -432,6 +454,7 @@ const retryPayment = async (req, res) => {
         existingTransaction.status = "failed"
         await existingTransaction.save()
       }
+
       const paypalClient = getPayPalClient()
       const request = new paypal.orders.OrdersCreateRequest()
       const amountUSD = (order.finalAmount / 75).toFixed(2)
@@ -459,6 +482,7 @@ const retryPayment = async (req, res) => {
           cancel_url: cancelUrl,
         },
       })
+
       const response = await paypalClient.execute(request)
       const approvalUrl = response.result.links.find((link) => link.rel === "approve").href
       const transactionId = generateTransactionId()
@@ -473,6 +497,7 @@ const retryPayment = async (req, res) => {
           paymentId: response.result.id,
         },
       })
+
       return res.json({
         success: true,
         redirect: approvalUrl,
@@ -485,6 +510,7 @@ const retryPayment = async (req, res) => {
           message: "Insufficient wallet balance",
         })
       }
+
       const stockUpdateOperations = []
       for (const orderProduct of order.products) {
         const product = await Product.findById(orderProduct.product)
@@ -506,6 +532,7 @@ const retryPayment = async (req, res) => {
         date: new Date(),
       })
       await user.save()
+
       order.paymentStatus = "completed"
       order.isTemporary = false
       order.paymentDetails = {
@@ -517,6 +544,7 @@ const retryPayment = async (req, res) => {
         createdAt: new Date(),
       }
       await order.save()
+
       await Transaction.create({
         user: req.user._id,
         order: order._id,

@@ -13,7 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const orderId = hiddenOrderId ? hiddenOrderId.value : ""
   let paypalInitialized = false
   const paypal = window.paypal
+  const checkedInput = document.querySelector('input[name="paymentMethod"]:checked')
+  if (checkedInput && selectedPaymentMethodInput) {
+    selectedPaymentMethodInput.value = checkedInput.value
+  }
+
   updateSelectedCard()
+
   if (paypalButtonContainer && typeof paypal !== "undefined") {
     paypal
       .Buttons({
@@ -138,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
   })
+
   if (orderForm) {
     orderForm.addEventListener("submit", (e) => {
       const selectedMethod = selectedPaymentMethodInput ? selectedPaymentMethodInput.value : ""
@@ -146,6 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault()
         return false
       }
+
       const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]')
       let selectedPaymentMethod = null
 

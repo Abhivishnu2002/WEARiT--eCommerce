@@ -6,6 +6,9 @@ const Transaction = require("../../models/transactionModel")
 const { generateInvoice } = require("../../utils/invoiceGenerator")
 const mongoose = require("mongoose")
 const getWishlistCount = require("../../utils/wishlistCount")
+const PriceCalculator = require("../../utils/priceCalculator")
+
+const priceCalculator = new PriceCalculator()
 
 function getStatusClass(status) {
   switch (status.toLowerCase()) {
@@ -103,6 +106,274 @@ function normalizePaymentMethod(order) {
   return order.paymentMethod || "COD"
 }
 
+const cancelProduct = async (req, res) => {
+  const session = await mongoose.startSession()
+
+  try {
+    await session.startTransaction()
+
+    const orderId = req.params.orderId
+    const productId = req.params.productId
+    const { reason } = req.body
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      await session.abortTransaction()
+      console.error(`[CANCEL_PRODUCT] Invalid order ID format: ${orderId}`)
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID format",
+      })
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      await session.abortTransaction()
+      console.error(`[CANCEL_PRODUCT] Invalid product ID format: ${productId}`)
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
+      })
+    }
+    const order = await Order.findOne({
+      _id: orderId,
+      user: req.user._id,
+    })
+      .populate({
+        path: "products.product",
+        select: "name variants",
+      })
+      .session(session)
+
+    if (!order) {
+      await session.abortTransaction()
+      console.error(`[CANCEL_PRODUCT] Order not found: ${orderId} for user: ${req.user._id}`)
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or you don't have permission to access it",
+      })
+    }
+    if (order.paymentStatus === "failed") {
+      await session.abortTransaction()
+      console.error(`[CANCEL_PRODUCT] Cannot cancel product from failed payment order: ${orderId}`)
+      return res.status(400).json({
+        success: false,
+        message: "Cannot cancel products from an order with failed payment. Please retry payment first.",
+      })
+    }
+    const paymentMethod = normalizePaymentMethod(order)
+    if (order.paymentMethod !== paymentMethod) {
+      order.paymentMethod = paymentMethod
+    }
+    const productItem = order.products.id(productId)
+    if (!productItem) {
+      await session.abortTransaction()
+      console.error(`[CANCEL_PRODUCT] Product not found in order: ${productId}`)
+      return res.status(404).json({
+        success: false,
+        message: "Product not found in this order",
+      })
+    }
+    const nonCancellableStatuses = ["delivered", "returned", "cancelled", "return pending"]
+    if (nonCancellableStatuses.includes(productItem.status)) {
+      await session.abortTransaction()
+      console.error(`[CANCEL_PRODUCT] Product cannot be cancelled - current status: ${productItem.status}`)
+      return res.status(400).json({
+        success: false,
+        message: `Product cannot be cancelled. Current status: ${productItem.status}`,
+      })
+    }
+    const refundAmount = priceCalculator.calculateRefundAmount([productItem], order)
+    const originalStatus = productItem.status
+    productItem.status = "cancelled"
+    productItem.cancellationReason = reason || "No reason provided"
+    productItem.cancelledAt = new Date()
+    productItem.cancelledBy = req.user._id
+    const product = await Product.findById(productItem.product._id).session(session)
+    if (product) {
+      const variant = product.variants.find((v) => v.size === productItem.variant.size)
+      if (variant) {
+        const oldQuantity = variant.varientquatity
+        variant.varientquatity += productItem.quantity
+        if (variant.varientquatity < 0) {
+          await session.abortTransaction()
+          console.error(
+            `[CANCEL_PRODUCT] Stock would go negative for product ${productItem.product._id}, variant ${productItem.variant.size}`,
+          )
+          return res.status(500).json({
+            success: false,
+            message: "Error updating stock levels. Please contact support.",
+          })
+        }
+
+        await product.save({ session })
+      } else {
+        console.warn(
+          `[CANCEL_PRODUCT] Variant ${productItem.variant.size} not found for product ${productItem.product._id}`,
+        )
+      }
+    } else {
+      console.warn(`[CANCEL_PRODUCT] Product ${productItem.product._id} not found for stock restoration`)
+    }
+    const statusCounts = {
+      pending: 0,
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0,
+      returned: 0,
+      "return pending": 0,
+    }
+
+    order.products.forEach((product) => {
+      const status = product.status || "pending"
+      statusCounts[status.toLowerCase()] = (statusCounts[status.toLowerCase()] || 0) + 1
+    })
+
+    const totalProducts = order.products.length
+    const originalOrderStatus = order.orderStatus
+    if (statusCounts.cancelled === totalProducts) {
+      order.orderStatus = "cancelled"
+    } else if (statusCounts.returned === totalProducts) {
+      order.orderStatus = "returned"
+    } else if (statusCounts["return pending"] > 0) {
+      order.orderStatus = "return pending"
+    } else if (statusCounts.delivered === totalProducts) {
+      order.orderStatus = "delivered"
+    } else if (statusCounts.shipped > 0) {
+      order.orderStatus = "shipped"
+    } else if (statusCounts.processing > 0) {
+      order.orderStatus = "processing"
+    } else {
+      order.orderStatus = "pending"
+    }
+    const updatedTotals = priceCalculator.recalculateOrderTotals(order)
+    const oldTotalAmount = order.totalAmount
+    const oldFinalAmount = order.finalAmount
+
+    order.totalAmount = updatedTotals.totalAmount
+    order.discount = updatedTotals.discount
+    order.finalAmount = updatedTotals.finalAmount
+    if (isNaN(order.totalAmount)) {
+      console.error(`[CANCEL_PRODUCT] totalAmount is NaN, setting to 0`)
+      order.totalAmount = 0
+    }
+
+    if (isNaN(order.finalAmount)) {
+      console.error(`[CANCEL_PRODUCT] finalAmount is NaN, setting to 0`)
+      order.finalAmount = 0
+    }
+
+    if (isNaN(order.discount)) {
+      console.error(`[CANCEL_PRODUCT] discount is NaN, setting to 0`)
+      order.discount = 0
+    }
+    if (
+      (order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet") &&
+      refundAmount > 0
+    ) {
+      const user = await User.findById(req.user._id).session(session)
+      if (user) {
+        if (!user.wallet) {
+          user.wallet = {
+            balance: 0,
+            transactions: [],
+          }
+        }
+
+        const oldWalletBalance = user.wallet.balance
+        user.wallet.balance += refundAmount
+        user.wallet.transactions.push({
+          amount: refundAmount,
+          type: "credit",
+          description: `Refund for cancelled item in order #${order.orderID}`,
+          date: new Date(),
+          orderId: order._id,
+          productId: productItem._id,
+        })
+
+        await user.save({ session })
+        await Transaction.create(
+          [
+            {
+              user: req.user._id,
+              order: order._id,
+              transactionId: `REFUND-ITEM-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              paymentMethod: "wallet",
+              amount: refundAmount,
+              status: "completed",
+              paymentDetails: {
+                type: "refund",
+                description: `Refund for cancelled item in order #${order.orderID}`,
+                productId: productItem._id,
+                productName: productItem.product?.name || "Unknown Product",
+                cancellationReason: reason || "No reason provided",
+              },
+              createdAt: new Date(),
+            },
+          ],
+          { session },
+        )
+      } else {
+        console.error(`[CANCEL_PRODUCT] User not found for refund processing: ${req.user._id}`)
+      }
+    }
+    if (!order.cancellationHistory) {
+      order.cancellationHistory = []
+    }
+
+    order.cancellationHistory.push({
+      productId: productItem._id,
+      productName: productItem.product?.name || "Unknown Product",
+      reason: reason || "No reason provided",
+      refundAmount: refundAmount,
+      cancelledAt: new Date(),
+      cancelledBy: req.user._id,
+    })
+    await order.save({ session })
+    await session.commitTransaction()
+    return res.status(200).json({
+      success: true,
+      message: "Product cancelled successfully",
+      data: {
+        refundAmount: refundAmount,
+        newOrderTotal: order.finalAmount,
+        orderStatus: order.orderStatus,
+        productStatus: "cancelled",
+        refundMethod:
+          order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet"
+            ? "wallet"
+            : "none",
+      },
+    })
+  } catch (error) {
+    await session.abortTransaction()
+    console.error(`[CANCEL_PRODUCT] Error cancelling product:`, {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.params.orderId,
+      productId: req.params.productId,
+      userId: req.user._id,
+    })
+    let errorMessage = "Error cancelling product. Please try again."
+
+    if (error.name === "ValidationError") {
+      errorMessage = "Invalid data provided. Please check your request and try again."
+    } else if (error.name === "CastError") {
+      errorMessage = "Invalid ID format provided."
+    } else if (error.message.includes("timeout")) {
+      errorMessage = "Request timed out. Please try again."
+    } else if (error.message.includes("network")) {
+      errorMessage = "Network error. Please check your connection and try again."
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: errorMessage,
+      errorCode: "CANCEL_PRODUCT_ERROR",
+    })
+  } finally {
+    await session.endSession()
+  }
+}
+
 const getOrdersPage = async (req, res) => {
   try {
     const user = req.user
@@ -198,10 +469,7 @@ const getOrderDetails = async (req, res) => {
     }
 
     const wishlistCount = await getWishlistCount(req.user._id)
-
-    let regularTotal = 0
-    let discountTotal = 0
-    let saleTotal = 0
+    const calculatedTotals = priceCalculator.calculateOrderDetailsTotals(order)
 
     const statusCounts = {
       pending: 0,
@@ -216,14 +484,6 @@ const getOrderDetails = async (req, res) => {
     order.products.forEach((product) => {
       const status = product.status || "pending"
       statusCounts[status.toLowerCase()] = (statusCounts[status.toLowerCase()] || 0) + 1
-
-      if (product.status !== "cancelled" && product.status !== "returned") {
-        const regularPrice = product.variant.varientPrice * product.quantity
-        const salePrice = product.variant.salePrice * product.quantity
-        regularTotal += regularPrice
-        discountTotal += regularPrice - salePrice
-        saleTotal += salePrice
-      }
     })
 
     let overallStatus = order.orderStatus
@@ -250,9 +510,6 @@ const getOrderDetails = async (req, res) => {
       await order.save()
     }
 
-    const shippingCharge = saleTotal > 2000 ? 0 : 50
-
-    const couponDiscount = order.coupon ? order.coupon.discountAmount : 0
     const couponInfo = order.coupon
       ? {
           code: order.coupon.code,
@@ -262,8 +519,6 @@ const getOrderDetails = async (req, res) => {
           description: order.coupon.description,
         }
       : null
-
-    const grandTotal = saleTotal - couponDiscount + shippingCharge
 
     const canBeCancelled =
       statusCounts.delivered === 0 &&
@@ -287,13 +542,13 @@ const getOrderDetails = async (req, res) => {
       address: order.address,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
-      regularTotal: regularTotal,
-      itemsTotal: saleTotal,
-      discount: discountTotal,
-      couponDiscount: couponDiscount,
+      regularTotal: calculatedTotals.regularTotal,
+      itemsTotal: calculatedTotals.itemsTotal,
+      discount: calculatedTotals.discount,
+      couponDiscount: calculatedTotals.couponDiscount,
       couponInfo: couponInfo,
-      shippingCharge: shippingCharge,
-      grandTotal: grandTotal,
+      shippingCharge: calculatedTotals.shippingCharge,
+      grandTotal: calculatedTotals.grandTotal,
       trackingDetails: order.trackingDetails || null,
       canBeCancelled: canBeCancelled,
       canBeReturned: canBeReturned,
@@ -430,8 +685,7 @@ const cancelOrder = async (req, res) => {
         }
       }
     }
-
-    if (order.paymentMethod === "online" || order.paymentMethod === "paypal") {
+    if (order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet") {
       const refundAmount = order.finalAmount
 
       const user = await User.findById(req.user._id)
@@ -550,34 +804,35 @@ const returnOrder = async (req, res) => {
     })
 
     await order.save()
+    let refundAmount = 0
+    order.products.forEach((product) => {
+      if (product.status === "return pending") {
+        refundAmount += product.variant.salePrice * product.quantity
+      }
+    })
 
-    if (order.paymentMethod === "online" || order.paymentMethod === "paypal") {
-      let refundAmount = 0
-      order.products.forEach((product) => {
-        if (product.status === "return pending") {
-          refundAmount += product.variant.salePrice * product.quantity
-        }
-      })
-
-      if (refundAmount > 0) {
-        const user = await User.findById(req.user._id)
-        if (user) {
-          if (!user.wallet) {
-            user.wallet = {
-              balance: 0,
-              transactions: [],
-            }
+    if (refundAmount > 0) {
+      const user = await User.findById(req.user._id)
+      if (user) {
+        if (!user.wallet) {
+          user.wallet = {
+            balance: 0,
+            transactions: [],
           }
-
-          user.wallet.transactions.push({
-            amount: refundAmount,
-            type: "credit",
-            description: `[PENDING] Refund for returned order #${order.orderID}`,
-            date: new Date(),
-          })
-
-          await user.save()
         }
+        const transactionDescription =
+          order.paymentMethod === "COD"
+            ? `Refund for returned COD order #${order.orderID}`
+            : `[PENDING] Refund for returned order #${order.orderID}`
+
+        user.wallet.transactions.push({
+          amount: refundAmount,
+          type: "credit",
+          description: transactionDescription,
+          date: new Date(),
+        })
+
+        await user.save()
       }
     }
 
@@ -685,28 +940,29 @@ const returnProduct = async (req, res) => {
     }
 
     await order.save()
+    const refundAmount = productItem.variant.salePrice * productItem.quantity
 
-    if (order.paymentMethod === "online" || order.paymentMethod === "paypal") {
-      const refundAmount = productItem.variant.salePrice * productItem.quantity
-
-      const user = await User.findById(req.user._id)
-      if (user) {
-        if (!user.wallet) {
-          user.wallet = {
-            balance: 0,
-            transactions: [],
-          }
+    const user = await User.findById(req.user._id)
+    if (user) {
+      if (!user.wallet) {
+        user.wallet = {
+          balance: 0,
+          transactions: [],
         }
-
-        user.wallet.transactions.push({
-          amount: refundAmount,
-          type: "credit",
-          description: `[PENDING] Refund for returned item in order #${order.orderID}`,
-          date: new Date(),
-        })
-
-        await user.save()
       }
+      const transactionDescription =
+        order.paymentMethod === "COD"
+          ? `Refund for returned COD item in order #${order.orderID}`
+          : `[PENDING] Refund for returned item in order #${order.orderID}`
+
+      user.wallet.transactions.push({
+        amount: refundAmount,
+        type: "credit",
+        description: transactionDescription,
+        date: new Date(),
+      })
+
+      await user.save()
     }
 
     res.json({
@@ -796,178 +1052,6 @@ const reorderItems = async (req, res) => {
   }
 }
 
-const cancelProduct = async (req, res) => {
-  try {
-    const orderId = req.params.orderId
-    const productId = req.params.productId
-    const { reason } = req.body
-
-    const order = await Order.findOne({
-      _id: orderId,
-      user: req.user._id,
-    }).populate({
-      path: "products.product",
-      select: "name variants",
-    })
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: "Order not found",
-      })
-    }
-
-    if (order.paymentStatus === "failed") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot cancel products from an order with failed payment. Please retry payment first.",
-      })
-    }
-
-    const paymentMethod = normalizePaymentMethod(order)
-    if (order.paymentMethod !== paymentMethod) {
-      order.paymentMethod = paymentMethod
-    }
-
-    const productItem = order.products.id(productId)
-    if (!productItem) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found in order",
-      })
-    }
-
-    if (
-      productItem.status === "delivered" ||
-      productItem.status === "returned" ||
-      productItem.status === "cancelled" ||
-      productItem.status === "return pending"
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Product cannot be cancelled at this stage",
-      })
-    }
-
-    productItem.status = "cancelled"
-    productItem.cancellationReason = reason || "No reason provided"
-    const refundAmount = productItem.variant.salePrice * productItem.quantity
-
-    const product = await Product.findById(productItem.product)
-    if (product) {
-      const variant = product.variants.find((v) => v.size === productItem.variant.size)
-      if (variant) {
-        variant.varientquatity += productItem.quantity
-        await product.save()
-      }
-    }
-
-    const statusCounts = {
-      pending: 0,
-      processing: 0,
-      shipped: 0,
-      delivered: 0,
-      cancelled: 0,
-      returned: 0,
-      "return pending": 0,
-    }
-
-    order.products.forEach((product) => {
-      const status = product.status || "pending"
-      statusCounts[status.toLowerCase()] = (statusCounts[status.toLowerCase()] || 0) + 1
-    })
-
-    const totalProducts = order.products.length
-
-    if (statusCounts.cancelled === totalProducts) {
-      order.orderStatus = "cancelled"
-    } else if (statusCounts.returned === totalProducts) {
-      order.orderStatus = "returned"
-    } else if (statusCounts["return pending"] > 0) {
-      order.orderStatus = "return pending"
-    } else if (statusCounts.delivered === totalProducts) {
-      order.orderStatus = "delivered"
-    } else if (statusCounts.shipped > 0) {
-      order.orderStatus = "shipped"
-    } else if (statusCounts.processing > 0) {
-      order.orderStatus = "processing"
-    } else {
-      order.orderStatus = "pending"
-    }
-
-    let regularTotal = 0
-    let discountTotal = 0
-    let activeProductsTotal = 0
-
-    order.products.forEach((product) => {
-      if (product.status !== "cancelled" && product.status !== "returned") {
-        const regularPrice = product.variant.varientPrice * product.quantity
-        const salePrice = product.variant.salePrice * product.quantity
-        regularTotal += regularPrice
-        discountTotal += regularPrice - salePrice
-        activeProductsTotal += salePrice
-      }
-    })
-
-    const couponDiscount = order.coupon ? order.coupon.discountAmount : 0
-    const shippingCharge = activeProductsTotal > 2000 ? 0 : 50
-
-    order.totalAmount = activeProductsTotal
-    order.discount = discountTotal
-    order.finalAmount = activeProductsTotal - couponDiscount + shippingCharge
-
-    await order.save()
-
-    if (order.paymentMethod === "online" || order.paymentMethod === "paypal") {
-      const user = await User.findById(req.user._id)
-      if (user) {
-        if (!user.wallet) {
-          user.wallet = {
-            balance: 0,
-            transactions: [],
-          }
-        }
-
-        user.wallet.balance += refundAmount
-        user.wallet.transactions.push({
-          amount: refundAmount,
-          type: "credit",
-          description: `Refund for cancelled item in order #${order.orderID}`,
-          date: new Date(),
-        })
-
-        await user.save()
-
-        await Transaction.create({
-          user: req.user._id,
-          order: order._id,
-          transactionId: `REFUND-ITEM-${Date.now()}`,
-          paymentMethod: "wallet",
-          amount: refundAmount,
-          status: "completed",
-          paymentDetails: {
-            type: "refund",
-            description: `Refund for cancelled item in order #${order.orderID}`,
-          },
-        })
-      }
-    }
-
-    res.json({
-      success: true,
-      message: "Product cancelled successfully",
-      refundAmount: refundAmount,
-      newOrderTotal: order.finalAmount,
-    })
-  } catch (error) {
-    console.error("Error cancelling product:", error)
-    res.status(500).json({
-      success: false,
-      message: "Error cancelling product",
-    })
-  }
-}
-
 const searchOrders = async (req, res) => {
   try {
     const { query } = req.query
@@ -1022,31 +1106,10 @@ const trackOrder = async (req, res) => {
     }
 
     const wishlistCount = await getWishlistCount(req.user._id)
-    let regularTotal = 0
-    let discountTotal = 0
-    let saleTotal = 0
-
-    if (order.products && order.products.length > 0) {
-      order.products.forEach((product) => {
-        if (product.status !== "cancelled" && product.status !== "returned" && product.product && product.variant) {
-          const regularPrice = product.variant.varientPrice * product.quantity
-          const salePrice = product.variant.salePrice * product.quantity
-          regularTotal += regularPrice
-          discountTotal += regularPrice - salePrice
-          saleTotal += salePrice
-        }
-      })
-    }
-
-    if (!order.totalAmount) order.totalAmount = saleTotal
-    if (!order.discount) order.discount = discountTotal
-
-    const couponDiscount = order.coupon ? order.coupon.discountAmount : 0
-
-    if (!order.finalAmount) {
-      const shippingCharge = saleTotal > 2000 ? 0 : 50
-      order.finalAmount = saleTotal - couponDiscount + shippingCharge
-    }
+    const calculatedTotals = priceCalculator.calculateOrderDetailsTotals(order)
+    if (!order.totalAmount) order.totalAmount = calculatedTotals.itemsTotal
+    if (!order.discount) order.discount = calculatedTotals.discount
+    if (!order.finalAmount) order.finalAmount = calculatedTotals.grandTotal
 
     const couponInfo = order.coupon
       ? {
@@ -1247,7 +1310,7 @@ const trackOrder = async (req, res) => {
     }
 
     order.couponInfo = couponInfo
-    order.couponDiscount = couponDiscount
+    order.couponDiscount = calculatedTotals.couponDiscount
     order.canDownloadInvoice = order.paymentStatus !== "pending" && order.paymentStatus !== "failed"
 
     res.render("pages/track-order", {
@@ -1321,11 +1384,6 @@ const orderSuccess = async (req, res) => {
         }
       : null
 
-    try {
-    } catch (analyticsError) {
-      console.error("Analytics error:", analyticsError)
-    }
-
     res.render("pages/order-success", {
       user: req.user,
       order: order,
@@ -1398,12 +1456,12 @@ module.exports = {
   canCancelOrder,
   getOrderDetails,
   getOrdersPage,
+  cancelProduct,
   getOrderInvoice,
   cancelOrder,
   returnOrder,
   returnProduct,
   reorderItems,
-  cancelProduct,
   searchOrders,
   trackOrder,
   orderSuccess,
