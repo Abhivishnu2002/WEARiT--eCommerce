@@ -159,7 +159,7 @@ const adminOrderController = {
         delivered: order.orderStatus === "delivered",
         deliveredDate: order.orderStatus === "delivered" ? formatDate(order.updatedAt) : "",
       }
-      const productBreakdown = order.products.map((product) => {
+      const productBreakdown = order.products.map((product, index) => {
         const regularPrice = (Number(product.variant?.varientPrice) || 0) * (Number(product.quantity) || 0)
         const salePrice = (Number(product.variant?.salePrice) || 0) * (Number(product.quantity) || 0)
         const itemDiscount = regularPrice - salePrice
@@ -170,6 +170,8 @@ const adminOrderController = {
           salePrice: Math.round(salePrice * 100) / 100,
           itemDiscount: Math.round(itemDiscount * 100) / 100,
           isActive: product.status !== "cancelled" && product.status !== "returned",
+          variantIndex: index,
+          uniqueId: `${product.product._id}_${product.variant?.size || "default"}_${index}`,
         }
       })
 
@@ -194,7 +196,7 @@ const adminOrderController = {
   updateOrderStatus: async (req, res) => {
     try {
       const orderId = req.params.id
-      const { status, note, productId, trackingNumber, courier } = req.body
+      const { status, note, productId, variantSize, variantIndex, trackingNumber, courier } = req.body
 
       if (!["pending", "shipped", "out for delivery", "delivered", "cancelled"].includes(status)) {
         return res.status(400).json({
@@ -223,14 +225,32 @@ const adminOrderController = {
           message: "Order not found",
         })
       }
-
       if (productId) {
-        const productItem = order.products.find((p) => p.product._id.toString() === productId)
+        let productItem = null
+        if (variantIndex !== undefined && variantIndex !== null) {
+          productItem = order.products[Number.parseInt(variantIndex)]
+          if (
+            !productItem ||
+            productItem.product._id.toString() !== productId ||
+            (variantSize && productItem.variant?.size !== variantSize)
+          ) {
+            return res.status(404).json({
+              success: false,
+              message: "Product variant not found or mismatch in order",
+            })
+          }
+        } else if (variantSize) {
+          productItem = order.products.find(
+            (p) => p.product._id.toString() === productId && p.variant?.size === variantSize,
+          )
+        } else {
+          productItem = order.products.find((p) => p.product._id.toString() === productId)
+        }
 
         if (!productItem) {
           return res.status(404).json({
             success: false,
-            message: "Product not found in order",
+            message: "Product variant not found in order",
           })
         }
 
@@ -239,7 +259,7 @@ const adminOrderController = {
         if (status === "cancelled" && ["pending", "shipped"].includes(previousStatus)) {
           try {
             const product = await Product.findById(productId)
-            if (product) {
+            if (product && productItem.variant?.size) {
               const variant = product.variants.find((v) => v.size === productItem.variant.size)
               if (variant) {
                 variant.varientquatity += productItem.quantity
@@ -247,13 +267,41 @@ const adminOrderController = {
               }
             }
           } catch (err) {
-            console.error(`Error restoring stock for product ${productId}:`, err)
+            console.error(`Error restoring stock for product ${productId}, variant ${productItem.variant?.size}:`, err)
           }
         }
         const allProductsHaveSameStatus = order.products.every((p) => p.status === status)
         if (allProductsHaveSameStatus) {
           order.orderStatus = status
+        } else {
+          const productStatuses = order.products.map((p) => p.status)
+          const uniqueStatuses = [...new Set(productStatuses)]
+
+          if (uniqueStatuses.includes("delivered") && uniqueStatuses.includes("cancelled")) {
+            order.orderStatus = "partially delivered"
+          } else if (uniqueStatuses.includes("shipped") || uniqueStatuses.includes("out for delivery")) {
+            order.orderStatus = "shipped"
+          } else if (uniqueStatuses.every((s) => s === "pending")) {
+            order.orderStatus = "pending"
+          } else if (uniqueStatuses.every((s) => s === "delivered")) {
+            order.orderStatus = "delivered"
+          } else if (uniqueStatuses.every((s) => s === "cancelled")) {
+            order.orderStatus = "cancelled"
+          } else {
+            order.orderStatus = "processing"
+          }
         }
+        if (!order.trackingDetails) {
+          order.trackingDetails = { updates: [] }
+        }
+
+        order.trackingDetails.updates.push({
+          status: status.charAt(0).toUpperCase() + status.slice(1),
+          location: req.body.location || "Processing Center",
+          timestamp: new Date(),
+          description:
+            `${productItem.product.name} (${productItem.variant?.size || "N/A"}) status updated to ${status}. ${note || ""}`.trim(),
+        })
       } else {
         const previousStatus = order.orderStatus
         order.orderStatus = status
@@ -264,40 +312,42 @@ const adminOrderController = {
           for (const item of order.products) {
             try {
               const product = await Product.findById(item.product._id)
-              if (product) {
+              if (product && item.variant?.size) {
                 const variant = product.variants.find((v) => v.size === item.variant.size)
                 if (variant) {
                   variant.varientquatity += item.quantity
                   await product.save()
+                  console.log(
+                    `Stock restored for product ${item.product._id}, variant ${item.variant.size}: +${item.quantity}`,
+                  )
                 }
               }
             } catch (err) {
-              console.error(`Error restoring stock for product ${item.product._id}:`, err)
+              console.error(
+                `Error restoring stock for product ${item.product._id}, variant ${item.variant?.size}:`,
+                err,
+              )
             }
           }
         }
-      }
-      const updatedTotals = priceCalculator.recalculateOrderTotals(order)
-      order.totalAmount = updatedTotals.totalAmount
-      order.discount = updatedTotals.discount
-      order.finalAmount = updatedTotals.finalAmount
-
-      if (!order.trackingDetails) {
-        order.trackingDetails = {
-          updates: [],
+        if (!order.trackingDetails) {
+          order.trackingDetails = { updates: [] }
         }
+
+        order.trackingDetails.updates.push({
+          status: status.charAt(0).toUpperCase() + status.slice(1),
+          location: req.body.location || "Processing Center",
+          timestamp: new Date(),
+          description: note || `Entire order status updated to ${status}`,
+        })
       }
       if (trackingNumber) {
+        if (!order.trackingDetails) {
+          order.trackingDetails = { updates: [] }
+        }
         order.trackingDetails.trackingNumber = trackingNumber
         order.trackingDetails.courier = courier || "Default Courier"
       }
-      order.trackingDetails.updates = order.trackingDetails.updates || []
-      order.trackingDetails.updates.push({
-        status: status.charAt(0).toUpperCase() + status.slice(1),
-        location: req.body.location || "Processing Center",
-        timestamp: new Date(),
-        description: note || `Order status updated to ${status}`,
-      })
       if (!order.statusHistory) {
         order.statusHistory = []
       }
@@ -305,7 +355,14 @@ const adminOrderController = {
         status: status,
         timestamp: new Date(),
         note: note || `Status updated to ${status}`,
+        productId: productId || null,
+        variantSize: variantSize || null,
+        variantIndex: variantIndex || null,
       })
+      const updatedTotals = priceCalculator.recalculateOrderTotals(order)
+      order.totalAmount = updatedTotals.totalAmount
+      order.discount = updatedTotals.discount
+      order.finalAmount = updatedTotals.finalAmount
       order.updatedAt = new Date()
 
       await order.save()
@@ -313,7 +370,7 @@ const adminOrderController = {
 
       res.json({
         success: true,
-        message: "Order status updated successfully",
+        message: productId ? `Product variant status updated successfully` : `Order status updated successfully`,
         updatedTotals: {
           regularTotal: newCalculatedTotals.regularTotal,
           itemsTotal: newCalculatedTotals.itemsTotal,
@@ -335,7 +392,7 @@ const adminOrderController = {
 
   processReturnRequest: async (req, res) => {
     try {
-      const { orderId, productId, action, reason } = req.body
+      const { orderId, productId, variantSize, variantIndex, action, reason } = req.body
 
       if (!["approve", "reject"].includes(action)) {
         return res.status(400).json({
@@ -364,27 +421,45 @@ const adminOrderController = {
           message: "Order not found",
         })
       }
+      let productItem = null
 
-      const productItem = order.products.find((p) => p.product._id.toString() === productId)
+      if (variantIndex !== undefined && variantIndex !== null) {
+        productItem = order.products[Number.parseInt(variantIndex)]
+        if (
+          !productItem ||
+          productItem.product._id.toString() !== productId ||
+          (variantSize && productItem.variant?.size !== variantSize)
+        ) {
+          return res.status(404).json({
+            success: false,
+            message: "Product variant not found or mismatch in order",
+          })
+        }
+      } else if (variantSize) {
+        productItem = order.products.find(
+          (p) => p.product._id.toString() === productId && p.variant?.size === variantSize,
+        )
+      } else {
+        productItem = order.products.find((p) => p.product._id.toString() === productId)
+      }
 
       if (!productItem) {
         return res.status(404).json({
           success: false,
-          message: "Product not found in order",
+          message: "Product variant not found in order",
         })
       }
 
       if (productItem.status !== "return pending") {
         return res.status(400).json({
           success: false,
-          message: "No return request found for this product",
+          message: "No return request found for this product variant",
         })
       }
 
       if (action === "approve") {
         productItem.status = "returned"
         const refundAmount = priceCalculator.calculateRefundAmount([productItem], order)
-
         if (!order.user.wallet) {
           order.user.wallet = {
             balance: 0,
@@ -395,25 +470,29 @@ const adminOrderController = {
         order.user.wallet.transactions.push({
           amount: refundAmount,
           type: "credit",
-          description: `Refund for returned item in order #${order.orderID}`,
+          description: `Refund for returned item: ${productItem.product.name} (${productItem.variant?.size || "N/A"}) in order #${order.orderID}`,
           date: new Date(),
         })
 
         await order.user.save()
-
         try {
           const product = await Product.findById(productId)
-          if (product) {
+          if (product && productItem.variant?.size) {
             const variant = product.variants.find((v) => v.size === productItem.variant.size)
             if (variant) {
               variant.varientquatity += productItem.quantity
               await product.save()
+              console.log(
+                `Stock restored for returned product ${productId}, variant ${productItem.variant.size}: +${productItem.quantity}`,
+              )
             }
           }
         } catch (err) {
-          console.error(`Error restoring stock for product ${productId}:`, err)
+          console.error(
+            `Error restoring stock for returned product ${productId}, variant ${productItem.variant?.size}:`,
+            err,
+          )
         }
-
         if (!order.trackingDetails) {
           order.trackingDetails = { updates: [] }
         }
@@ -422,11 +501,10 @@ const adminOrderController = {
           status: "Return Approved",
           location: "Return Center",
           timestamp: new Date(),
-          description: `Return request approved. Refund of ₹${refundAmount.toFixed(2)} issued to wallet.`,
+          description: `Return request approved for ${productItem.product.name} (${productItem.variant?.size || "N/A"}). Refund of ₹${refundAmount.toFixed(2)} issued to wallet.`,
         })
       } else {
         productItem.status = "delivered"
-
         if (!order.trackingDetails) {
           order.trackingDetails = { updates: [] }
         }
@@ -435,7 +513,7 @@ const adminOrderController = {
           status: "Return Rejected",
           location: "Return Center",
           timestamp: new Date(),
-          description: `Return request rejected. Reason: ${reason || "No reason provided"}`,
+          description: `Return request rejected for ${productItem.product.name} (${productItem.variant?.size || "N/A"}). Reason: ${reason || "No reason provided"}`,
         })
       }
 
@@ -476,7 +554,7 @@ const adminOrderController = {
 
       res.json({
         success: true,
-        message: `Return request ${action === "approve" ? "approved" : "rejected"} successfully`,
+        message: `Return request ${action === "approve" ? "approved" : "rejected"} successfully for ${productItem.product.name} (${productItem.variant?.size || "N/A"})`,
         updatedTotals: {
           regularTotal: newCalculatedTotals.regularTotal,
           itemsTotal: newCalculatedTotals.itemsTotal,

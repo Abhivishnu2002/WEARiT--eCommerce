@@ -50,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     showNotification("Price summary updated successfully!", "success")
   }
+
   function showNotification(message, type = "info") {
     const notification = document.createElement("div")
     notification.className = `alert alert-${type === "success" ? "success" : type === "error" ? "danger" : "info"} alert-dismissible fade show position-fixed`
@@ -82,6 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", function () {
         const orderId = this.dataset.orderId
         const productId = this.dataset.productId || ""
+        const variantSize = this.dataset.variantSize || ""
+        const variantIndex = this.dataset.variantIndex || ""
         const currentStatus = this.dataset.currentStatus
 
         const Swal = window.Swal
@@ -89,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
           title: "Update Status",
           html: `
                         <div class="mb-3">
+                            <p class="text-muted">Updating status for variant: <strong>${variantSize || "N/A"}</strong></p>
                             <select id="statusSelect" class="form-select">
                                 <option value="pending" ${currentStatus === "pending" ? "selected" : ""}>Pending</option>
                                 <option value="shipped" ${currentStatus === "shipped" ? "selected" : ""}>Shipped</option>
@@ -133,6 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 status,
                 note,
                 productId,
+                variantSize,
+                variantIndex,
               }),
             })
               .then((response) => response.json())
@@ -180,6 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.addEventListener("click", function () {
         const orderId = this.dataset.orderId
         const productId = this.dataset.productId
+        const variantSize = this.dataset.variantSize || ""
+        const variantIndex = this.dataset.variantIndex || ""
         const productName = this.dataset.productName
 
         const Swal = window.Swal
@@ -228,6 +236,8 @@ document.addEventListener("DOMContentLoaded", () => {
               body: JSON.stringify({
                 orderId,
                 productId,
+                variantSize,
+                variantIndex,
                 action,
                 reason,
               }),
@@ -344,6 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
+
   function initializePriceSummaryUpdates() {
     const productRows = document.querySelectorAll("[data-product-id]")
 
@@ -359,7 +370,9 @@ document.addEventListener("DOMContentLoaded", () => {
       observer.observe(row, { attributes: true, attributeFilter: ["class"] })
     })
   }
+
   initializePriceSummaryUpdates()
+
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "r") {
       e.preventDefault()
@@ -370,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]')
   if (tooltipElements.length > 0) {
-    const bootstrap = window.bootstrap 
+    const bootstrap = window.bootstrap
     if (typeof bootstrap !== "undefined") {
       tooltipElements.forEach((el) => new bootstrap.Tooltip(el))
     }

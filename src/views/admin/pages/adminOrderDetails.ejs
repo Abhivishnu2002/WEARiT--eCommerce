@@ -79,6 +79,33 @@
                 50% { background-color: rgba(255,255,255,0.3); }
                 100% { background-color: transparent; }
             }
+            .variant-identifier {
+                font-size: 0.75rem;
+                color: #6c757d;
+                font-style: italic;
+            }
+            .product-variant-row {
+                border-left: 3px solid transparent;
+                transition: border-color 0.3s ease;
+            }
+            .product-variant-row:hover {
+                border-left-color: #0d6efd;
+            }
+            .variant-status-badge {
+                position: relative;
+            }
+            .variant-status-badge::after {
+                content: attr(data-variant);
+                position: absolute;
+                bottom: -1px;
+                right: -1px;
+                background: rgba(0,0,0,0.7);
+                color: white;
+                font-size: 0.6rem;
+                padding: 1px 3px;
+                border-radius: 2px;
+                font-weight: normal;
+            }
         </style>
     </head>
     <body>
@@ -344,7 +371,7 @@
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th scope="col" style="width: 50%">Product</th>
+                                                <th scope="col" style="width: 45%">Product</th>
                                                 <th scope="col">Size</th>
                                                 <th scope="col">Price</th>
                                                 <th scope="col">Qty</th>
@@ -354,8 +381,11 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% order.products.forEach(item => { %>
-                                            <tr class="<%= item.isActive ? '' : 'table-secondary' %>" data-product-id="<%= item.product._id %>">
+                                            <% order.products.forEach((item, index) => { %>
+                                            <tr class="product-variant-row <%= item.isActive ? '' : 'table-secondary' %>" 
+                                                data-product-id="<%= item.product._id %>" 
+                                                data-variant-index="<%= index %>"
+                                                data-variant-size="<%= item.variant?.size || 'N/A' %>">
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <img src="<%= item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/images/placeholder.jpg' %>" 
@@ -365,6 +395,9 @@
                                                         <div>
                                                             <h6 class="mb-0"><%= item.product.name %></h6>
                                                             <small class="text-muted"><%= item.product.color || 'N/A' %></small>
+                                                            <div class="variant-identifier">
+                                                                Variant #<%= index + 1 %> | ID: <%= item.uniqueId %>
+                                                            </div>
                                                             <% if (!item.isActive) { %>
                                                                 <small class="text-danger d-block">
                                                                     <i class="fas fa-exclamation-triangle me-1"></i>
@@ -374,7 +407,11 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td><%= item.variant.size %></td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        <%= item.variant?.size || 'N/A' %>
+                                                    </span>
+                                                </td>
                                                 <td>
                                                     <% if (item.regularPrice > item.salePrice) { %>
                                                         <span class="text-decoration-line-through text-muted small">₹<%= item.regularPrice.toFixed(2) %></span><br>
@@ -386,12 +423,13 @@
                                                 <td><%= item.quantity %></td>
                                                 <td>₹<%= (item.variant.salePrice * item.quantity).toFixed(2) %></td>
                                                 <td>
-                                                    <span class="badge <%= item.status === 'delivered' ? 'bg-success' : 
+                                                    <span class="badge variant-status-badge <%= item.status === 'delivered' ? 'bg-success' : 
                                                                         item.status === 'cancelled' ? 'bg-danger' : 
                                                                         item.status === 'shipped' ? 'bg-info' : 
                                                                         item.status === 'out for delivery' ? 'bg-primary' : 
                                                                         item.status === 'return pending' ? 'bg-warning' :
-                                                                        item.status === 'returned' ? 'bg-secondary' : 'bg-warning' %>">
+                                                                        item.status === 'returned' ? 'bg-secondary' : 'bg-warning' %>"
+                                                          data-variant="<%= item.variant?.size || 'N/A' %>">
                                                         <%= item.status.charAt(0).toUpperCase() + item.status.slice(1) %>
                                                     </span>
                                                 </td>
@@ -400,14 +438,19 @@
                                                         <button class="btn btn-sm btn-warning process-return-btn" 
                                                                 data-order-id="<%= order._id %>" 
                                                                 data-product-id="<%= item.product._id %>"
-                                                                data-product-name="<%= item.product.name %>">
+                                                                data-variant-size="<%= item.variant?.size || '' %>"
+                                                                data-variant-index="<%= index %>"
+                                                                data-product-name="<%= item.product.name %> (<%= item.variant?.size || 'N/A' %>)">
                                                             Process Return
                                                         </button>
                                                     <% } else if (item.status !== 'cancelled' && item.status !== 'delivered' && item.status !== 'returned') { %>
                                                         <button class="btn btn-sm btn-primary update-status-btn" 
                                                                 data-order-id="<%= order._id %>" 
                                                                 data-product-id="<%= item.product._id %>"
-                                                                data-current-status="<%= item.status %>">
+                                                                data-variant-size="<%= item.variant?.size || '' %>"
+                                                                data-variant-index="<%= index %>"
+                                                                data-current-status="<%= item.status %>"
+                                                                title="Update status for <%= item.product.name %> (<%= item.variant?.size || 'N/A' %>)">
                                                             Update Status
                                                         </button>
                                                     <% } %>
