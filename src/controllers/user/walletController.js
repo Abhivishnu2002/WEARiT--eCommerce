@@ -1,7 +1,8 @@
-// controllers/user/walletController.js
 const User = require("../../models/userModel")
 const mongoose = require("mongoose")
 const Transaction = require("../../models/transactionModel")
+const Order = require("../../models/orderModel")
+const Product = require("../../models/productModel")
 const getWishlistCount = require("../../utils/wishlistCount")
 const paypal = require("@paypal/checkout-server-sdk")
 
@@ -32,7 +33,6 @@ function getBaseUrl(req) {
   return `${protocol}://${host}`
 }
 
-
 function generateTransactionId() {
   return `WALLET-${Date.now()}-${Math.floor(Math.random() * 10000)
     .toString()
@@ -56,20 +56,73 @@ const walletController = {
       const skip = (page - 1) * limit
       const totalTransactions = await Transaction.countDocuments({
         user: req.user._id,
+        status: "completed",
       })
-
       const totalPages = Math.ceil(totalTransactions / limit)
       const transactions = await Transaction.find({
         user: req.user._id,
+        status: "completed",
       })
+        .populate({
+          path: "order",
+          select: "orderID totalAmount createdAt",
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .lean()
+      const refundSummary = {
+        totalRefunds: 0,
+        totalRefundAmount: 0,
+        thisMonthRefunds: 0,
+        thisMonthRefundAmount: 0,
+      }
+
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+      const enhancedTransactions = transactions.map((transaction) => {
+        if (!transaction.paymentDetails) {
+          transaction.paymentDetails = {}
+        }
+        if (!transaction.paymentDetails.type) {
+          if (transaction.paymentMethod === "wallet" && transaction.amount > 0) {
+            const description = transaction.paymentDetails.description || ""
+            if (
+              description.toLowerCase().includes("refund") ||
+              description.toLowerCase().includes("cancelled") ||
+              description.toLowerCase().includes("return")
+            ) {
+              transaction.paymentDetails.type = "refund"
+            } else {
+              transaction.paymentDetails.type = "order_payment"
+            }
+          } else if (transaction.paymentMethod === "paypal") {
+            transaction.paymentDetails.type = "wallet_add"
+          } else if (transaction.paymentMethod === "COD") {
+            transaction.paymentDetails.type = "order_payment"
+          } else {
+            transaction.paymentDetails.type = "transaction"
+          }
+        }
+        if (transaction.paymentDetails.type === "refund") {
+          refundSummary.totalRefunds++
+          refundSummary.totalRefundAmount += transaction.amount
+
+          const transactionDate = new Date(transaction.createdAt)
+          if (transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear) {
+            refundSummary.thisMonthRefunds++
+            refundSummary.thisMonthRefundAmount += transaction.amount
+          }
+        }
+
+        return transaction
+      })
 
       res.render("pages/wallet", {
         user,
         wishlistCount,
-        transactions,
+        transactions: enhancedTransactions,
+        refundSummary,
         activePage: "wallet",
         currentPage: page,
         totalPages,
@@ -81,6 +134,132 @@ const walletController = {
       res.redirect("/profile")
     }
   },
+  processRefund: async (userId, amount, orderId, orderID, description = null, productDetails = null) => {
+    try {
+      const user = await User.findById(userId)
+      if (!user) {
+        throw new Error("User not found")
+      }
+
+      if (!user.wallet) {
+        user.wallet = {
+          balance: 0,
+          transactions: [],
+        }
+      }
+
+      const refundAmount = Number.parseFloat(amount)
+      if (refundAmount <= 0) {
+        throw new Error("Invalid refund amount")
+      }
+      const refundDescription = `Refund for order cancellation - Order #${orderID}`
+      user.wallet.balance += refundAmount
+      const walletTransaction = {
+        amount: refundAmount,
+        type: "credit",
+        description: refundDescription,
+        date: new Date(),
+      }
+      user.wallet.transactions.push(walletTransaction)
+
+      await user.save()
+      const transactionId = generateTransactionId()
+
+      await Transaction.create({
+        user: userId,
+        order: orderId,
+        transactionId: transactionId,
+        paymentMethod: "wallet",
+        amount: refundAmount,
+        status: "completed",
+        paymentDetails: {
+          type: "refund",
+          subType: "order_cancellation",
+          description: refundDescription,
+          orderID: orderID,
+          refundDate: new Date(),
+          refundReason: "Order cancellation",
+        },
+      })
+      return {
+        success: true,
+        message: "Refund processed successfully",
+        newBalance: user.wallet.balance,
+        transactionId: transactionId,
+      }
+    } catch (error) {
+      console.error("Error processing refund:", error)
+      throw error
+    }
+  },
+  processProductReturnRefund: async (
+    userId,
+    amount,
+    orderId,
+    orderID,
+    returnedItems,
+    refundReason = "Product return",
+  ) => {
+    try {
+      const user = await User.findById(userId)
+      if (!user) {
+        throw new Error("User not found")
+      }
+
+      if (!user.wallet) {
+        user.wallet = {
+          balance: 0,
+          transactions: [],
+        }
+      }
+
+      const refundAmount = Number.parseFloat(amount)
+      if (refundAmount <= 0) {
+        throw new Error("Invalid refund amount")
+      }
+      const refundDescription = `Refund for product return - Order #${orderID}`
+      user.wallet.balance += refundAmount
+      const walletTransaction = {
+        amount: refundAmount,
+        type: "credit",
+        description: refundDescription,
+        date: new Date(),
+      }
+      user.wallet.transactions.push(walletTransaction)
+
+      await user.save()
+      const transactionId = generateTransactionId()
+      await Transaction.create({
+        user: userId,
+        order: orderId,
+        transactionId: transactionId,
+        paymentMethod: "wallet",
+        amount: refundAmount,
+        status: "completed",
+        paymentDetails: {
+          type: "refund",
+          subType: "product_return",
+          description: refundDescription,
+          orderID: orderID,
+          refundDate: new Date(),
+          refundReason: "Product return",
+        },
+      })
+      return {
+        success: true,
+        message: "Product return refund processed successfully",
+        newBalance: user.wallet.balance,
+        transactionId: transactionId,
+      }
+    } catch (error) {
+      console.error("Error processing product return refund:", error)
+      throw error
+    }
+  },
+  processPartialRefund: async (userId, amount, orderId, orderID, returnedItems, refundReason = "Product return") => {
+    return walletController.processProductReturnRefund(userId, amount, orderId, orderID, returnedItems, refundReason)
+  },
+
   createPaypalOrder: async (req, res) => {
     try {
       const { amount } = req.body
@@ -175,7 +354,7 @@ const walletController = {
         user.wallet.transactions.push({
           amount: amount,
           type: "credit",
-          description: `Added via PayPal (Order ID: ${token})`,
+          description: `Added via PayPal - Order #${token}`,
           date: new Date(),
         })
 
@@ -214,6 +393,7 @@ const walletController = {
       return res.redirect("/wallet")
     }
   },
+
   cancelPaypalPayment: async (req, res) => {
     try {
       delete req.session.paypalWalletTopup
@@ -226,6 +406,7 @@ const walletController = {
       return res.redirect("/wallet")
     }
   },
+
   addMoney: async (req, res) => {
     try {
       const { amount, paymentMethod } = req.body
@@ -290,6 +471,7 @@ const walletController = {
       })
     }
   },
+
   useWalletBalance: async (req, res) => {
     try {
       const { amount, orderId, description } = req.body

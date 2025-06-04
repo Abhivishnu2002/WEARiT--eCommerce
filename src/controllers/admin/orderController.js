@@ -1,6 +1,7 @@
 const Order = require("../../models/orderModel")
 const User = require("../../models/userModel")
 const Product = require("../../models/productModel")
+const Transaction = require("../../models/transactionModel")
 const { generateInvoice } = require("../../utils/invoiceGenerator")
 const PriceCalculator = require("../../utils/priceCalculator")
 const mongoose = require("mongoose")
@@ -8,6 +9,11 @@ const fs = require("fs")
 const path = require("path")
 
 const priceCalculator = new PriceCalculator()
+function generateTransactionId() {
+  return `REFUND-${Date.now()}-${Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0")}`
+}
 
 const adminOrderController = {
   getAllOrders: async (req, res) => {
@@ -51,7 +57,7 @@ const adminOrderController = {
         query["products.status"] = "returned"
       }
       if (req.query.paymentMethod) {
-        query.paymentMethod = req.query.paymentMethod
+        query.paymentMethod = new RegExp(`^${req.query.paymentMethod}$`, "i")
       }
       const totalOrders = await Order.countDocuments(query)
       const totalPages = Math.ceil(totalOrders / limit)
@@ -60,7 +66,11 @@ const adminOrderController = {
         sort = { [req.query.sortBy]: req.query.sortOrder === "asc" ? 1 : -1 }
       }
       const orders = await Order.find(query)
-        .populate("user", "name email mobile")
+        .populate({
+          path: "user",
+          select: "name email mobile",
+          options: { strictPopulate: false },
+        })
         .populate({
           path: "products.product",
           select: "name images",
@@ -69,9 +79,20 @@ const adminOrderController = {
         .sort(sort)
         .skip(skip)
         .limit(limit)
-      const paymentMethods = await Order.distinct("paymentMethod")
+        .lean() 
+      const processedOrders = orders.map((order) => ({
+        ...order,
+        user: order.user || {
+          name: "Unknown User",
+          email: "N/A",
+          mobile: "N/A",
+        },
+      }))
+
+      const paymentMethods = ["wallet", "paypal", "COD"]
+
       res.render("admin/pages/adminOrders", {
-        orders,
+        orders: processedOrders,
         currentPage: page,
         totalPages,
         totalOrders,
@@ -197,11 +218,12 @@ const adminOrderController = {
     try {
       const orderId = req.params.id
       const { status, note, productId, variantSize, variantIndex, trackingNumber, courier } = req.body
+      const validStatuses = ["pending", "shipped", "out for delivery", "delivered", "cancelled"]
 
-      if (!["pending", "shipped", "out for delivery", "delivered", "cancelled"].includes(status)) {
+      if (!validStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid status",
+          message: `Invalid status. Valid statuses are: ${validStatuses.join(", ")}`,
         })
       }
       let order = null
@@ -256,7 +278,10 @@ const adminOrderController = {
 
         const previousStatus = productItem.status
         productItem.status = status
-        if (status === "cancelled" && ["pending", "shipped"].includes(previousStatus)) {
+        if (status === "delivered" && previousStatus !== "delivered") {
+          productItem.deliveredAt = new Date()
+        }
+        if (status === "cancelled" && ["pending", "shipped", "out for delivery"].includes(previousStatus)) {
           try {
             const product = await Product.findById(productId)
             if (product && productItem.variant?.size) {
@@ -270,26 +295,22 @@ const adminOrderController = {
             console.error(`Error restoring stock for product ${productId}, variant ${productItem.variant?.size}:`, err)
           }
         }
-        const allProductsHaveSameStatus = order.products.every((p) => p.status === status)
-        if (allProductsHaveSameStatus) {
-          order.orderStatus = status
+        const productStatuses = order.products.map((p) => p.status)
+        const uniqueStatuses = [...new Set(productStatuses)]
+        if (uniqueStatuses.every((s) => s === "delivered")) {
+          order.orderStatus = "delivered"
+        } else if (uniqueStatuses.every((s) => s === "cancelled")) {
+          order.orderStatus = "cancelled"
+        } else if (uniqueStatuses.every((s) => s === "pending")) {
+          order.orderStatus = "pending"
+        } else if (uniqueStatuses.includes("delivered")) {
+          order.orderStatus = "delivered"
+        } else if (uniqueStatuses.includes("out for delivery")) {
+          order.orderStatus = "out for delivery"
+        } else if (uniqueStatuses.includes("shipped")) {
+          order.orderStatus = "shipped"
         } else {
-          const productStatuses = order.products.map((p) => p.status)
-          const uniqueStatuses = [...new Set(productStatuses)]
-
-          if (uniqueStatuses.includes("delivered") && uniqueStatuses.includes("cancelled")) {
-            order.orderStatus = "partially delivered"
-          } else if (uniqueStatuses.includes("shipped") || uniqueStatuses.includes("out for delivery")) {
-            order.orderStatus = "shipped"
-          } else if (uniqueStatuses.every((s) => s === "pending")) {
-            order.orderStatus = "pending"
-          } else if (uniqueStatuses.every((s) => s === "delivered")) {
-            order.orderStatus = "delivered"
-          } else if (uniqueStatuses.every((s) => s === "cancelled")) {
-            order.orderStatus = "cancelled"
-          } else {
-            order.orderStatus = "processing"
-          }
+          order.orderStatus = "pending"
         }
         if (!order.trackingDetails) {
           order.trackingDetails = { updates: [] }
@@ -306,9 +327,16 @@ const adminOrderController = {
         const previousStatus = order.orderStatus
         order.orderStatus = status
         order.products.forEach((product) => {
+          const previousProductStatus = product.status
           product.status = status
+          if (status === "delivered" && previousProductStatus !== "delivered") {
+            product.deliveredAt = new Date()
+          }
         })
-        if (status === "cancelled" && ["pending", "shipped"].includes(previousStatus)) {
+        if (status === "delivered") {
+          order.deliveryDate = new Date()
+        }
+        if (status === "cancelled" && ["pending", "shipped", "out for delivery"].includes(previousStatus)) {
           for (const item of order.products) {
             try {
               const product = await Product.findById(item.product._id)
@@ -317,9 +345,6 @@ const adminOrderController = {
                 if (variant) {
                   variant.varientquatity += item.quantity
                   await product.save()
-                  console.log(
-                    `Stock restored for product ${item.product._id}, variant ${item.variant.size}: +${item.quantity}`,
-                  )
                 }
               }
             } catch (err) {
@@ -470,11 +495,39 @@ const adminOrderController = {
         order.user.wallet.transactions.push({
           amount: refundAmount,
           type: "credit",
-          description: `Refund for returned item: ${productItem.product.name} (${productItem.variant?.size || "N/A"}) in order #${order.orderID}`,
+          description: `Refund for product return - Order #${order.orderID}`,
           date: new Date(),
         })
 
         await order.user.save()
+        const transactionId = generateTransactionId()
+        await Transaction.create({
+          user: order.user._id,
+          order: order._id,
+          transactionId: transactionId,
+          paymentMethod: "wallet",
+          amount: refundAmount,
+          status: "completed",
+          paymentDetails: {
+            type: "refund",
+            subType: "product_return",
+            description: `Refund for product return - Order #${order.orderID}`,
+            orderID: order.orderID,
+            refundDate: new Date(),
+            returnedItems: [
+              {
+                productId: productItem.product._id,
+                productName: productItem.product?.name || "Unknown Product",
+                quantity: productItem.quantity,
+                refundAmount: refundAmount,
+                reason: reason || "Return approved",
+              },
+            ],
+            refundReason: reason || "Return approved",
+            isPartialRefund: true,
+            returnType: "individual_products",
+          },
+        })
         try {
           const product = await Product.findById(productId)
           if (product && productItem.variant?.size) {
@@ -482,9 +535,6 @@ const adminOrderController = {
             if (variant) {
               variant.varientquatity += productItem.quantity
               await product.save()
-              console.log(
-                `Stock restored for returned product ${productId}, variant ${productItem.variant.size}: +${productItem.quantity}`,
-              )
             }
           }
         } catch (err) {
@@ -524,10 +574,11 @@ const adminOrderController = {
 
       if (!pendingReturns) {
         const returnedProducts = order.products.filter((p) => p.status === "returned")
+        const deliveredProducts = order.products.filter((p) => p.status === "delivered")
 
         if (returnedProducts.length === order.products.length) {
-          order.orderStatus = "returned"
-        } else if (returnedProducts.length > 0) {
+          order.orderStatus = "cancelled"
+        } else if (deliveredProducts.length > 0) {
           order.orderStatus = "delivered"
 
           if (!order.trackingDetails) {
@@ -535,7 +586,7 @@ const adminOrderController = {
           }
 
           order.trackingDetails.updates.push({
-            status: "Partial Return",
+            status: "Partial Return Processed",
             location: "System",
             timestamp: new Date(),
             description: `Some items in this order have been returned.`,
@@ -618,9 +669,11 @@ const adminOrderController = {
       })
     }
   },
+
   clearFilters: (req, res) => {
     res.redirect("/admin/orders")
   },
+
   getInventoryStatus: async (req, res) => {
     try {
       const page = Number.parseInt(req.query.page) || 1
@@ -669,6 +722,7 @@ const adminOrderController = {
       })
     }
   },
+
   updateProductStock: async (req, res) => {
     try {
       const { productId, size, quantity } = req.body

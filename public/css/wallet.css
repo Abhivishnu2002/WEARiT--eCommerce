@@ -93,14 +93,17 @@ body {
 .transaction-id {
   font-family: monospace;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .transaction-date {
   white-space: nowrap;
+  font-size: 14px;
 }
 
 .transaction-amount {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 16px;
 }
 
 .transaction-description {
@@ -120,6 +123,44 @@ body {
 
 .transaction-type.debit {
   color: #c12121;
+}
+
+/* Enhanced Badge Styles */
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.badge.bg-info {
+  background-color: #17a2b8 !important;
+  color: white;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+  color: white;
+}
+
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #212529;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: white;
+}
+
+/* Transaction Row Hover Effect */
+.wallet-transactions tbody tr:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease;
+}
+
+/* Refund Transaction Highlighting */
+.wallet-transactions tbody tr:has(.badge.bg-info) {
+  border-left: 4px solid #17a2b8;
 }
 
 /* Pagination */
@@ -296,5 +337,11 @@ body {
 
   .transaction-description {
     max-width: 150px;
+  }
+
+  .wallet-transactions th,
+  .wallet-transactions td {
+    padding: 8px 10px;
+    font-size: 14px;
   }
 }

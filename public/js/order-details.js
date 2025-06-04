@@ -7,11 +7,13 @@ document.addEventListener("DOMContentLoaded", () => {
     toastContainer.style.zIndex = "1060"
     document.body.appendChild(toastContainer)
   }
+
   function showToast(message, type = "success", duration = 4000) {
     const toastContainer = document.getElementById("toastContainer")
     const toastId = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const iconClass = type === "success" ? "fa-check-circle" : "fa-exclamation-triangle"
     const bgClass = type === "success" ? "bg-success" : "bg-danger"
+
     const toastHTML = `
       <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -23,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `
+
     toastContainer.insertAdjacentHTML("beforeend", toastHTML)
     const toastElement = document.getElementById(toastId)
     const toast = new bootstrap.Toast(toastElement, {
@@ -31,12 +34,14 @@ document.addEventListener("DOMContentLoaded", () => {
       animation: true,
     })
     toast.show()
+
     toastElement.addEventListener("hidden.bs.toast", () => {
       toastElement.remove()
     })
 
     return toast
   }
+
   function setButtonLoading(button, isLoading, originalText = null) {
     if (isLoading) {
       button.disabled = true
@@ -57,10 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const orderId = this.getAttribute("data-order-id")
         const productId = this.getAttribute("data-product-id")
         const productName = this.closest(".product-item").querySelector(".product-name")?.textContent || "this product"
+
         if (!orderId || !productId) {
           showToast("Missing order or product information", "error")
           return
         }
+
         const confirmModal = document.createElement("div")
         confirmModal.innerHTML = `
           <div class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -125,8 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const modalElement = confirmModal.querySelector(".modal")
         const modal = new bootstrap.Modal(modalElement)
         modal.show()
+
         const textarea = confirmModal.querySelector("#cancellationReason")
         const charCount = confirmModal.querySelector("#charCount")
+
         textarea.addEventListener("input", function () {
           charCount.textContent = this.value.length
           if (this.value.length > 450) {
@@ -135,11 +144,13 @@ document.addEventListener("DOMContentLoaded", () => {
             charCount.style.color = "#6c757d"
           }
         })
+
         const confirmBtn = confirmModal.querySelector(".confirm-cancel")
         confirmBtn.addEventListener("click", function () {
           const reason = textarea.value.trim()
           const originalText = this.innerHTML
           setButtonLoading(this, true, originalText)
+
           fetch(`/orders/cancel-product/${orderId}/${productId}`, {
             method: "POST",
             headers: {
@@ -150,22 +161,19 @@ document.addEventListener("DOMContentLoaded", () => {
           })
             .then(async (response) => {
               const data = await response.json()
-
               if (!response.ok) {
                 throw new Error(data.message || `HTTP error! status: ${response.status}`)
               }
-
               return data
             })
             .then((data) => {
               if (data.success) {
                 modal.hide()
                 let successMessage = "Product cancelled successfully!"
-                if (data.refundAmount && data.refundAmount > 0) {
-                  successMessage += ` Refund of ₹${data.refundAmount.toFixed(2)} will be processed.`
+                if (data.data && data.data.refundAmount && data.data.refundAmount > 0) {
+                  successMessage += ` Refund of ₹${data.data.refundAmount.toFixed(2)} will be processed.`
                 }
                 showToast(successMessage, "success", 5000)
-                updateProductUI(productId, "cancelled", reason)
                 setTimeout(() => {
                   window.location.reload()
                 }, 2000)
@@ -176,21 +184,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch((error) => {
               console.error("Error cancelling product:", error)
               setButtonLoading(this, false, originalText)
-
-              let errorMessage = "Failed to cancel product. "
-              if (error.message.includes("network") || error.message.includes("fetch")) {
-                errorMessage += "Please check your internet connection and try again."
-              } else if (error.message.includes("already cancelled")) {
-                errorMessage += "This product has already been cancelled."
-              } else if (error.message.includes("cannot be cancelled")) {
-                errorMessage += "This product cannot be cancelled at this stage."
-              } else {
-                errorMessage += error.message || "Please try again later."
-              }
-
-              showToast(errorMessage, "error", 6000)
+              showToast(error.message || "Failed to cancel product. Please try again.", "error", 6000)
             })
         })
+
         modalElement.addEventListener("hidden.bs.modal", () => {
           setTimeout(() => {
             confirmModal.remove()
@@ -199,29 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
-  function updateProductUI(productId, newStatus, reason) {
-    const productItem = document.querySelector(`[data-product-id="${productId}"]`)?.closest(".product-item")
-    if (productItem) {
-      const statusBadge = productItem.querySelector(".product-status-badge")
-      if (statusBadge) {
-        statusBadge.className = "product-status-badge cancelled"
-        statusBadge.textContent = "CANCELLED"
-      }
-      const cancelBtn = productItem.querySelector(".cancel-product-btn")
-      if (cancelBtn) {
-        const buttonContainer = cancelBtn.parentElement
-        buttonContainer.innerHTML = `
-          <div class="text-muted small">
-            <i class="fas fa-times-circle text-danger me-1"></i>
-            Cancelled
-            ${reason ? `<br><small>Reason: ${reason}</small>` : ""}
-          </div>
-        `
-      }
-      productItem.style.opacity = "0.7"
-      productItem.style.backgroundColor = "#f8f9fa"
-    }
-  }
+
   const returnProductBtns = document.querySelectorAll(".return-product-btn")
   if (returnProductBtns.length > 0) {
     returnProductBtns.forEach((btn) => {
@@ -314,6 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const modalElement = confirmModal.querySelector(".modal")
         const modal = new bootstrap.Modal(modalElement)
         modal.show()
+
         const reasonSelect = confirmModal.querySelector("#returnReasonSelect")
         const reasonTextarea = confirmModal.querySelector("#returnReason")
         const charCount = confirmModal.querySelector("#returnCharCount")
@@ -334,6 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
             this.classList.remove("is-invalid")
           }
         })
+
         const confirmBtn = confirmModal.querySelector(".confirm-return")
         confirmBtn.addEventListener("click", function () {
           const reason = reasonTextarea.value.trim()
@@ -357,18 +334,15 @@ document.addEventListener("DOMContentLoaded", () => {
           })
             .then(async (response) => {
               const data = await response.json()
-
               if (!response.ok) {
                 throw new Error(data.message || `HTTP error! status: ${response.status}`)
               }
-
               return data
             })
             .then((data) => {
               if (data.success) {
                 modal.hide()
                 showToast("Return request submitted successfully! We'll review it within 24 hours.", "success", 5000)
-
                 setTimeout(() => {
                   window.location.reload()
                 }, 2000)
@@ -469,18 +443,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
           .then(async (response) => {
             const data = await response.json()
-
             if (!response.ok) {
               throw new Error(data.message || `HTTP error! status: ${response.status}`)
             }
-
             return data
           })
           .then((data) => {
             if (data.success) {
               modal.hide()
               showToast("Order cancelled successfully!", "success", 5000)
-
               setTimeout(() => {
                 window.location.reload()
               }, 2000)
@@ -492,6 +463,174 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Error cancelling order:", error)
             setButtonLoading(this, false, originalText)
             showToast(error.message || "Failed to cancel order. Please try again.", "error")
+          })
+      })
+
+      modalElement.addEventListener("hidden.bs.modal", () => {
+        setTimeout(() => {
+          confirmModal.remove()
+        }, 300)
+      })
+    })
+  }
+  const returnOrderBtn = document.querySelector(".return-order-btn")
+  if (returnOrderBtn) {
+    returnOrderBtn.addEventListener("click", function (e) {
+      e.preventDefault()
+
+      const orderId = this.getAttribute("data-order-id")
+
+      if (!orderId) {
+        showToast("Missing order information", "error")
+        return
+      }
+
+      const confirmModal = document.createElement("div")
+      confirmModal.innerHTML = `
+        <div class="modal fade" tabindex="-1" data-bs-backdrop="static">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+              <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                  <i class="fas fa-undo me-2"></i>
+                  Return Entire Order
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  <strong>Warning:</strong> This will return all delivered products in this order.
+                </div>
+                <p>Please provide a reason for returning this entire order. Our team will review your request.</p>
+                <div class="mb-3">
+                  <label for="orderReturnReason" class="form-label">
+                    Reason for return <span class="text-danger">*</span>
+                  </label>
+                  <select class="form-select mb-2" id="orderReturnReasonSelect">
+                    <option value="">Select a reason</option>
+                    <option value="defective">Products are defective/damaged</option>
+                    <option value="wrong-items">Wrong items received</option>
+                    <option value="size-issues">Size issues with products</option>
+                    <option value="quality">Quality not as expected</option>
+                    <option value="not-as-described">Products not as described</option>
+                    <option value="other">Other (please specify)</option>
+                  </select>
+                  <textarea 
+                    class="form-control" 
+                    id="orderReturnReason" 
+                    rows="3" 
+                    placeholder="Please provide detailed reason for returning the entire order"
+                    required
+                    maxlength="500"
+                  ></textarea>
+                  <div class="invalid-feedback">
+                    Please provide a reason for return.
+                  </div>
+                  <div class="form-text">
+                    <span id="orderReturnCharCount">0</span>/500 characters
+                  </div>
+                </div>
+                <div class="alert alert-info d-flex align-items-start" role="alert">
+                  <i class="fas fa-clock me-2 mt-1"></i>
+                  <div>
+                    <strong>Return Policy:</strong>
+                    <ul class="mb-0 mt-1">
+                      <li>Returns accepted within 7 days of delivery</li>
+                      <li>All products must be in original condition</li>
+                      <li>Refund will be processed after quality check</li>
+                      <li>Return request will be reviewed within 24 hours</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-warning confirm-order-return">
+                  <i class="fas fa-paper-plane me-1"></i>Submit Return Request
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+
+      document.body.appendChild(confirmModal)
+      const modalElement = confirmModal.querySelector(".modal")
+      const modal = new bootstrap.Modal(modalElement)
+      modal.show()
+
+      const reasonSelect = confirmModal.querySelector("#orderReturnReasonSelect")
+      const reasonTextarea = confirmModal.querySelector("#orderReturnReason")
+      const charCount = confirmModal.querySelector("#orderReturnCharCount")
+
+      reasonSelect.addEventListener("change", function () {
+        if (this.value && this.value !== "other") {
+          reasonTextarea.value = this.options[this.selectedIndex].text
+          charCount.textContent = reasonTextarea.value.length
+        } else if (this.value === "other") {
+          reasonTextarea.value = ""
+          reasonTextarea.focus()
+        }
+      })
+
+      reasonTextarea.addEventListener("input", function () {
+        charCount.textContent = this.value.length
+        if (this.value.trim()) {
+          this.classList.remove("is-invalid")
+        }
+        if (this.value.length > 450) {
+          charCount.style.color = "#dc3545"
+        } else {
+          charCount.style.color = "#6c757d"
+        }
+      })
+
+      const confirmBtn = confirmModal.querySelector(".confirm-order-return")
+      confirmBtn.addEventListener("click", function () {
+        const reason = reasonTextarea.value.trim()
+
+        if (!reason) {
+          reasonTextarea.classList.add("is-invalid")
+          reasonTextarea.focus()
+          return
+        }
+
+        const originalText = this.innerHTML
+        setButtonLoading(this, true, originalText)
+
+        fetch(`/orders/return/${orderId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({ reason }),
+        })
+          .then(async (response) => {
+            const data = await response.json()
+            if (!response.ok) {
+              throw new Error(data.message || `HTTP error! status: ${response.status}`)
+            }
+            return data
+          })
+          .then((data) => {
+            if (data.success) {
+              modal.hide()
+              showToast("Return request submitted successfully! We'll review it within 24 hours.", "success", 5000)
+              setTimeout(() => {
+                window.location.reload()
+              }, 2000)
+            } else {
+              throw new Error(data.message || "Failed to submit return request")
+            }
+          })
+          .catch((error) => {
+            console.error("Error submitting return request:", error)
+            setButtonLoading(this, false, originalText)
+            showToast(error.message || "Failed to submit return request. Please try again.", "error")
           })
       })
 
@@ -595,11 +734,9 @@ document.addEventListener("DOMContentLoaded", () => {
           })
             .then(async (response) => {
               const data = await response.json()
-
               if (!response.ok) {
                 throw new Error(data.message || `HTTP error! status: ${response.status}`)
               }
-
               return data
             })
             .then((data) => {
@@ -630,6 +767,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("online", () => {
     showToast("Connection restored", "success", 2000)
   })
+
   window.addEventListener("offline", () => {
     showToast("Connection lost. Please check your internet connection.", "error", 5000)
   })

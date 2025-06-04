@@ -1,66 +1,76 @@
 document.addEventListener("DOMContentLoaded", () => {
-    try {
-      const successMsg = document.querySelector(".alert-success")?.textContent.trim()
-      const errorMsg = document.querySelector(".alert-danger")?.textContent.trim()
-  
-      if (successMsg && successMsg.length > 0) {
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: successMsg,
-          confirmButtonColor: "#0d6efd",
-        })
-      }
-  
-      if (errorMsg && errorMsg.length > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: errorMsg,
-          confirmButtonColor: "#0d6efd",
-        })
-      }
-    } catch (e) {
-      console.log("Flash message check error:", e)
+  const Swal = window.Swal
+
+  try {
+    const successMsg = document.querySelector(".alert-success")?.textContent.trim()
+    const errorMsg = document.querySelector(".alert-danger")?.textContent.trim()
+
+    if (successMsg && successMsg.length > 0) {
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: successMsg,
+        confirmButtonColor: "#667eea",
+      })
     }
- 
-    const toggleForms = document.querySelectorAll(".toggle-form")
-  
-    toggleForms.forEach((form) => {
-      const checkbox = form.querySelector('input[type="checkbox"]')
-  
-      if (checkbox) {
-        const originalChecked = checkbox.checked
 
-        checkbox.addEventListener("change", function (e) {
+    if (errorMsg && errorMsg.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMsg,
+        confirmButtonColor: "#667eea",
+      })
+    }
+  } catch (e) {
+    console.error("Flash message check error:", e)
+  }
 
-          e.preventDefault()
-          e.stopPropagation()
-  
-          this.checked = originalChecked
+  const toggleForms = document.querySelectorAll(".toggle-form")
 
-          const action = originalChecked ? "Unblocking" : "Blocking"
+  toggleForms.forEach((form) => {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault()
+
+      const isBlockAction = !form.querySelector('input[type="checkbox"]')?.checked
+      const actionText = isBlockAction ? "block" : "unblock"
+      const customerName = this.closest("tr").querySelector(".customer-name")?.textContent.trim() || "this customer"
+
+      Swal.fire({
+        title: `Are you sure you want to ${actionText} ${customerName}?`,
+        text: isBlockAction
+          ? "This will prevent the customer from logging in and placing orders."
+          : "This will allow the customer to log in and place orders again.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: isBlockAction ? "#dc3545" : "#28a745",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: `Yes, ${actionText}`,
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
           Swal.fire({
-            title: `${action.charAt(0).toUpperCase() + action.slice(1)} User`,
-            text:'Processing...',
-            icon: action === "processing",
-          }).then((result) => {
-            if (result.isConfirmed) {
-              Swal.fire({
-                title: "Processing...",
-                html: `Please wait while we ${action} this user`,
-                allowOutsideClick: false,
-                didOpen: () => {
-                  Swal.showLoading()
-                  form.submit()
-                },
-              })
-            }
+            title: "Processing...",
+            text: `${isBlockAction ? "Blocking" : "Unblocking"} customer`,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading()
+              form.submit()
+            },
           })
-  
-          return false
-        })
-      }
+        }
+      })
     })
   })
-  
+  const searchForm = document.querySelector('form[action="/admin/customer"]')
+  if (searchForm) {
+    const searchInput = searchForm.querySelector('input[name="search"]')
+
+    searchForm.addEventListener("submit", (e) => {
+      if (searchInput && searchInput.value.trim() === "") {
+        e.preventDefault()
+        window.location.href = "/admin/customer"
+      }
+    })
+  }
+})

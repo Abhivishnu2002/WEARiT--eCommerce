@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="/css/admin-navbar.css">
-    <link rel="stylesheet" href="/css/admin-category.css">
     <link rel="stylesheet" href="/css/admin-sales-report.css">
 </head>
 <body>
@@ -26,22 +25,25 @@
             <% } %>
             
             <div class="report-header">
-                <h2 class="report-title">Sales Report</h2>
+                <h2 class="report-title">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Sales Report
+                </h2>
                 <div class="report-actions">
                     <% if (reportData) { %>
                         <div class="dropdown me-2">
                             <button class="btn btn-outline-primary dropdown-toggle" type="button" id="downloadDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-download me-2"></i> Download
+                                <i class="fas fa-download me-2"></i> Export Report
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
                                 <li>
                                     <a class="dropdown-item" href="/admin/sales-report/download-pdf?timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>" target="_blank">
-                                        <i class="fas fa-file-pdf me-2"></i> PDF
+                                        <i class="fas fa-file-pdf me-2 text-danger"></i> Download PDF
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="/admin/sales-report/download-excel?timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>">
-                                        <i class="fas fa-file-excel me-2"></i> Excel
+                                        <i class="fas fa-file-excel me-2 text-success"></i> Download Excel
                                     </a>
                                 </li>
                             </ul>
@@ -59,7 +61,7 @@
                         <form action="/admin/sales-report" method="GET" id="reportFilterForm">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Time Period</label>
+                                    <label class="form-label fw-semibold">Time Period</label>
                                     <div class="btn-group w-100" role="group">
                                         <input type="radio" class="btn-check" name="timeFilter" id="timeDaily" value="daily" <%= reportData && reportData.timeFilter === 'daily' ? 'checked' : '' %>>
                                         <label class="btn btn-outline-primary" for="timeDaily">Daily</label>
@@ -74,18 +76,18 @@
                                         <label class="btn btn-outline-primary" for="timeYearly">Yearly</label>
                                         
                                         <input type="radio" class="btn-check" name="timeFilter" id="timeCustom" value="custom" <%= reportData && reportData.timeFilter === 'custom' ? 'checked' : '' %>>
-                                        <label class="btn btn-outline-primary" for="timeCustom">Custom</label>
+                                        <label class="btn btn-outline-primary" for="timeCustom">Custom Range</label>
                                     </div>
                                 </div>
                                 
                                 <div class="col-md-6 mb-3 custom-date-range <%= reportData && reportData.timeFilter === 'custom' ? '' : 'd-none' %>">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <label class="form-label">Start Date</label>
+                                            <label class="form-label fw-semibold">Start Date</label>
                                             <input type="date" class="form-control" name="startDate" id="startDate" value="<%= reportData && reportData.startDate ? reportData.startDate.toISOString().split('T')[0] : '' %>">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">End Date</label>
+                                            <label class="form-label fw-semibold">End Date</label>
                                             <input type="date" class="form-control" name="endDate" id="endDate" value="<%= reportData && reportData.endDate ? reportData.endDate.toISOString().split('T')[0] : '' %>">
                                         </div>
                                     </div>
@@ -94,7 +96,7 @@
                             
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Payment Method</label>
+                                    <label class="form-label fw-semibold">Payment Method</label>
                                     <select class="form-select" name="paymentMethod">
                                         <option value="">All Payment Methods</option>
                                         <% if (reportData && reportData.filters.availablePaymentMethods) { %>
@@ -108,7 +110,7 @@
                                 </div>
                                 
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Sort By</label>
+                                    <label class="form-label fw-semibold">Sort By</label>
                                     <select class="form-select" name="sortBy">
                                         <option value="orderDate" <%= !reportData || reportData.filters.sortBy === 'orderDate' ? 'selected' : '' %>>Order Date</option>
                                         <option value="finalAmount" <%= reportData && reportData.filters.sortBy === 'finalAmount' ? 'selected' : '' %>>Amount</option>
@@ -117,34 +119,34 @@
                                 </div>
                                 
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Sort Order</label>
+                                    <label class="form-label fw-semibold">Sort Order</label>
                                     <select class="form-select" name="sortOrder">
-                                        <option value="desc" <%= !reportData || reportData.filters.sortOrder === 'desc' ? 'selected' : '' %>>Descending</option>
-                                        <option value="asc" <%= reportData && reportData.filters.sortOrder === 'asc' ? 'selected' : '' %>>Ascending</option>
+                                        <option value="desc" <%= !reportData || reportData.filters.sortOrder === 'desc' ? 'selected' : '' %>>Newest First</option>
+                                        <option value="asc" <%= reportData && reportData.filters.sortOrder === 'asc' ? 'selected' : '' %>>Oldest First</option>
                                     </select>
                                 </div>
                             </div>
                             
                             <div class="row">
                                 <div class="col-md-8 mb-3">
-                                    <label class="form-label">Search</label>
+                                    <label class="form-label fw-semibold">Search</label>
                                     <input type="text" class="form-control" name="search" placeholder="Search by Order ID or Transaction ID" value="<%= reportData && reportData.filters.search ? reportData.filters.search : '' %>">
                                 </div>
                                 
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Items Per Page</label>
+                                    <label class="form-label fw-semibold">Items Per Page</label>
                                     <select class="form-select" name="limit">
-                                        <option value="10" <%= !reportData || reportData.pagination.limit === 10 ? 'selected' : '' %>>10</option>
-                                        <option value="25" <%= reportData && reportData.pagination.limit === 25 ? 'selected' : '' %>>25</option>
-                                        <option value="50" <%= reportData && reportData.pagination.limit === 50 ? 'selected' : '' %>>50</option>
-                                        <option value="100" <%= reportData && reportData.pagination.limit === 100 ? 'selected' : '' %>>100</option>
+                                        <option value="10" <%= !reportData || reportData.pagination.limit === 10 ? 'selected' : '' %>>10 per page</option>
+                                        <option value="25" <%= reportData && reportData.pagination.limit === 25 ? 'selected' : '' %>>25 per page</option>
+                                        <option value="50" <%= reportData && reportData.pagination.limit === 50 ? 'selected' : '' %>>50 per page</option>
+                                        <option value="100" <%= reportData && reportData.pagination.limit === 100 ? 'selected' : '' %>>100 per page</option>
                                     </select>
                                 </div>
                             </div>
                             
                             <div class="d-flex justify-content-between">
                                 <a href="/admin/sales-report" class="btn btn-outline-secondary">
-                                    <i class="fas fa-redo me-2"></i> Reset Filters
+                                    <i class="fas fa-redo me-2"></i> Reset All Filters
                                 </a>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-search me-2"></i> Generate Report
@@ -157,11 +159,25 @@
             
             <% if (reportData) { %>
                 <div class="report-period mb-4">
-                    <h4>Report Period: <%= moment(reportData.startDate).format('MMM DD, YYYY') %> - <%= moment(reportData.endDate).format('MMM DD, YYYY') %></h4>
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h4 class="mb-1">
+                                <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                                Report Period: <%= moment(reportData.startDate).format('MMM DD, YYYY') %> - <%= moment(reportData.endDate).format('MMM DD, YYYY') %>
+                            </h4>
+                            <p class="text-muted mb-0">
+                                Filter: <%= reportData.timeFilter.charAt(0).toUpperCase() + reportData.timeFilter.slice(1) %> 
+                                <% if (reportData.filters.paymentMethod) { %>
+                                    | Payment: <%= reportData.filters.paymentMethod.charAt(0).toUpperCase() + reportData.filters.paymentMethod.slice(1) %>
+                                <% } %>
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Summary Statistics -->
                 <div class="row mb-4">
-                    <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
                         <div class="stat-card">
                             <div class="stat-card-body">
                                 <div class="stat-card-icon bg-primary">
@@ -169,13 +185,13 @@
                                 </div>
                                 <div class="stat-card-info">
                                     <h5 class="stat-card-title">Total Orders</h5>
-                                    <p class="stat-card-value"><%= reportData.totalOrders %></p>
+                                    <p class="stat-card-value"><%= reportData.totalOrders.toLocaleString() %></p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
                         <div class="stat-card">
                             <div class="stat-card-body">
                                 <div class="stat-card-icon bg-success">
@@ -189,21 +205,21 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
                         <div class="stat-card">
                             <div class="stat-card-body">
                                 <div class="stat-card-icon bg-warning">
                                     <i class="fas fa-tags"></i>
                                 </div>
                                 <div class="stat-card-info">
-                                    <h5 class="stat-card-title">Total Discount</h5>
+                                    <h5 class="stat-card-title">Total Discounts</h5>
                                     <p class="stat-card-value"><%= formatCurrency(reportData.totalDiscount + reportData.totalCouponDiscount) %></p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="col-lg-3 col-md-6 mb-3">
                         <div class="stat-card">
                             <div class="stat-card-body">
                                 <div class="stat-card-icon bg-info">
@@ -218,72 +234,77 @@
                     </div>
                 </div>
                 
-                <div class="row mb-4">
-                    <div class="col-lg-8 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">Sales Trend</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="salesTrendChart" height="300"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">Payment Methods</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="paymentMethodChart" height="300"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Daily Sales Table -->
+                <!-- Daily Sales Table with Pagination -->
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Daily Sales</h5>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            Daily Sales Breakdown
+                        </h5>
+                        <span class="badge bg-primary">
+                            <%= reportData.dailySalesPagination.totalItems %> days total
+                        </span>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover" id="dailySalesTable">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Orders</th>
-                                        <th>Revenue</th>
-                                        <th>Product Discount</th>
-                                        <th>Coupon Discount</th>
-                                        <th>Total Discount</th>
-                                        <th>Net Revenue</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                        <th><i class="fas fa-shopping-cart me-1"></i>Orders</th>
+                                        <th><i class="fas fa-rupee-sign me-1"></i>Revenue</th>
+                                        <th><i class="fas fa-tag me-1"></i>Product Discount</th>
+                                        <th><i class="fas fa-ticket-alt me-1"></i>Coupon Discount</th>
+                                        <th><i class="fas fa-tags me-1"></i>Total Discount</th>
+                                        <th><i class="fas fa-chart-line me-1"></i>Net Revenue</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <% if (reportData.dailySales && reportData.dailySales.length > 0) { %>
-                                        <% reportData.dailySales.forEach(day => { %>
-                                            <tr>
-                                                <td><%= moment(day.date).format('MMM DD, YYYY') %></td>
-                                                <td><%= day.count %></td>
-                                                <td><%= formatCurrency(day.revenue) %></td>
-                                                <td><%= formatCurrency(day.discount) %></td>
-                                                <td><%= formatCurrency(day.couponDiscount) %></td>
-                                                <td><%= formatCurrency(day.discount + day.couponDiscount) %></td>
-                                                <td><%= formatCurrency(day.revenue - day.discount - day.couponDiscount) %></td>
+                                        <% reportData.dailySales.forEach((day, index) => { %>
+                                            <tr class="<%= index % 2 === 0 ? 'table-light' : '' %>">
+                                                <td class="fw-semibold">
+                                                    <%= moment(day.date).format('MMM DD, YYYY') %>
+                                                    <small class="text-muted d-block">
+                                                        <%= moment(day.date).format('dddd') %>
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary rounded-pill">
+                                                        <%= day.count %>
+                                                    </span>
+                                                </td>
+                                                <td class="fw-semibold text-success">
+                                                    <%= formatCurrency(day.revenue) %>
+                                                </td>
+                                                <td class="text-warning">
+                                                    <%= formatCurrency(day.discount) %>
+                                                </td>
+                                                <td class="text-info">
+                                                    <%= formatCurrency(day.couponDiscount) %>
+                                                </td>
+                                                <td class="text-danger">
+                                                    <%= formatCurrency(day.discount + day.couponDiscount) %>
+                                                </td>
+                                                <td class="fw-bold text-success">
+                                                    <%= formatCurrency(day.revenue - day.discount - day.couponDiscount) %>
+                                                </td>
                                             </tr>
                                         <% }); %>
                                     <% } else { %>
                                         <tr>
-                                            <td colspan="7" class="text-center">No daily sales data available</td>
+                                            <td colspan="7" class="text-center py-4">
+                                                <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">No daily sales data available for the selected period</p>
+                                            </td>
                                         </tr>
                                     <% } %>
                                 </tbody>
-                                <tfoot>
-                                    <tr class="table-dark">
-                                        <th>Total</th>
-                                        <th><%= reportData.totalOrders %></th>
+                                <% if (reportData.dailySales && reportData.dailySales.length > 0) { %>
+                                <tfoot class="table-dark">
+                                    <tr>
+                                        <th>Period Total</th>
+                                        <th><%= reportData.totalOrders.toLocaleString() %></th>
                                         <th><%= formatCurrency(reportData.totalRevenue) %></th>
                                         <th><%= formatCurrency(reportData.totalDiscount) %></th>
                                         <th><%= formatCurrency(reportData.totalCouponDiscount) %></th>
@@ -291,117 +312,189 @@
                                         <th><%= formatCurrency(reportData.totalRevenue - reportData.totalDiscount - reportData.totalCouponDiscount) %></th>
                                     </tr>
                                 </tfoot>
+                                <% } %>
                             </table>
                         </div>
+                        
+                        <!-- Daily Sales Pagination -->
+                        <% if (reportData.dailySalesPagination && reportData.dailySalesPagination.totalPages > 1) { %>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div>
+                                    Showing <%= (reportData.dailySalesPagination.page - 1) * reportData.dailySalesPagination.limit + 1 %> to 
+                                    <%= Math.min(reportData.dailySalesPagination.page * reportData.dailySalesPagination.limit, reportData.dailySalesPagination.totalItems) %> 
+                                    of <%= reportData.dailySalesPagination.totalItems %> days
+                                </div>
+                                <nav aria-label="Daily sales pagination">
+                                    <ul class="pagination mb-0">
+                                        <li class="page-item <%= !reportData.dailySalesPagination.hasPrevPage ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/admin/sales-report?dailySalesPage=<%= reportData.dailySalesPagination.page - 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&page=<%= reportData.pagination.page %>&transactionPage=<%= reportData.transactionPagination.page %>" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        
+                                        <% 
+                                        let startPage = Math.max(1, reportData.dailySalesPagination.page - 2);
+                                        let endPage = Math.min(reportData.dailySalesPagination.totalPages, startPage + 4);
+                                        
+                                        for (let i = startPage; i <= endPage; i++) { %>
+                                            <li class="page-item <%= i === reportData.dailySalesPagination.page ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/sales-report?dailySalesPage=<%= i %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&page=<%= reportData.pagination.page %>&transactionPage=<%= reportData.transactionPagination.page %>">
+                                                    <%= i %>
+                                                </a>
+                                            </li>
+                                        <% } %>
+                                        
+                                        <li class="page-item <%= !reportData.dailySalesPagination.hasNextPage ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/admin/sales-report?dailySalesPage=<%= reportData.dailySalesPagination.page + 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&page=<%= reportData.pagination.page %>&transactionPage=<%= reportData.transactionPagination.page %>" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
                 
-                <!-- Order Details Table -->
+                <!-- Order Details Table with Enhanced Pagination -->
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Order Details</h5>
-                        <div class="input-group" style="max-width: 300px;">
-                            <input type="text" id="orderSearchInput" class="form-control" placeholder="Search orders...">
-                            <button class="btn btn-outline-secondary" type="button">
-                                <i class="fas fa-search"></i>
-                            </button>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list-alt me-2"></i>
+                            Order Details
+                        </h5>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-info">
+                                <%= reportData.pagination.totalItems %> orders total
+                            </span>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="text" id="orderSearchInput" class="form-control form-control-sm" placeholder="Search orders...">
+                                <button class="btn btn-outline-secondary btn-sm" type="button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover" id="orderDetailsTable">
-                                <thead>
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>Order ID</th>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Items</th>
-                                        <th>Payment</th>
-                                        <th>Original Amount</th>
-                                        <th>Discount</th>
-                                        <th>Coupon</th>
-                                        <th>Final Amount</th>
-                                        <th>Status</th>
+                                        <th><i class="fas fa-hashtag me-1"></i>Order ID</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                        <th><i class="fas fa-user me-1"></i>Customer</th>
+                                        <th><i class="fas fa-box me-1"></i>Items</th>
+                                        <th><i class="fas fa-credit-card me-1"></i>Payment</th>
+                                        <th><i class="fas fa-rupee-sign me-1"></i>Original</th>
+                                        <th><i class="fas fa-tags me-1"></i>Discount</th>
+                                        <th><i class="fas fa-ticket-alt me-1"></i>Coupon</th>
+                                        <th><i class="fas fa-calculator me-1"></i>Final Amount</th>
+                                        <th><i class="fas fa-info-circle me-1"></i>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <% if (reportData.orders && reportData.orders.length > 0) { %>
-                                        <% reportData.orders.forEach(order => { %>
-                                            <tr>
+                                        <% reportData.orders.forEach((order, index) => { %>
+                                            <tr class="<%= index % 2 === 0 ? 'table-light' : '' %>">
                                                 <td>
-                                                    <a href="/admin/orders/<%= order._id %>" class="text-primary fw-semibold">
+                                                    <a href="/admin/orders/<%= order._id %>" class="text-primary fw-semibold text-decoration-none">
                                                         <%= order.orderID %>
                                                     </a>
                                                 </td>
-                                                <td><%= moment(order.orderDate).format('MMM DD, YYYY') %></td>
+                                                <td>
+                                                    <div class="fw-semibold"><%= moment(order.orderDate).format('MMM DD, YYYY') %></div>
+                                                    <small class="text-muted"><%= moment(order.orderDate).format('HH:mm') %></small>
+                                                </td>
                                                 <td>
                                                     <% if (order.user) { %>
-                                                        <div><%= order.user.name %></div>
+                                                        <div class="fw-semibold"><%= order.user.name %></div>
                                                         <small class="text-muted"><%= order.user.email %></small>
                                                     <% } else { %>
-                                                        Unknown
+                                                        <span class="text-muted">Unknown Customer</span>
                                                     <% } %>
                                                 </td>
                                                 <td>
                                                     <% if (order.products && order.products.length > 0) { %>
+                                                        <% let totalItems = order.products.reduce((sum, item) => sum + item.quantity, 0); %>
+                                                        <div class="fw-semibold">
+                                                            <%= totalItems %> item<%= totalItems > 1 ? 's' : '' %>
+                                                        </div>
                                                         <% let displayItems = order.products.slice(0, 2); %>
-                                                        <% displayItems.forEach((item, index) => { %>
-                                                            <div>
-                                                                <%= item.product ? item.product.name : 'Unknown Product' %> 
-                                                                (<%= item.quantity %>)
-                                                            </div>
+                                                        <% displayItems.forEach((item, idx) => { %>
+                                                            <small class="text-muted d-block">
+                                                                <%= item.product ? item.product.name.substring(0, 25) : 'Unknown' %><%= item.product && item.product.name.length > 25 ? '...' : '' %> (×<%= item.quantity %>)
+                                                            </small>
                                                         <% }); %>
                                                         <% if (order.products.length > 2) { %>
-                                                            <small class="text-muted">+<%= order.products.length - 2 %> more</small>
+                                                            <small class="text-primary">+<%= order.products.length - 2 %> more items</small>
                                                         <% } %>
                                                     <% } else { %>
-                                                        No items
+                                                        <span class="text-muted">No items</span>
                                                     <% } %>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-<%= order.paymentMethod === 'COD' ? 'secondary' : order.paymentMethod === 'wallet' ? 'info' : 'primary' %>">
-                                                        <%= order.paymentMethod %>
+                                                    <% let badgeClass = 'secondary'; %>
+                                                    <% if (order.paymentMethod === 'paypal') badgeClass = 'primary'; %>
+                                                    <% if (order.paymentMethod === 'wallet') badgeClass = 'info'; %>
+                                                    <% if (order.paymentMethod === 'online') badgeClass = 'success'; %>
+                                                    <span class="badge bg-<%= badgeClass %>">
+                                                        <%= order.paymentMethod.toUpperCase() %>
                                                     </span>
                                                 </td>
-                                                <td><%= formatCurrency(order.totalAmount) %></td>
-                                                <td><%= formatCurrency(order.discount || 0) %></td>
+                                                <td class="fw-semibold">
+                                                    <%= formatCurrency(order.totalAmount) %>
+                                                </td>
+                                                <td class="text-warning">
+                                                    <%= formatCurrency(order.discount || 0) %>
+                                                </td>
                                                 <td>
                                                     <% if (order.coupon && order.coupon.code) { %>
-                                                        <span class="badge bg-success"><%= order.coupon.code %></span>
-                                                        <div><%= formatCurrency(order.coupon.discountAmount) %></div>
+                                                        <span class="badge bg-success mb-1"><%= order.coupon.code %></span>
+                                                        <div class="text-success fw-semibold">
+                                                            <%= formatCurrency(order.coupon.discountAmount) %>
+                                                        </div>
                                                     <% } else { %>
-                                                        -
+                                                        <span class="text-muted">-</span>
                                                     <% } %>
                                                 </td>
-                                                <td><%= formatCurrency(order.finalAmount) %></td>
+                                                <td class="fw-bold text-success">
+                                                    <%= formatCurrency(order.finalAmount) %>
+                                                </td>
                                                 <td>
-                                                    <span class="badge bg-<%= order.orderStatus === 'delivered' ? 'success' : order.orderStatus === 'cancelled' ? 'danger' : 'warning' %>">
-                                                        <%= order.orderStatus %>
+                                                    <% let statusClass = 'warning'; %>
+                                                    <% if (order.orderStatus === 'delivered') statusClass = 'success'; %>
+                                                    <% if (order.orderStatus === 'cancelled') statusClass = 'danger'; %>
+                                                    <% if (order.orderStatus === 'shipped') statusClass = 'info'; %>
+                                                    <span class="badge bg-<%= statusClass %>">
+                                                        <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
                                                     </span>
                                                 </td>
                                             </tr>
                                         <% }); %>
                                     <% } else { %>
                                         <tr>
-                                            <td colspan="10" class="text-center">No order data available</td>
+                                            <td colspan="10" class="text-center py-4">
+                                                <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">No order data available for the selected criteria</p>
+                                            </td>
                                         </tr>
                                     <% } %>
                                 </tbody>
                             </table>
                         </div>
                         
-                        <!-- Pagination -->
+                        <!-- Enhanced Order Pagination -->
                         <% if (reportData.pagination && reportData.pagination.totalPages > 1) { %>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted">
                                     Showing <%= (reportData.pagination.page - 1) * reportData.pagination.limit + 1 %> to 
                                     <%= Math.min(reportData.pagination.page * reportData.pagination.limit, reportData.pagination.totalItems) %> 
-                                    of <%= reportData.pagination.totalItems %> orders
+                                    of <%= reportData.pagination.totalItems.toLocaleString() %> orders
                                 </div>
-                                <nav aria-label="Page navigation">
+                                <nav aria-label="Order pagination">
                                     <ul class="pagination mb-0">
                                         <li class="page-item <%= !reportData.pagination.hasPrevPage ? 'disabled' : '' %>">
-                                            <a class="page-link" href="/admin/sales-report?page=<%= reportData.pagination.page - 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>&limit=<%= reportData.pagination.limit %><%= reportData.filters.search ? '&search=' + reportData.filters.search : '' %>" aria-label="Previous">
+                                            <a class="page-link" href="/admin/sales-report?page=<%= reportData.pagination.page - 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>&limit=<%= reportData.pagination.limit %><%= reportData.filters.search ? '&search=' + reportData.filters.search : '' %>&dailySalesPage=<%= reportData.dailySalesPagination.page %>&transactionPage=<%= reportData.transactionPagination.page %>" aria-label="Previous">
                                                 <span aria-hidden="true">&laquo;</span>
                                             </a>
                                         </li>
@@ -416,14 +509,14 @@
                                         
                                         for (let i = startPage; i <= endPage; i++) { %>
                                             <li class="page-item <%= i === reportData.pagination.page ? 'active' : '' %>">
-                                                <a class="page-link" href="/admin/sales-report?page=<%= i %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>&limit=<%= reportData.pagination.limit %><%= reportData.filters.search ? '&search=' + reportData.filters.search : '' %>">
+                                                <a class="page-link" href="/admin/sales-report?page=<%= i %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>&limit=<%= reportData.pagination.limit %><%= reportData.filters.search ? '&search=' + reportData.filters.search : '' %>&dailySalesPage=<%= reportData.dailySalesPagination.page %>&transactionPage=<%= reportData.transactionPagination.page %>">
                                                     <%= i %>
                                                 </a>
                                             </li>
                                         <% } %>
                                         
                                         <li class="page-item <%= !reportData.pagination.hasNextPage ? 'disabled' : '' %>">
-                                            <a class="page-link" href="/admin/sales-report?page=<%= reportData.pagination.page + 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>&limit=<%= reportData.pagination.limit %><%= reportData.filters.search ? '&search=' + reportData.filters.search : '' %>" aria-label="Next">
+                                            <a class="page-link" href="/admin/sales-report?page=<%= reportData.pagination.page + 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>&limit=<%= reportData.pagination.limit %><%= reportData.filters.search ? '&search=' + reportData.filters.search : '' %>&dailySalesPage=<%= reportData.dailySalesPagination.page %>&transactionPage=<%= reportData.transactionPagination.page %>" aria-label="Next">
                                                 <span aria-hidden="true">&raquo;</span>
                                             </a>
                                         </li>
@@ -434,139 +527,255 @@
                     </div>
                 </div>
                 
-                <!-- Transaction Details Table -->
+                <!-- Transaction Details Table with Pagination -->
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Transaction Details</h5>
-                        <div class="input-group" style="max-width: 300px;">
-                            <input type="text" id="transactionSearchInput" class="form-control" placeholder="Search transactions...">
-                            <button class="btn btn-outline-secondary" type="button">
-                                <i class="fas fa-search"></i>
-                            </button>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Transaction Details
+                        </h5>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-secondary">
+                                <%= reportData.transactionPagination.totalItems %> transactions
+                            </span>
+                            <div class="input-group" style="max-width: 250px;">
+                                <input type="text" id="transactionSearchInput" class="form-control form-control-sm" placeholder="Search transactions...">
+                                <button class="btn btn-outline-secondary btn-sm" type="button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover" id="transactionDetailsTable">
-                                <thead>
+                                <thead class="table-dark">
                                     <tr>
-                                        <th>Transaction ID</th>
-                                        <th>Order ID</th>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Payment Method</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
+                                        <th><i class="fas fa-hashtag me-1"></i>Transaction ID</th>
+                                        <th><i class="fas fa-shopping-cart me-1"></i>Order ID</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Date & Time</th>
+                                        <th><i class="fas fa-user me-1"></i>Customer</th>
+                                        <th><i class="fas fa-credit-card me-1"></i>Payment Method</th>
+                                        <th><i class="fas fa-rupee-sign me-1"></i>Amount</th>
+                                        <th><i class="fas fa-info-circle me-1"></i>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <% if (reportData.transactions && reportData.transactions.length > 0) { %>
-                                        <% reportData.transactions.forEach(transaction => { %>
-                                            <tr>
-                                                <td><%= transaction.transactionId %></td>
+                                        <% reportData.transactions.forEach((transaction, index) => { %>
+                                            <tr class="<%= index % 2 === 0 ? 'table-light' : '' %>">
+                                                <td class="fw-semibold font-monospace">
+                                                    <%= transaction.transactionId %>
+                                                </td>
                                                 <td>
                                                     <% if (transaction.order) { %>
-                                                        <a href="/admin/orders/<%= transaction.order._id %>" class="text-primary fw-semibold">
+                                                        <a href="/admin/orders/<%= transaction.order._id %>" class="text-primary fw-semibold text-decoration-none">
                                                             <%= transaction.order.orderID %>
                                                         </a>
                                                     <% } else { %>
-                                                        -
+                                                        <span class="text-muted">-</span>
                                                     <% } %>
                                                 </td>
-                                                <td><%= moment(transaction.createdAt).format('MMM DD, YYYY HH:mm') %></td>
+                                                <td>
+                                                    <div class="fw-semibold"><%= moment(transaction.createdAt).format('MMM DD, YYYY') %></div>
+                                                    <small class="text-muted"><%= moment(transaction.createdAt).format('HH:mm:ss') %></small>
+                                                </td>
                                                 <td>
                                                     <% if (transaction.user) { %>
-                                                        <div><%= transaction.user.name %></div>
+                                                        <div class="fw-semibold"><%= transaction.user.name %></div>
                                                         <small class="text-muted"><%= transaction.user.email %></small>
                                                     <% } else { %>
-                                                        Unknown
+                                                        <span class="text-muted">Unknown Customer</span>
                                                     <% } %>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-<%= transaction.paymentMethod === 'COD' ? 'secondary' : transaction.paymentMethod === 'wallet' ? 'info' : 'primary' %>">
-                                                        <%= transaction.paymentMethod %>
+                                                    <% let badgeClass = 'secondary'; %>
+                                                    <% if (transaction.paymentMethod === 'paypal') badgeClass = 'primary'; %>
+                                                    <% if (transaction.paymentMethod === 'wallet') badgeClass = 'info'; %>
+                                                    <% if (transaction.paymentMethod === 'online') badgeClass = 'success'; %>
+                                                    <span class="badge bg-<%= badgeClass %>">
+                                                        <%= transaction.paymentMethod.toUpperCase() %>
                                                     </span>
                                                 </td>
-                                                <td><%= formatCurrency(transaction.amount) %></td>
+                                                <td class="fw-bold text-success">
+                                                    <%= formatCurrency(transaction.amount) %>
+                                                </td>
                                                 <td>
-                                                    <span class="badge bg-<%= transaction.status === 'completed' ? 'success' : transaction.status === 'failed' ? 'danger' : transaction.status === 'refunded' ? 'info' : 'warning' %>">
-                                                        <%= transaction.status %>
+                                                    <% let statusClass = 'warning'; %>
+                                                    <% if (transaction.status === 'completed') statusClass = 'success'; %>
+                                                    <% if (transaction.status === 'failed') statusClass = 'danger'; %>
+                                                    <% if (transaction.status === 'refunded') statusClass = 'info'; %>
+                                                    <% if (transaction.status === 'pending') statusClass = 'warning'; %>
+                                                    <span class="badge bg-<%= statusClass %>">
+                                                        <%= transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1) %>
                                                     </span>
                                                 </td>
                                             </tr>
                                         <% }); %>
                                     <% } else { %>
                                         <tr>
-                                            <td colspan="7" class="text-center">No transaction data available</td>
+                                            <td colspan="7" class="text-center py-4">
+                                                <i class="fas fa-exchange-alt fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">No transaction data available for the selected period</p>
+                                            </td>
                                         </tr>
                                     <% } %>
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Transaction Pagination -->
+                        <% if (reportData.transactionPagination && reportData.transactionPagination.totalPages > 1) { %>
+                            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                                <div class="text-muted">
+                                    Showing <%= (reportData.transactionPagination.page - 1) * reportData.transactionPagination.limit + 1 %> to 
+                                    <%= Math.min(reportData.transactionPagination.page * reportData.transactionPagination.limit, reportData.transactionPagination.totalItems) %> 
+                                    of <%= reportData.transactionPagination.totalItems.toLocaleString() %> transactions
+                                </div>
+                                <nav aria-label="Transaction pagination">
+                                    <ul class="pagination mb-0">
+                                        <li class="page-item <%= !reportData.transactionPagination.hasPrevPage ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/admin/sales-report?transactionPage=<%= reportData.transactionPagination.page - 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&page=<%= reportData.pagination.page %>&dailySalesPage=<%= reportData.dailySalesPagination.page %>" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        
+                                        <% 
+                                        let startPage = Math.max(1, reportData.transactionPagination.page - 2);
+                                        let endPage = Math.min(reportData.transactionPagination.totalPages, startPage + 4);
+                                        
+                                        for (let i = startPage; i <= endPage; i++) { %>
+                                            <li class="page-item <%= i === reportData.transactionPagination.page ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/sales-report?transactionPage=<%= i %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&page=<%= reportData.pagination.page %>&dailySalesPage=<%= reportData.dailySalesPagination.page %>">
+                                                    <%= i %>
+                                                </a>
+                                            </li>
+                                        <% } %>
+                                        
+                                        <li class="page-item <%= !reportData.transactionPagination.hasNextPage ? 'disabled' : '' %>">
+                                            <a class="page-link" href="/admin/sales-report?transactionPage=<%= reportData.transactionPagination.page + 1 %>&timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>&page=<%= reportData.pagination.page %>&dailySalesPage=<%= reportData.dailySalesPagination.page %>" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
                 
+                <!-- Analysis Cards Row -->
                 <div class="row">
-                    <div class="col-md-6 mb-4">
+                    <div class="col-lg-6 mb-4">
                         <div class="card h-100">
                             <div class="card-header">
-                                <h5 class="card-title mb-0">Discount Analysis</h5>
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Discount Analysis
+                                </h5>
                             </div>
                             <div class="card-body">
                                 <div class="discount-breakdown">
                                     <div class="discount-item">
                                         <div class="discount-label">Product Discounts</div>
-                                        <div class="discount-value"><%= formatCurrency(reportData.totalDiscount) %></div>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%= (reportData.totalDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>%" aria-valuenow="<%= (reportData.totalDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <div class="discount-value text-warning">
+                                            <%= formatCurrency(reportData.totalDiscount) %>
                                         </div>
+                                        <div class="progress mt-2">
+                                            <div class="progress-bar bg-warning" role="progressbar" 
+                                                 style="width: <%= (reportData.totalDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>%" 
+                                                 aria-valuenow="<%= (reportData.totalDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <%= ((reportData.totalDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100).toFixed(1) %>% of total discounts
+                                        </small>
                                     </div>
-                                    <div class="discount-item">
+                                    
+                                    <div class="discount-item mt-3">
                                         <div class="discount-label">Coupon Discounts</div>
-                                        <div class="discount-value"><%= formatCurrency(reportData.totalCouponDiscount) %></div>
-                                        <div class="progress">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: <%= (reportData.totalCouponDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>%" aria-valuenow="<%= (reportData.totalCouponDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>" aria-valuemin="0" aria-valuemax="100"></div>
+                                        <div class="discount-value text-success">
+                                            <%= formatCurrency(reportData.totalCouponDiscount) %>
                                         </div>
+                                        <div class="progress mt-2">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 style="width: <%= (reportData.totalCouponDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>%" 
+                                                 aria-valuenow="<%= (reportData.totalCouponDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100 %>" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            <%= ((reportData.totalCouponDiscount / (reportData.totalDiscount + reportData.totalCouponDiscount || 1)) * 100).toFixed(1) %>% of total discounts
+                                        </small>
                                     </div>
-                                    <div class="discount-item total">
-                                        <div class="discount-label">Total Discounts</div>
-                                        <div class="discount-value"><%= formatCurrency(reportData.totalDiscount + reportData.totalCouponDiscount) %></div>
+                                    
+                                    <div class="discount-item total mt-4 pt-3 border-top">
+                                        <div class="discount-label">Total Discounts Given</div>
+                                        <div class="discount-value text-danger">
+                                            <%= formatCurrency(reportData.totalDiscount + reportData.totalCouponDiscount) %>
+                                        </div>
+                                        <small class="text-muted">
+                                            <%= ((reportData.totalDiscount + reportData.totalCouponDiscount) / reportData.totalRevenue * 100).toFixed(1) %>% of total revenue
+                                        </small>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="col-md-6 mb-4">
+                    <div class="col-lg-6 mb-4">
                         <div class="card h-100">
                             <div class="card-header">
-                                <h5 class="card-title mb-0">Top Customers</h5>
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-crown me-2"></i>
+                                    Top Customers
+                                </h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-hover">
-                                        <thead>
+                                        <thead class="table-light">
                                             <tr>
-                                                <th>Customer</th>
-                                                <th>Orders</th>
-                                                <th>Total Spent</th>
+                                                <th><i class="fas fa-trophy me-1"></i>Rank</th>
+                                                <th><i class="fas fa-user me-1"></i>Customer</th>
+                                                <th><i class="fas fa-shopping-cart me-1"></i>Orders</th>
+                                                <th><i class="fas fa-rupee-sign me-1"></i>Total Spent</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <% if (reportData.topCustomers && reportData.topCustomers.length > 0) { %>
-                                                <% reportData.topCustomers.forEach(customer => { %>
+                                                <% reportData.topCustomers.forEach((customer, index) => { %>
                                                     <tr>
                                                         <td>
-                                                            <div><%= customer.name %></div>
+                                                            <% let rankClass = 'secondary'; %>
+                                                            <% if (index === 0) rankClass = 'warning'; %>
+                                                            <% if (index === 1) rankClass = 'light'; %>
+                                                            <% if (index === 2) rankClass = 'dark'; %>
+                                                            <span class="badge bg-<%= rankClass %> rounded-pill">
+                                                                #<%= index + 1 %>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div class="fw-semibold"><%= customer.name %></div>
                                                             <small class="text-muted"><%= customer.email %></small>
                                                         </td>
-                                                        <td><%= customer.orderCount %></td>
-                                                        <td><%= formatCurrency(customer.totalSpent) %></td>
+                                                        <td>
+                                                            <span class="badge bg-primary rounded-pill">
+                                                                <%= customer.orderCount %>
+                                                            </span>
+                                                        </td>
+                                                        <td class="fw-bold text-success">
+                                                            <%= formatCurrency(customer.totalSpent) %>
+                                                        </td>
                                                     </tr>
                                                 <% }); %>
                                             <% } else { %>
                                                 <tr>
-                                                    <td colspan="3" class="text-center">No customer data available</td>
+                                                    <td colspan="4" class="text-center py-3">
+                                                        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                                        <p class="text-muted mb-0">No customer data available</p>
+                                                    </td>
                                                 </tr>
                                             <% } %>
                                         </tbody>
@@ -577,21 +786,26 @@
                     </div>
                 </div>
                 
+                <!-- Payment Method Breakdown -->
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">Payment Method Breakdown</h5>
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    Payment Method Analysis
+                                </h5>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-hover">
-                                        <thead>
+                                        <thead class="table-dark">
                                             <tr>
-                                                <th>Payment Method</th>
-                                                <th>Order Count</th>
-                                                <th>Amount</th>
-                                                <th>Percentage</th>
+                                                <th><i class="fas fa-credit-card me-1"></i>Payment Method</th>
+                                                <th><i class="fas fa-shopping-cart me-1"></i>Order Count</th>
+                                                <th><i class="fas fa-rupee-sign me-1"></i>Total Amount</th>
+                                                <th><i class="fas fa-calculator me-1"></i>Average Order</th>
+                                                <th><i class="fas fa-chart-pie me-1"></i>Percentage</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -600,27 +814,53 @@
                                                     <tr>
                                                         <td>
                                                             <% let icon = 'credit-card'; %>
-                                                            <% if (method === 'COD') icon = 'money-bill'; %>
-                                                            <% if (method === 'paypal') icon = 'paypal'; %>
-                                                            <% if (method === 'wallet') icon = 'wallet'; %>
-                                                            <i class="fas fa-<%= icon %> me-2"></i>
-                                                            <%= method.charAt(0).toUpperCase() + method.slice(1) %>
+                                                            <% let iconColor = 'primary'; %>
+                                                            <% if (method === 'COD') { icon = 'money-bill'; iconColor = 'success'; } %>
+                                                            <% if (method === 'paypal') { icon = 'paypal'; iconColor = 'primary'; } %>
+                                                            <% if (method === 'wallet') { icon = 'wallet'; iconColor = 'info'; } %>
+                                                            <% if (method === 'online') { icon = 'globe'; iconColor = 'warning'; } %>
+                                                            <i class="fas fa-<%= icon %> me-2 text-<%= iconColor %>"></i>
+                                                            <span class="fw-semibold">
+                                                                <%= method.charAt(0).toUpperCase() + method.slice(1) %>
+                                                            </span>
                                                         </td>
-                                                        <td><%= data.count %></td>
-                                                        <td><%= formatCurrency(data.amount) %></td>
+                                                        <td>
+                                                            <span class="badge bg-primary rounded-pill">
+                                                                <%= data.count.toLocaleString() %>
+                                                            </span>
+                                                        </td>
+                                                        <td class="fw-bold text-success">
+                                                            <%= formatCurrency(data.amount) %>
+                                                        </td>
+                                                        <td class="text-info">
+                                                            <%= formatCurrency(data.amount / data.count) %>
+                                                        </td>
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                                                    <div class="progress-bar" role="progressbar" style="width: <%= (data.amount / reportData.totalRevenue) * 100 %>%" aria-valuenow="<%= (data.amount / reportData.totalRevenue) * 100 %>" aria-valuemin="0" aria-valuemax="100"></div>
+                                                                    <% let percentage = (data.amount / reportData.totalRevenue) * 100; %>
+                                                                    <% let progressColor = 'primary'; %>
+                                                                    <% if (percentage > 50) progressColor = 'success'; %>
+                                                                    <% if (percentage > 75) progressColor = 'warning'; %>
+                                                                    <div class="progress-bar bg-<%= progressColor %>" role="progressbar" 
+                                                                         style="width: <%= percentage %>%" 
+                                                                         aria-valuenow="<%= percentage %>" 
+                                                                         aria-valuemin="0" aria-valuemax="100">
+                                                                    </div>
                                                                 </div>
-                                                                <span><%= ((data.amount / reportData.totalRevenue) * 100).toFixed(1) %>%</span>
+                                                                <span class="fw-semibold">
+                                                                    <%= percentage.toFixed(1) %>%
+                                                                </span>
                                                             </div>
                                                         </td>
                                                     </tr>
                                                 <% }); %>
                                             <% } else { %>
                                                 <tr>
-                                                    <td colspan="4" class="text-center">No payment method data available</td>
+                                                    <td colspan="5" class="text-center py-4">
+                                                        <i class="fas fa-credit-card fa-2x text-muted mb-2"></i>
+                                                        <p class="text-muted mb-0">No payment method data available</p>
+                                                    </td>
                                                 </tr>
                                             <% } %>
                                         </tbody>
@@ -634,9 +874,9 @@
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
-                        <h4>No Report Data Available</h4>
-                        <p class="text-muted">Please select a time period and generate a report.</p>
-                        <button class="btn btn-primary mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                        <h4>Generate Your Sales Report</h4>
+                        <p class="text-muted mb-4">Select your preferred time period and filters to generate a comprehensive sales report with detailed analytics.</p>
+                        <button class="btn btn-primary btn-lg" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
                             <i class="fas fa-filter me-2"></i> Show Filter Options
                         </button>
                     </div>
@@ -647,7 +887,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -665,6 +904,68 @@
         </script>
     <% } %>
     
-    <script src="/js/admin-sales-report.js"></script>
+    <script>
+        // Custom date range toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const timeFilterInputs = document.querySelectorAll('input[name="timeFilter"]');
+            const customDateRange = document.querySelector('.custom-date-range');
+            
+            timeFilterInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customDateRange.classList.remove('d-none');
+                    } else {
+                        customDateRange.classList.add('d-none');
+                    }
+                });
+            });
+            
+            // Initialize flatpickr for date inputs
+            if (typeof flatpickr !== 'undefined') {
+                flatpickr("#startDate", {
+                    dateFormat: "Y-m-d",
+                    maxDate: "today"
+                });
+                
+                flatpickr("#endDate", {
+                    dateFormat: "Y-m-d",
+                    maxDate: "today"
+                });
+            }
+            
+            // Initialize DataTables for search functionality
+            if (typeof $ !== 'undefined' && $.fn.DataTable) {
+                // Order search
+                $('#orderSearchInput').on('keyup', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const tableRows = document.querySelectorAll('#orderDetailsTable tbody tr');
+                    
+                    tableRows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+                
+                // Transaction search
+                $('#transactionSearchInput').on('keyup', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const tableRows = document.querySelectorAll('#transactionDetailsTable tbody tr');
+                    
+                    tableRows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>

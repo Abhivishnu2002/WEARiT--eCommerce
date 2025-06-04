@@ -153,10 +153,14 @@ const updateAccount = async (req, res) => {
   }
 }
 
-const getDateRange = (period) => {
+const getDateRange = (period, startDate, endDate) => {
   const today = new Date()
-  let startDate, endDate
-
+  if (period === "custom" && startDate && endDate) {
+    return {
+      startDate: new Date(startDate),
+      endDate: new Date(endDate + "T23:59:59.999Z"),
+    }
+  }
   switch (period) {
     case "daily":
       startDate = new Date(today)
@@ -188,17 +192,87 @@ const getDateRange = (period) => {
   return { startDate, endDate }
 }
 
+const calculateDiscountData = async (orders) => {
+  const discountData = []
+  orders.forEach((order) => {
+    const productDiscount = order.discount || 0
+    const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+    const totalDiscount = productDiscount + couponDiscount
+
+    discountData.push(totalDiscount)
+  })
+
+  return discountData
+}
+
 const getDashboardData = async (req, res) => {
   try {
     const period = req.query.period || "monthly"
-    const { startDate, endDate } = getDateRange(period)
-
+    const { startDate: startDateParam, endDate: endDateParam } = req.query
+    const { startDate, endDate } = getDateRange(period, startDateParam, endDateParam)
     const salesData = []
     const orderCountData = []
+    const discountData = []
     const labels = []
     const today = new Date()
+    if (period === "custom") {
+      const diffTime = Math.abs(endDate - startDate)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      if (diffDays > 31) {
+        const currentDate = new Date(startDate)
+        while (currentDate <= endDate) {
+          const weekStart = new Date(currentDate)
+          const weekEnd = new Date(currentDate)
+          weekEnd.setDate(weekEnd.getDate() + 6)
 
-    if (period === "yearly") {
+          if (weekEnd > endDate) {
+            weekEnd.setTime(endDate.getTime())
+          }
+
+          const weekOrders = await Order.find({
+            orderDate: { $gte: weekStart, $lte: weekEnd },
+            orderStatus: { $nin: ["cancelled"] },
+          })
+
+          const weekSales = weekOrders.reduce((total, order) => total + order.finalAmount, 0)
+          const weekDiscounts = weekOrders.reduce((total, order) => {
+            const productDiscount = order.discount || 0
+            const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+            return total + productDiscount + couponDiscount
+          }, 0)
+
+          salesData.push(weekSales)
+          orderCountData.push(weekOrders.length)
+          discountData.push(weekDiscounts)
+          labels.push(`${moment(weekStart).format("MMM DD")} - ${moment(weekEnd).format("MMM DD")}`)
+          currentDate.setDate(currentDate.getDate() + 7)
+        }
+      } else {
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          const dayStart = new Date(d)
+          dayStart.setHours(0, 0, 0, 0)
+          const dayEnd = new Date(d)
+          dayEnd.setHours(23, 59, 59, 999)
+
+          const dailyOrders = await Order.find({
+            orderDate: { $gte: dayStart, $lte: dayEnd },
+            orderStatus: { $nin: ["cancelled"] },
+          })
+
+          const dailySales = dailyOrders.reduce((total, order) => total + order.finalAmount, 0)
+          const dailyDiscounts = dailyOrders.reduce((total, order) => {
+            const productDiscount = order.discount || 0
+            const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+            return total + productDiscount + couponDiscount
+          }, 0)
+
+          salesData.push(dailySales)
+          orderCountData.push(dailyOrders.length)
+          discountData.push(dailyDiscounts)
+          labels.push(moment(dayStart).format("MMM DD"))
+        }
+      }
+    } else if (period === "yearly") {
       const currentYear = today.getFullYear()
       for (let month = 0; month < 12; month++) {
         const monthStart = new Date(currentYear, month, 1)
@@ -210,8 +284,15 @@ const getDashboardData = async (req, res) => {
         })
 
         const monthlySales = monthlyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const monthlyDiscounts = monthlyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(monthlySales)
         orderCountData.push(monthlyOrders.length)
+        discountData.push(monthlyDiscounts)
         labels.push(moment(monthStart).format("MMM"))
       }
     } else if (period === "monthly") {
@@ -226,8 +307,15 @@ const getDashboardData = async (req, res) => {
         })
 
         const dailySales = dailyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const dailyDiscounts = dailyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(dailySales)
         orderCountData.push(dailyOrders.length)
+        discountData.push(dailyDiscounts)
         labels.push(day.toString())
       }
     } else if (period === "weekly") {
@@ -245,8 +333,15 @@ const getDashboardData = async (req, res) => {
         })
 
         const dailySales = dailyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const dailyDiscounts = dailyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(dailySales)
         orderCountData.push(dailyOrders.length)
+        discountData.push(dailyDiscounts)
         labels.push(moment(date).format("ddd"))
       }
     } else if (period === "daily") {
@@ -262,14 +357,43 @@ const getDashboardData = async (req, res) => {
         })
 
         const hourlySales = hourlyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const hourlyDiscounts = hourlyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(hourlySales)
         orderCountData.push(hourlyOrders.length)
+        discountData.push(hourlyDiscounts)
         labels.push(`${hour}:00`)
       }
     }
+    const periodOrders = await Order.find({
+      orderDate: { $gte: startDate, $lte: endDate },
+      orderStatus: { $nin: ["cancelled"] },
+    })
+
+    const paymentMethods = {}
+    periodOrders.forEach((order) => {
+      const method = order.paymentMethod
+      if (!paymentMethods[method]) {
+        paymentMethods[method] = {
+          count: 0,
+          amount: 0,
+        }
+      }
+      paymentMethods[method].count += 1
+      paymentMethods[method].amount += order.finalAmount
+    })
 
     const bestSellingProducts = await Order.aggregate([
-      { $match: { orderStatus: { $nin: ["cancelled"] } } },
+      {
+        $match: {
+          orderDate: { $gte: startDate, $lte: endDate },
+          orderStatus: { $nin: ["cancelled"] },
+        },
+      },
       { $unwind: "$products" },
       {
         $group: {
@@ -299,7 +423,12 @@ const getDashboardData = async (req, res) => {
     ])
 
     const bestSellingCategories = await Order.aggregate([
-      { $match: { orderStatus: { $nin: ["cancelled"] } } },
+      {
+        $match: {
+          orderDate: { $gte: startDate, $lte: endDate },
+          orderStatus: { $nin: ["cancelled"] },
+        },
+      },
       { $unwind: "$products" },
       {
         $lookup: {
@@ -338,7 +467,12 @@ const getDashboardData = async (req, res) => {
     ])
 
     const bestSellingBrands = await Order.aggregate([
-      { $match: { orderStatus: { $nin: ["cancelled"] } } },
+      {
+        $match: {
+          orderDate: { $gte: startDate, $lte: endDate },
+          orderStatus: { $nin: ["cancelled"] },
+        },
+      },
       { $unwind: "$products" },
       {
         $lookup: {
@@ -367,24 +501,33 @@ const getDashboardData = async (req, res) => {
         },
       },
     ])
+    const chartData = {
+      labels: labels,
+      revenue: salesData.map((value) => Number.parseFloat(value.toFixed(2))),
+      orderCount: orderCountData.map((value) => Number.parseInt(value)),
+      discount: discountData.map((value) => Number.parseFloat(value.toFixed(2))),
+    }
 
     res.json({
       success: true,
       data: {
-        salesData: salesData.map((value) => Number.parseFloat(value.toFixed(2))),
-        orderCountData: orderCountData.map((value) => Number.parseInt(value)),
-        labels,
-        period,
+        chartData,
+        paymentMethods,
         bestSellingProducts,
         bestSellingCategories,
         bestSellingBrands,
+        period,
+        dateRange: {
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
+        },
       },
     })
   } catch (error) {
     console.error("Error fetching dashboard data:", error)
     res.status(500).json({
       success: false,
-      error: "Failed to fetch dashboard data",
+      error: "Failed to fetch dashboard data: " + error.message,
     })
   }
 }
@@ -392,7 +535,10 @@ const getDashboardData = async (req, res) => {
 const loadDashboard = async (req, res) => {
   try {
     const period = req.query.period || "monthly"
-    const { startDate, endDate } = getDateRange(period)
+    const { startDate: startDateParam, endDate: endDateParam } = req.query
+
+    const { startDate, endDate } = getDateRange(period, startDateParam, endDateParam)
+
     const userCount = await User.countDocuments({ isAdmin: false })
     const productCount = await Product.countDocuments()
     const categoryCount = await Category.countDocuments()
@@ -417,9 +563,66 @@ const loadDashboard = async (req, res) => {
           : 0
     let salesData = []
     let orderCountData = []
+    let discountData = []
     const labels = []
+    if (period === "custom") {
+      const diffTime = Math.abs(endDate - startDate)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      if (diffDays > 31) {
+        const currentDate = new Date(startDate)
+        while (currentDate <= endDate) {
+          const weekStart = new Date(currentDate)
+          const weekEnd = new Date(currentDate)
+          weekEnd.setDate(weekEnd.getDate() + 6)
 
-    if (period === "yearly") {
+          if (weekEnd > endDate) {
+            weekEnd.setTime(endDate.getTime())
+          }
+
+          const weekOrders = await Order.find({
+            orderDate: { $gte: weekStart, $lte: weekEnd },
+            orderStatus: { $nin: ["cancelled"] },
+          })
+
+          const weekSales = weekOrders.reduce((total, order) => total + order.finalAmount, 0)
+          const weekDiscounts = weekOrders.reduce((total, order) => {
+            const productDiscount = order.discount || 0
+            const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+            return total + productDiscount + couponDiscount
+          }, 0)
+
+          salesData.push(weekSales)
+          orderCountData.push(weekOrders.length)
+          discountData.push(weekDiscounts)
+          labels.push(`${moment(weekStart).format("MMM DD")} - ${moment(weekEnd).format("MMM DD")}`)
+          currentDate.setDate(currentDate.getDate() + 7)
+        }
+      } else {
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          const dayStart = new Date(d)
+          dayStart.setHours(0, 0, 0, 0)
+          const dayEnd = new Date(d)
+          dayEnd.setHours(23, 59, 59, 999)
+
+          const dailyOrders = await Order.find({
+            orderDate: { $gte: dayStart, $lte: dayEnd },
+            orderStatus: { $nin: ["cancelled"] },
+          })
+
+          const dailySales = dailyOrders.reduce((total, order) => total + order.finalAmount, 0)
+          const dailyDiscounts = dailyOrders.reduce((total, order) => {
+            const productDiscount = order.discount || 0
+            const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+            return total + productDiscount + couponDiscount
+          }, 0)
+
+          salesData.push(dailySales)
+          orderCountData.push(dailyOrders.length)
+          discountData.push(dailyDiscounts)
+          labels.push(moment(dayStart).format("MMM DD"))
+        }
+      }
+    } else if (period === "yearly") {
       const currentYear = today.getFullYear()
       for (let month = 0; month < 12; month++) {
         const monthStart = new Date(currentYear, month, 1)
@@ -431,8 +634,15 @@ const loadDashboard = async (req, res) => {
         })
 
         const monthlySales = monthlyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const monthlyDiscounts = monthlyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(monthlySales)
         orderCountData.push(monthlyOrders.length)
+        discountData.push(monthlyDiscounts)
         labels.push(moment(monthStart).format("MMM"))
       }
     } else if (period === "monthly") {
@@ -447,8 +657,15 @@ const loadDashboard = async (req, res) => {
         })
 
         const dailySales = dailyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const dailyDiscounts = dailyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(dailySales)
         orderCountData.push(dailyOrders.length)
+        discountData.push(dailyDiscounts)
         labels.push(day.toString())
       }
     } else if (period === "weekly") {
@@ -466,8 +683,15 @@ const loadDashboard = async (req, res) => {
         })
 
         const dailySales = dailyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const dailyDiscounts = dailyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(dailySales)
         orderCountData.push(dailyOrders.length)
+        discountData.push(dailyDiscounts)
         labels.push(moment(date).format("ddd"))
       }
     } else if (period === "daily") {
@@ -483,11 +707,19 @@ const loadDashboard = async (req, res) => {
         })
 
         const hourlySales = hourlyOrders.reduce((total, order) => total + order.finalAmount, 0)
+        const hourlyDiscounts = hourlyOrders.reduce((total, order) => {
+          const productDiscount = order.discount || 0
+          const couponDiscount = order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0
+          return total + productDiscount + couponDiscount
+        }, 0)
+
         salesData.push(hourlySales)
         orderCountData.push(hourlyOrders.length)
+        discountData.push(hourlyDiscounts)
         labels.push(`${hour}:00`)
       }
     }
+
     const currentQuarter = Math.floor(today.getMonth() / 3)
     const startOfQuarter = new Date(today.getFullYear(), currentQuarter * 3, 1)
     const endOfQuarter = new Date(today.getFullYear(), (currentQuarter + 1) * 3, 0, 23, 59, 59)
@@ -500,6 +732,19 @@ const loadDashboard = async (req, res) => {
     const quarterlyRevenue = quarterlyOrders.reduce((total, order) => total + order.finalAmount, 0)
     const quarterlyTarget = 100000
     let salesProgress = (quarterlyRevenue / quarterlyTarget) * 100
+    const paymentMethods = {}
+    quarterlyOrders.forEach((order) => {
+      const method = order.paymentMethod
+      if (!paymentMethods[method]) {
+        paymentMethods[method] = {
+          count: 0,
+          amount: 0,
+        }
+      }
+      paymentMethods[method].count += 1
+      paymentMethods[method].amount += order.finalAmount
+    })
+
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     yesterday.setHours(0, 0, 0, 0)
@@ -518,7 +763,9 @@ const loadDashboard = async (req, res) => {
     })
     const todayRevenue = todayOrders.reduce((total, order) => total + order.finalAmount, 0)
     const yesterdayRevenue = yesterdayOrders.reduce((total, order) => total + order.finalAmount, 0)
-    const revenueGrowth = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : todayRevenue > 0 ? 100 : 0
+    const revenueGrowth =
+      yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : todayRevenue > 0 ? 100 : 0
+
     const bestSellingProducts = await Order.aggregate([
       { $match: { orderStatus: { $nin: ["cancelled"] } } },
       { $unwind: "$products" },
@@ -549,6 +796,7 @@ const loadDashboard = async (req, res) => {
         },
       },
     ])
+
     const bestSellingCategories = await Order.aggregate([
       { $match: { orderStatus: { $nin: ["cancelled"] } } },
       { $unwind: "$products" },
@@ -587,6 +835,7 @@ const loadDashboard = async (req, res) => {
         },
       },
     ])
+
     const bestSellingBrands = await Order.aggregate([
       { $match: { orderStatus: { $nin: ["cancelled"] } } },
       { $unwind: "$products" },
@@ -617,13 +866,16 @@ const loadDashboard = async (req, res) => {
         },
       },
     ])
+
     const admin = {
       name: req.session.admin.name,
       email: req.session.admin.email,
       profileImage: req.session.admin.profileImage,
     }
+
     salesData = salesData.map((value) => Number.parseFloat(value.toFixed(2)))
     orderCountData = orderCountData.map((value) => Number.parseInt(value))
+    discountData = discountData.map((value) => Number.parseFloat(value.toFixed(2)))
     salesProgress = Math.min(100, Math.max(0, Number.parseFloat(salesProgress.toFixed(2))))
     const totalSales = quarterlyRevenue
     const totalOrders = quarterlyOrders.length
@@ -631,18 +883,28 @@ const loadDashboard = async (req, res) => {
     const orderTarget = 100
     const orderProgress = Math.min(100, Math.max(0, (totalOrders / orderTarget) * 100))
     const customerProgress = Math.abs(userGrowth)
+
     const recentOrders = await Order.find()
       .populate("user", "name email")
       .populate("products.product", "name")
       .sort({ createdAt: -1 })
       .limit(5)
       .lean()
+
     const orders = recentOrders.map((order) => ({
       productName: order.products[0]?.product?.name || "Unknown Product",
       productNumber: order.orderID,
       paymentType: order.paymentMethod,
       status: order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1),
     }))
+
+    const chartData = {
+      labels: labels,
+      revenue: salesData,
+      orderCount: orderCountData,
+      discount: discountData,
+    }
+
     const dashboardData = {
       userCount,
       productCount,
@@ -652,8 +914,13 @@ const loadDashboard = async (req, res) => {
       userGrowth,
       salesData,
       orderCountData,
+      discountData,
       labels,
       period,
+      dateRange: {
+        startDate: startDate.toISOString().split("T")[0],
+        endDate: endDate.toISOString().split("T")[0],
+      },
       salesProgress: Number.parseFloat(salesProgress.toFixed(2)),
       todayRevenue,
       quarterlyTarget,
@@ -669,7 +936,10 @@ const loadDashboard = async (req, res) => {
       bestSellingCategories,
       bestSellingBrands,
       user: { username: req.session.admin.name },
+      chartData,
+      paymentMethods,
     }
+
     res.render("admin/pages/adminDashboard", {
       admin,
       ...dashboardData,

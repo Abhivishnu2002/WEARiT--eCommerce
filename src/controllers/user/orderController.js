@@ -7,6 +7,7 @@ const { generateInvoice } = require("../../utils/invoiceGenerator")
 const mongoose = require("mongoose")
 const getWishlistCount = require("../../utils/wishlistCount")
 const PriceCalculator = require("../../utils/priceCalculator")
+const walletController = require("./walletController")
 
 const priceCalculator = new PriceCalculator()
 
@@ -115,6 +116,7 @@ const cancelProduct = async (req, res) => {
     const orderId = req.params.orderId
     const productId = req.params.productId
     const { reason } = req.body
+
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       await session.abortTransaction()
       console.error(`[CANCEL_PRODUCT] Invalid order ID format: ${orderId}`)
@@ -132,6 +134,7 @@ const cancelProduct = async (req, res) => {
         message: "Invalid product ID format",
       })
     }
+
     const order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
@@ -150,6 +153,7 @@ const cancelProduct = async (req, res) => {
         message: "Order not found or you don't have permission to access it",
       })
     }
+
     if (order.paymentStatus === "failed") {
       await session.abortTransaction()
       console.error(`[CANCEL_PRODUCT] Cannot cancel product from failed payment order: ${orderId}`)
@@ -158,10 +162,12 @@ const cancelProduct = async (req, res) => {
         message: "Cannot cancel products from an order with failed payment. Please retry payment first.",
       })
     }
+
     const paymentMethod = normalizePaymentMethod(order)
     if (order.paymentMethod !== paymentMethod) {
       order.paymentMethod = paymentMethod
     }
+
     const productItem = order.products.id(productId)
     if (!productItem) {
       await session.abortTransaction()
@@ -171,6 +177,7 @@ const cancelProduct = async (req, res) => {
         message: "Product not found in this order",
       })
     }
+
     const nonCancellableStatuses = ["delivered", "returned", "cancelled", "return pending"]
     if (nonCancellableStatuses.includes(productItem.status)) {
       await session.abortTransaction()
@@ -180,12 +187,14 @@ const cancelProduct = async (req, res) => {
         message: `Product cannot be cancelled. Current status: ${productItem.status}`,
       })
     }
+
     const refundAmount = priceCalculator.calculateRefundAmount([productItem], order)
     const originalStatus = productItem.status
     productItem.status = "cancelled"
     productItem.cancellationReason = reason || "No reason provided"
     productItem.cancelledAt = new Date()
     productItem.cancelledBy = req.user._id
+
     const product = await Product.findById(productItem.product._id).session(session)
     if (product) {
       const variant = product.variants.find((v) => v.size === productItem.variant.size)
@@ -212,6 +221,7 @@ const cancelProduct = async (req, res) => {
     } else {
       console.warn(`[CANCEL_PRODUCT] Product ${productItem.product._id} not found for stock restoration`)
     }
+
     const statusCounts = {
       pending: 0,
       processing: 0,
@@ -244,6 +254,7 @@ const cancelProduct = async (req, res) => {
     } else {
       order.orderStatus = "pending"
     }
+
     const updatedTotals = priceCalculator.recalculateOrderTotals(order)
     const oldTotalAmount = order.totalAmount
     const oldFinalAmount = order.finalAmount
@@ -251,6 +262,7 @@ const cancelProduct = async (req, res) => {
     order.totalAmount = updatedTotals.totalAmount
     order.discount = updatedTotals.discount
     order.finalAmount = updatedTotals.finalAmount
+
     if (isNaN(order.totalAmount)) {
       console.error(`[CANCEL_PRODUCT] totalAmount is NaN, setting to 0`)
       order.totalAmount = 0
@@ -269,52 +281,28 @@ const cancelProduct = async (req, res) => {
       (order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet") &&
       refundAmount > 0
     ) {
-      const user = await User.findById(req.user._id).session(session)
-      if (user) {
-        if (!user.wallet) {
-          user.wallet = {
-            balance: 0,
-            transactions: [],
-          }
-        }
-
-        const oldWalletBalance = user.wallet.balance
-        user.wallet.balance += refundAmount
-        user.wallet.transactions.push({
-          amount: refundAmount,
-          type: "credit",
-          description: `Refund for cancelled item in order #${order.orderID}`,
-          date: new Date(),
-          orderId: order._id,
-          productId: productItem._id,
-        })
-
-        await user.save({ session })
-        await Transaction.create(
-          [
-            {
-              user: req.user._id,
-              order: order._id,
-              transactionId: `REFUND-ITEM-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              paymentMethod: "wallet",
-              amount: refundAmount,
-              status: "completed",
-              paymentDetails: {
-                type: "refund",
-                description: `Refund for cancelled item in order #${order.orderID}`,
-                productId: productItem._id,
-                productName: productItem.product?.name || "Unknown Product",
-                cancellationReason: reason || "No reason provided",
-              },
-              createdAt: new Date(),
-            },
-          ],
-          { session },
+      try {
+        const productDetails = [
+          {
+            productId: productItem.product._id,
+            productName: productItem.product?.name || "Unknown Product",
+            quantity: productItem.quantity,
+            price: productItem.variant.salePrice,
+          },
+        ]
+        await walletController.processRefund(
+          req.user._id,
+          refundAmount,
+          order._id,
+          order.orderID,
+          `Refund for product cancellation - Order #${order.orderID}`,
+          productDetails,
         )
-      } else {
-        console.error(`[CANCEL_PRODUCT] User not found for refund processing: ${req.user._id}`)
+      } catch (refundError) {
+        console.error(`[CANCEL_PRODUCT] Error processing refund:`, refundError)
       }
     }
+
     if (!order.cancellationHistory) {
       order.cancellationHistory = []
     }
@@ -327,8 +315,10 @@ const cancelProduct = async (req, res) => {
       cancelledAt: new Date(),
       cancelledBy: req.user._id,
     })
+
     await order.save({ session })
     await session.commitTransaction()
+
     return res.status(200).json({
       success: true,
       message: "Product cancelled successfully",
@@ -688,37 +678,23 @@ const cancelOrder = async (req, res) => {
     if (order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet") {
       const refundAmount = order.finalAmount
 
-      const user = await User.findById(req.user._id)
-      if (user) {
-        if (!user.wallet) {
-          user.wallet = {
-            balance: 0,
-            transactions: [],
-          }
-        }
-
-        user.wallet.balance += refundAmount
-        user.wallet.transactions.push({
-          amount: refundAmount,
-          type: "credit",
-          description: `Refund for cancelled order #${order.orderID}`,
-          date: new Date(),
-        })
-
-        await user.save()
-
-        await Transaction.create({
-          user: req.user._id,
-          order: order._id,
-          transactionId: `REFUND-${Date.now()}`,
-          paymentMethod: "wallet",
-          amount: refundAmount,
-          status: "completed",
-          paymentDetails: {
-            type: "refund",
-            description: `Refund for cancelled order #${order.orderID}`,
-          },
-        })
+      try {
+        const productDetails = order.products.map((product) => ({
+          productId: product.product._id,
+          productName: product.product?.name || "Unknown Product",
+          quantity: product.quantity,
+          price: product.variant.salePrice,
+        }))
+        await walletController.processRefund(
+          req.user._id,
+          refundAmount,
+          order._id,
+          order.orderID,
+          `Refund for order cancellation - Order #${order.orderID}`,
+          productDetails,
+        )
+      } catch (refundError) {
+        console.error(`Error processing order cancellation refund:`, refundError)
       }
     }
 
@@ -752,6 +728,9 @@ const returnOrder = async (req, res) => {
     const order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
+    }).populate({
+      path: "products.product",
+      select: "name variants",
     })
 
     if (!order) {
@@ -794,7 +773,6 @@ const returnOrder = async (req, res) => {
 
     order.orderStatus = "return pending"
     order.returnReason = reason
-
     order.products.forEach((product) => {
       if (product.status === "delivered") {
         product.status = "return pending"
@@ -804,35 +782,38 @@ const returnOrder = async (req, res) => {
     })
 
     await order.save()
-    let refundAmount = 0
-    order.products.forEach((product) => {
-      if (product.status === "return pending") {
-        refundAmount += product.variant.salePrice * product.quantity
-      }
-    })
+    if (order.paymentMethod === "COD") {
+      let refundAmount = 0
+      const returnedItems = []
 
-    if (refundAmount > 0) {
-      const user = await User.findById(req.user._id)
-      if (user) {
-        if (!user.wallet) {
-          user.wallet = {
-            balance: 0,
-            transactions: [],
-          }
+      order.products.forEach((product) => {
+        if (product.status === "return pending") {
+          const itemRefund = product.variant.salePrice * product.quantity
+          refundAmount += itemRefund
+
+          returnedItems.push({
+            productId: product.product._id,
+            productName: product.product?.name || "Unknown Product",
+            quantity: product.quantity,
+            refundAmount: itemRefund,
+            reason: reason,
+          })
         }
-        const transactionDescription =
-          order.paymentMethod === "COD"
-            ? `Refund for returned COD order #${order.orderID}`
-            : `[PENDING] Refund for returned order #${order.orderID}`
+      })
 
-        user.wallet.transactions.push({
-          amount: refundAmount,
-          type: "credit",
-          description: transactionDescription,
-          date: new Date(),
-        })
-
-        await user.save()
+      if (refundAmount > 0) {
+        try {
+          await walletController.processProductReturnRefund(
+            req.user._id,
+            refundAmount,
+            order._id,
+            order.orderID,
+            returnedItems,
+            `Refund for product return - Order #${order.orderID}`,
+          )
+        } catch (refundError) {
+          console.error(`Error processing COD return refund:`, refundError)
+        }
       }
     }
 
@@ -940,29 +921,31 @@ const returnProduct = async (req, res) => {
     }
 
     await order.save()
-    const refundAmount = productItem.variant.salePrice * productItem.quantity
+    if (order.paymentMethod === "COD") {
+      const refundAmount = productItem.variant.salePrice * productItem.quantity
 
-    const user = await User.findById(req.user._id)
-    if (user) {
-      if (!user.wallet) {
-        user.wallet = {
-          balance: 0,
-          transactions: [],
-        }
+      const returnedItems = [
+        {
+          productId: productItem.product._id,
+          productName: productItem.product?.name || "Unknown Product",
+          quantity: productItem.quantity,
+          refundAmount: refundAmount,
+          reason: reason,
+        },
+      ]
+
+      try {
+        await walletController.processProductReturnRefund(
+          req.user._id,
+          refundAmount,
+          order._id,
+          order.orderID,
+          returnedItems,
+          `Refund for product return - Order #${order.orderID}`,
+        )
+      } catch (refundError) {
+        console.error(`Error processing COD product return refund:`, refundError)
       }
-      const transactionDescription =
-        order.paymentMethod === "COD"
-          ? `Refund for returned COD item in order #${order.orderID}`
-          : `[PENDING] Refund for returned item in order #${order.orderID}`
-
-      user.wallet.transactions.push({
-        amount: refundAmount,
-        type: "credit",
-        description: transactionDescription,
-        date: new Date(),
-      })
-
-      await user.save()
     }
 
     res.json({

@@ -53,6 +53,7 @@ const transactionSchema = new Schema(
 if (mongoose.connection.models["Transaction"]) {
   delete mongoose.connection.models["Transaction"]
 }
-
+transactionSchema.index({ user: 1, createdAt: -1 })
+transactionSchema.index({ "paymentDetails.type": 1 })
 const Transaction = mongoose.model("Transaction", transactionSchema)
 module.exports = Transaction

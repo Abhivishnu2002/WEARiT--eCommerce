@@ -11,6 +11,60 @@
     <link rel="stylesheet" href="/css/footer.css">
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/wallet.css">
+    <style>
+        .refund-summary-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .refund-item-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+        .product-return-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+        }
+        .order-cancellation-badge {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            border: none;
+        }
+        .transaction-details-modal .product-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        .amount-highlight {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .refund-reason {
+            font-style: italic;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        /* Enhanced styling for refund transactions */
+        .wallet-transactions tbody tr:has(.product-return-badge) {
+            border-left: 4px solid #28a745;
+            background-color: #f8fff9;
+        }
+        .wallet-transactions tbody tr:has(.order-cancellation-badge) {
+            border-left: 4px solid #dc3545;
+            background-color: #fff5f5;
+        }
+        .wallet-transactions tbody tr:has(.badge.bg-info) {
+            border-left: 4px solid #17a2b8;
+            background-color: #f0fdff;
+        }
+    </style>
 </head>
 <body>
     <%- include('../partials/header') %>
@@ -64,6 +118,7 @@
                                         <tr>
                                             <th>Transaction ID</th>
                                             <th>Date</th>
+                                            <th>Type</th>
                                             <th>Amount</th>
                                             <th>Description</th>
                                             <th>Status</th>
@@ -72,33 +127,95 @@
                                     <tbody>
                                         <% transactions.forEach(transaction => { %>
                                             <tr>
-                                                <td class="transaction-id"><%= transaction.transactionId %></td>
-                                                <td class="transaction-date"><%= new Date(transaction.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
-                                                <td class="transaction-amount">
-                                                    <% if (transaction.paymentDetails && transaction.paymentDetails.type === 'wallet_add') { %>
-                                                        <span class="text-success">+₹<%= transaction.amount.toFixed(2) %></span>
+                                                <td class="transaction-id">
+                                                    <small><%= transaction.transactionId %></small>
+                                                </td>
+                                                <td class="transaction-date">
+                                                    <%= new Date(transaction.createdAt).toLocaleDateString('en-US', { 
+                                                        day: '2-digit', 
+                                                        month: '2-digit', 
+                                                        year: 'numeric', 
+                                                        hour: '2-digit', 
+                                                        minute: '2-digit' 
+                                                    }) %>
+                                                </td>
+                                                <td>
+                                                    <% if (transaction.paymentDetails && transaction.paymentDetails.type === 'refund') { %>
+                                                        <% if (transaction.paymentDetails.subType === 'product_return') { %>
+                                                            <span class="badge product-return-badge">
+                                                                <i class="fas fa-box-open me-1"></i>Product Return
+                                                            </span>
+                                                        <% } else if (transaction.paymentDetails.subType === 'order_cancellation') { %>
+                                                            <span class="badge order-cancellation-badge">
+                                                                <i class="fas fa-times-circle me-1"></i>Order Cancelled
+                                                            </span>
+                                                        <% } else { %>
+                                                            <span class="badge bg-info">
+                                                                <i class="fas fa-undo me-1"></i>Refund
+                                                            </span>
+                                                        <% } %>
+                                                    <% } else if (transaction.paymentDetails && transaction.paymentDetails.type === 'wallet_add') { %>
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-plus me-1"></i>Credit
+                                                        </span>
                                                     <% } else if (transaction.paymentDetails && transaction.paymentDetails.type === 'order_payment') { %>
-                                                        <span class="text-danger">-₹<%= transaction.amount.toFixed(2) %></span>
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-shopping-cart me-1"></i>Purchase
+                                                        </span>
                                                     <% } else if (transaction.paymentMethod === 'wallet') { %>
-                                                        <span class="text-danger">-₹<%= transaction.amount.toFixed(2) %></span>
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-minus me-1"></i>Debit
+                                                        </span>
                                                     <% } else { %>
-                                                        <span>₹<%= transaction.amount.toFixed(2) %></span>
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-exchange-alt me-1"></i>Transaction
+                                                        </span>
+                                                    <% } %>
+                                                </td>
+                                                <td class="transaction-amount">
+                                                    <% if (transaction.paymentDetails && (transaction.paymentDetails.type === 'wallet_add' || transaction.paymentDetails.type === 'refund')) { %>
+                                                        <span class="text-success fw-bold amount-highlight">+₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } else if (transaction.paymentDetails && transaction.paymentDetails.type === 'order_payment') { %>
+                                                        <span class="text-danger fw-bold amount-highlight">-₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } else if (transaction.paymentMethod === 'wallet') { %>
+                                                        <span class="text-danger fw-bold amount-highlight">-₹<%= transaction.amount.toFixed(2) %></span>
+                                                    <% } else { %>
+                                                        <span class="fw-bold">₹<%= transaction.amount.toFixed(2) %></span>
                                                     <% } %>
                                                 </td>
                                                 <td class="transaction-description">
                                                     <% if (transaction.paymentDetails && transaction.paymentDetails.description) { %>
                                                         <%= transaction.paymentDetails.description %>
+                                                        
+                                                        <% if (transaction.order && transaction.order.orderID) { %>
+                                                            <div class="mt-2">
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-receipt me-1"></i>
+                                                                    Order: #<%= transaction.order.orderID %>
+                                                                </small>
+                                                            </div>
+                                                        <% } %>
                                                     <% } else { %>
-                                                        <%= transaction.paymentMethod %> transaction
+                                                        <span class="text-muted"><%= transaction.paymentMethod %> transaction</span>
                                                     <% } %>
                                                 </td>
                                                 <td>
                                                     <% if (transaction.status === 'completed') { %>
-                                                        <span class="badge bg-success">Completed</span>
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i>Completed
+                                                        </span>
                                                     <% } else if (transaction.status === 'pending') { %>
-                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-clock me-1"></i>Pending
+                                                        </span>
                                                     <% } else if (transaction.status === 'failed') { %>
-                                                        <span class="badge bg-danger">Failed</span>
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times me-1"></i>Failed
+                                                        </span>
+                                                    <% } else if (transaction.status === 'refunded') { %>
+                                                        <span class="badge bg-info">
+                                                            <i class="fas fa-undo me-1"></i>Refunded
+                                                        </span>
                                                     <% } else { %>
                                                         <span class="badge bg-secondary"><%= transaction.status %></span>
                                                     <% } %>
@@ -138,9 +255,32 @@
                                 <i class="fas fa-history fa-3x mb-3"></i>
                                 <h3>No transactions yet</h3>
                                 <p>Your transaction history will appear here once you start using your wallet.</p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                                    <i class="fas fa-plus me-2"></i>Add Money to Get Started
+                                </button>
                             </div>
                         <% } %>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div class="modal fade" id="transactionDetailsModal" tabindex="-1" aria-labelledby="transactionDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content transaction-details-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="transactionDetailsModalLabel">
+                        <i class="fas fa-receipt me-2"></i>Transaction Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="transactionDetailsBody">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -246,5 +386,176 @@
     <!-- PayPal SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id=<%= process.env.PAYPAL_CLIENT_ID %>&currency=USD"></script>
     <script src="/js/wallet.js"></script>
+    
+    <script>
+        function showTransactionDetails(transactionData) {
+            try {
+                const transaction = JSON.parse(transactionData);
+                const modalBody = document.getElementById('transactionDetailsBody');
+                
+                let detailsHTML = `
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted mb-1">Transaction ID</h6>
+                                    <code class="fs-6">${transaction.transactionId}</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted mb-1">Date & Time</h6>
+                                    <span class="fs-6">${new Date(transaction.createdAt).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-success bg-opacity-10">
+                                <div class="card-body">
+                                    <h6 class="card-title text-success mb-1">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Refund Amount
+                                    </h6>
+                                    <span class="fs-4 fw-bold text-success">₹${transaction.amount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-primary bg-opacity-10">
+                                <div class="card-body">
+                                    <h6 class="card-title text-primary mb-1">
+                                        <i class="fas fa-check-circle me-2"></i>Status
+                                    </h6>
+                                    <span class="badge bg-success fs-6">${transaction.status.toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (transaction.order && transaction.order.orderID) {
+                    detailsHTML += `
+                        <div class="alert alert-info">
+                            <i class="fas fa-receipt me-2"></i>
+                            <strong>Related Order:</strong> #${transaction.order.orderID}
+                            ${transaction.paymentDetails.originalOrderAmount ? 
+                                `<span class="ms-2 text-muted">(Original Amount: ₹${transaction.paymentDetails.originalOrderAmount.toFixed(2)})</span>` : ''}
+                        </div>
+                    `;
+                }
+                
+                if (transaction.paymentDetails && transaction.paymentDetails.type === 'refund') {
+                    const isProductReturn = transaction.paymentDetails.subType === 'product_return';
+                    const isOrderCancellation = transaction.paymentDetails.subType === 'order_cancellation';
+                    
+                    detailsHTML += `
+                        <div class="card border-${isProductReturn ? 'success' : 'danger'}">
+                            <div class="card-header bg-${isProductReturn ? 'success' : 'danger'} text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-${isProductReturn ? 'box-open' : 'times-circle'} me-2"></i>
+                                    ${isProductReturn ? 'Product Return' : 'Order Cancellation'} Details
+                                    ${transaction.paymentDetails.isPartialRefund ? 
+                                        '<span class="badge bg-warning text-dark ms-2">Partial Refund</span>' : 
+                                        '<span class="badge bg-light text-dark ms-2">Full Refund</span>'}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                    `;
+                    
+                    // Show returned items for product returns
+                    if (isProductReturn && transaction.paymentDetails.returnedItems && transaction.paymentDetails.returnedItems.length > 0) {
+                        detailsHTML += `<h6 class="text-success mb-3">Returned Products (${transaction.paymentDetails.returnedItems.length})</h6>`;
+                        
+                        transaction.paymentDetails.returnedItems.forEach((item, index) => {
+                            detailsHTML += `
+                                <div class="product-item mb-3 ${index < transaction.paymentDetails.returnedItems.length - 1 ? 'border-bottom pb-3' : ''}">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1 text-dark">
+                                                <i class="fas fa-cube text-success me-2"></i>${item.productName}
+                                            </h6>
+                                            <div class="d-flex gap-3 text-muted small">
+                                                <span><i class="fas fa-hashtag me-1"></i>Quantity: ${item.quantity}</span>
+                                                ${item.reason ? `<span><i class="fas fa-comment me-1"></i>Reason: ${item.reason}</span>` : ''}
+                                                ${item.returnDate ? `<span><i class="fas fa-calendar me-1"></i>Returned: ${new Date(item.returnDate).toLocaleDateString()}</span>` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            ${item.refundAmount ? 
+                                                `<span class="fs-5 fw-bold text-success">₹${item.refundAmount.toFixed(2)}</span>` : 
+                                                '<span class="text-muted">Amount included</span>'}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    // Show product details for order cancellations
+                    else if (transaction.paymentDetails.productDetails && transaction.paymentDetails.productDetails.length > 0) {
+                        detailsHTML += `<h6 class="text-${isOrderCancellation ? 'danger' : 'info'} mb-3">
+                            ${isOrderCancellation ? 'Cancelled' : ''} Products (${transaction.paymentDetails.productDetails.length})
+                        </h6>`;
+                        
+                        transaction.paymentDetails.productDetails.forEach((product, index) => {
+                            detailsHTML += `
+                                <div class="product-item mb-3 ${index < transaction.paymentDetails.productDetails.length - 1 ? 'border-bottom pb-3' : ''}">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1 text-dark">
+                                                <i class="fas fa-cube text-${isOrderCancellation ? 'danger' : 'primary'} me-2"></i>${product.productName}
+                                            </h6>
+                                            <div class="d-flex gap-3 text-muted small">
+                                                <span><i class="fas fa-hashtag me-1"></i>Quantity: ${product.quantity}</span>
+                                                ${product.price ? `<span><i class="fas fa-tag me-1"></i>Price: ₹${product.price.toFixed(2)}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    if (transaction.paymentDetails.refundReason) {
+                        detailsHTML += `
+                            <div class="alert alert-light border-start border-primary border-4 mt-3">
+                                <h6 class="text-primary mb-2">
+                                    <i class="fas fa-info-circle me-2"></i>Refund Reason
+                                </h6>
+                                <p class="mb-0">${transaction.paymentDetails.refundReason}</p>
+                            </div>
+                        `;
+                    }
+                    
+                    if (transaction.paymentDetails.refundDate) {
+                        detailsHTML += `
+                            <div class="text-muted small mt-3">
+                                <i class="fas fa-calendar-check me-1"></i>
+                                <strong>Processed on:</strong> ${new Date(transaction.paymentDetails.refundDate).toLocaleString()}
+                            </div>
+                        `;
+                    }
+                    
+                    detailsHTML += `
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                modalBody.innerHTML = detailsHTML;
+            } catch (error) {
+                console.error('Error parsing transaction data:', error);
+                document.getElementById('transactionDetailsBody').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Error:</strong> Unable to load transaction details. Please try again.
+                    </div>
+                `;
+            }
+        }
+    </script>
 </body>
 </html>

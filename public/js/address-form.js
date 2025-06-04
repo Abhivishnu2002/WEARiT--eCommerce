@@ -1,0 +1,224 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("addressForm")
+  const submitBtn = document.getElementById("submitBtn")
+  const fields = {
+    name: document.getElementById("name"),
+    mobile: document.getElementById("mobile"),
+    address: document.getElementById("address"),
+    city: document.getElementById("city"),
+    state: document.getElementById("state"),
+    pincode: document.getElementById("pincode"),
+  }
+  const validationRules = {
+    name: {
+      required: true,
+      minLength: 2,
+      maxLength: 50,
+      pattern: /^[a-zA-Z\s]+$/,
+      message: {
+        required: "Full name is required",
+        minLength: "Name must be at least 2 characters long",
+        maxLength: "Name cannot exceed 50 characters",
+        pattern: "Name can only contain letters and spaces",
+      },
+    },
+    mobile: {
+      required: true,
+      pattern: /^[6-9]\d{9}$/,
+      message: {
+        required: "Mobile number is required",
+        pattern: "Please enter a valid 10-digit mobile number starting with 6-9",
+      },
+    },
+    address: {
+      required: true,
+      minLength: 10,
+      maxLength: 200,
+      message: {
+        required: "Address is required",
+        minLength: "Address must be at least 10 characters long",
+        maxLength: "Address cannot exceed 200 characters",
+      },
+    },
+    city: {
+      required: true,
+      minLength: 2,
+      maxLength: 50,
+      pattern: /^[a-zA-Z\s]+$/,
+      message: {
+        required: "City is required",
+        minLength: "City name must be at least 2 characters long",
+        maxLength: "City name cannot exceed 50 characters",
+        pattern: "City name can only contain letters and spaces",
+      },
+    },
+    state: {
+      required: true,
+      message: {
+        required: "Please select a state",
+      },
+    },
+    pincode: {
+      required: true,
+      pattern: /^[1-9][0-9]{5}$/,
+      message: {
+        required: "PIN code is required",
+        pattern: "Please enter a valid 6-digit PIN code",
+      },
+    },
+  }
+  Object.keys(fields).forEach((fieldName) => {
+    const errorElement = document.getElementById(`${fieldName}-error`)
+    if (errorElement && !errorElement.textContent.trim()) {
+      errorElement.style.display = "none"
+    }
+  })
+  Object.keys(fields).forEach((fieldName) => {
+    const field = fields[fieldName]
+    if (field) {
+      field.addEventListener("blur", () => validateField(fieldName))
+      field.addEventListener("input", () => {
+        clearFieldError(fieldName)
+        if (field.value.trim()) {
+          validateField(fieldName)
+        }
+      })
+    }
+  })
+  if (fields.mobile) {
+    fields.mobile.addEventListener("input", (e) => {
+      let value = e.target.value.replace(/\D/g, "")
+      if (value.length > 10) {
+        value = value.slice(0, 10)
+      }
+      e.target.value = value
+    })
+  }
+
+  if (fields.pincode) {
+    fields.pincode.addEventListener("input", (e) => {
+      let value = e.target.value.replace(/\D/g, "")
+      if (value.length > 6) {
+        value = value.slice(0, 6)
+      }
+      e.target.value = value
+    })
+  }
+
+  if (fields.name) {
+    fields.name.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "")
+    })
+  }
+
+  if (fields.city) {
+    fields.city.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, "")
+    })
+  }
+  function validateField(fieldName) {
+    const field = fields[fieldName]
+    const rules = validationRules[fieldName]
+    const value = field.value.trim()
+    clearFieldError(fieldName)
+    if (rules.required && !value) {
+      showFieldError(fieldName, rules.message.required)
+      return false
+    }
+
+    if (value) {
+      if (rules.pattern && !rules.pattern.test(value)) {
+        showFieldError(fieldName, rules.message.pattern)
+        return false
+      }
+      if (rules.minLength && value.length < rules.minLength) {
+        showFieldError(fieldName, rules.message.minLength)
+        return false
+      }
+
+      if (rules.maxLength && value.length > rules.maxLength) {
+        showFieldError(fieldName, rules.message.maxLength)
+        return false
+      }
+    }
+    showFieldSuccess(fieldName)
+    return true
+  }
+  function showFieldError(fieldName, message) {
+    const field = fields[fieldName]
+    const errorElement = document.getElementById(`${fieldName}-error`)
+
+    field.classList.remove("is-valid")
+    field.classList.add("is-invalid")
+
+    if (errorElement) {
+      errorElement.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i>${message}`
+      errorElement.style.display = "block"
+    }
+  }
+  function showFieldSuccess(fieldName) {
+    const field = fields[fieldName]
+    const errorElement = document.getElementById(`${fieldName}-error`)
+
+    field.classList.remove("is-invalid")
+    field.classList.add("is-valid")
+
+    if (errorElement) {
+      errorElement.style.display = "none"
+    }
+  }
+  function clearFieldError(fieldName) {
+    const field = fields[fieldName]
+    const errorElement = document.getElementById(`${fieldName}-error`)
+
+    field.classList.remove("is-invalid", "is-valid")
+
+    if (errorElement) {
+      errorElement.style.display = "none"
+    }
+  }
+  form.addEventListener("submit", (e) => {
+    e.preventDefault()
+
+    let isValid = true
+    Object.keys(fields).forEach((fieldName) => {
+      if (!validateField(fieldName)) {
+        isValid = false
+      }
+    })
+
+    if (isValid) {
+      submitBtn.classList.add("loading")
+      submitBtn.disabled = true
+      setTimeout(() => {
+        form.submit()
+      }, 500)
+    } else {
+      const firstInvalidField = form.querySelector(".is-invalid")
+      if (firstInvalidField) {
+        firstInvalidField.focus()
+        firstInvalidField.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
+      }
+    }
+  })
+
+  if (fields.name) {
+    fields.name.focus()
+  }
+
+  const flashMessages = document.querySelectorAll(".alert-float")
+  if (flashMessages.length > 0) {
+    flashMessages.forEach((message) => {
+      message.classList.add("show")
+      setTimeout(() => {
+        message.classList.remove("show")
+        setTimeout(() => {
+          message.remove()
+        }, 300)
+      }, 5000)
+    })
+  }
+})

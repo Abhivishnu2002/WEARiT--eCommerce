@@ -14,6 +14,7 @@
         />
         <link rel="stylesheet" href="/css/navbar.css" />
         <link rel="stylesheet" href="/css/address.css" />
+        <link rel="stylesheet" href="/css/address-form.css" />
     </head>
     <body>
         <%- include('../partials/header') %>
@@ -29,102 +30,135 @@
                             <h2 class="address-title">Edit Address</h2>
                             <div class="address-actions">
                                 <a
-                                    href="/profile/addresses"
+                                    href="<%= returnTo === 'checkout' ? '/checkout' : '/profile/addresses' %>"
                                     class="btn btn-outline-dark"
                                 >
                                     <i class="fas fa-arrow-left me-2"></i> Back
-                                    to Addresses
+                                    to <%= returnTo === 'checkout' ? 'Checkout' : 'Addresses' %>
                                 </a>
                             </div>
                         </div>
 
                         <div class="address-form-container">
                             <form
+                                id="addressForm"
                                 action="/profile/addresses/edit/<%= address._id %><%= returnTo === 'checkout' ? '?returnTo=checkout' : '' %>"
                                 method="POST"
                                 class="address-form"
+                                novalidate
                             >
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label"
-                                            >Full Name</label
-                                        >
+                                        <label for="name" class="form-label required">Full Name</label>
                                         <input
                                             type="text"
-                                            class="form-control"
+                                            class="form-control <%= locals.errors && errors.name ? 'is-invalid' : '' %>"
                                             id="name"
                                             name="name"
-                                            value="<%= address.name %>"
+                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.name || '') : (address.name || '') %>"
+                                            required
                                         />
+                                        <div class="invalid-feedback" id="name-error">
+                                            <% if (locals.errors && errors.name) { %>
+                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.name %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="mobile" class="form-label"
-                                            >Mobile Number</label
-                                        >
+                                        <label for="mobile" class="form-label required">Mobile Number</label>
                                         <input
                                             type="tel"
-                                            class="form-control"
+                                            class="form-control <%= locals.errors && errors.mobile ? 'is-invalid' : '' %>"
                                             id="mobile"
                                             name="mobile"
-                                            value="<%= address.mobile %>"
+                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.mobile || '') : (address.mobile || '') %>"
                                             pattern="[0-9]{10}"
                                             title="Please enter a valid 10-digit mobile number"
+                                            required
                                         />
+                                        <div class="invalid-feedback" id="mobile-error">
+                                            <% if (locals.errors && errors.mobile) { %>
+                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.mobile %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="address" class="form-label"
-                                        >Address</label
-                                    >
+                                    <label for="address" class="form-label required">Address (House No, Building, Street, Area)</label>
                                     <textarea
-                                        class="form-control"
+                                        class="form-control <%= locals.errors && errors.address ? 'is-invalid' : '' %>"
                                         id="address"
                                         name="address"
                                         rows="3"
-                                    >
-<%= address.address %></textarea
-                                    >
+                                        placeholder="Enter your complete address"
+                                        required
+                                    ><%= locals.formData && Object.keys(formData).length > 0 ? (formData.address || '') : (address.address || '') %></textarea>
+                                    <div class="invalid-feedback" id="address-error">
+                                        <% if (locals.errors && errors.address) { %>
+                                            <i class="fas fa-exclamation-circle me-1"></i><%= errors.address %>
+                                        <% } %>
+                                    </div>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label for="city" class="form-label"
-                                            >City</label
-                                        >
+                                        <label for="city" class="form-label required">City</label>
                                         <input
                                             type="text"
-                                            class="form-control"
+                                            class="form-control <%= locals.errors && errors.city ? 'is-invalid' : '' %>"
                                             id="city"
                                             name="city"
-                                            value="<%= address.city %>"
+                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.city || '') : (address.city || '') %>"
+                                            required
                                         />
+                                        <div class="invalid-feedback" id="city-error">
+                                            <% if (locals.errors && errors.city) { %>
+                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.city %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label for="state" class="form-label"
-                                            >State</label
-                                        >
-                                        <input
-                                            type="text"
-                                            class="form-control"
+                                        <label for="state" class="form-label required">State</label>
+                                        <% 
+                                        const currentState = (locals.formData && Object.keys(formData).length > 0) ? formData.state : address.state;
+                                        const states = ['Kerala', 'Tamil Nadu', 'Karnataka', 'Andhra Pradesh', 'Telangana', 'Maharashtra', 'Gujarat', 'Rajasthan', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Madhya Pradesh', 'Bihar', 'West Bengal', 'Odisha', 'Jharkhand', 'Assam', 'Himachal Pradesh', 'Uttarakhand', 'Goa', 'Delhi'];
+                                        %>
+                                        <select
+                                            class="form-select <%= locals.errors && errors.state ? 'is-invalid' : '' %>"
                                             id="state"
                                             name="state"
-                                            value="<%= address.state %>"
-                                        />
+                                            required
+                                        >
+                                            <option value="">Select State</option>
+                                            <% states.forEach(state => { %>
+                                                <option value="<%= state %>" <%= currentState === state ? 'selected' : '' %>><%= state %></option>
+                                            <% }); %>
+                                        </select>
+                                        <div class="invalid-feedback" id="state-error">
+                                            <% if (locals.errors && errors.state) { %>
+                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.state %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label for="pincode" class="form-label"
-                                            >Pincode</label
-                                        >
+                                        <label for="pincode" class="form-label required">PIN Code</label>
                                         <input
                                             type="text"
-                                            class="form-control"
+                                            class="form-control <%= locals.errors && errors.pincode ? 'is-invalid' : '' %>"
                                             id="pincode"
                                             name="pincode"
-                                            value="<%= address.pincode %>"
+                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.pincode || '') : (address.pincode || '') %>"
                                             pattern="[0-9]{6}"
                                             title="Please enter a valid 6-digit pincode"
+                                            maxlength="6"
+                                            required
                                         />
+                                        <div class="invalid-feedback" id="pincode-error">
+                                            <% if (locals.errors && errors.pincode) { %>
+                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.pincode %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -133,7 +167,7 @@
                                         <input class="form-check-input"
                                         type="checkbox" id="isDefault"
                                         name="isDefault" value="true" <%=
-                                        address.isDefault ? 'checked' : '' %>>
+                                        ((locals.formData && Object.keys(formData).length > 0) ? formData.isDefault : address.isDefault) ? 'checked' : '' %>>
                                         <label
                                             class="form-check-label"
                                             for="isDefault"
@@ -143,9 +177,22 @@
                                     </div>
                                 </div>
 
+                                <% if (locals.errors && errors.general) { %>
+                                    <div class="alert alert-danger" role="alert">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <%= errors.general %>
+                                    </div>
+                                <% } %>
+
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-dark">
-                                        Update Address
+                                    <button type="submit" class="btn btn-dark btn-lg" id="submitBtn">
+                                        <span class="btn-text">
+                                            <i class="fas fa-save me-2"></i>Update Address
+                                        </span>
+                                        <span class="btn-loading d-none">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Updating...
+                                        </span>
                                     </button>
                                 </div>
                             </form>
@@ -162,5 +209,6 @@
         <% } %> <% } %> <%- include('../partials/footer') %>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="/js/address-form.js"></script>
     </body>
 </html>

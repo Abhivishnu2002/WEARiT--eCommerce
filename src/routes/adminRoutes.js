@@ -16,7 +16,8 @@ router.use(csrf.generateToken)
 router.get("/login", isAdminLoggedOut, authController.loadLogin);
 router.post("/login", isAdminLoggedOut, authController.verifyLogin);
 router.get("/logout", isAdminLoggedIn, authController.logout);
-router.get("/dashboard", verifyAdminSession, authController.loadDashboard);
+router.get("/dashboard", verifyAdminSession, authController.loadDashboard)
+router.get("/dashboard/data", verifyAdminSession, authController.getDashboardData)
 router.get("/account", verifyAdminSession, authController.loadAccount);
 router.get("/editaccount", verifyAdminSession, authController.loadEditAccount);
 router.post("/editaccount", verifyAdminSession, authController.updateAccount);

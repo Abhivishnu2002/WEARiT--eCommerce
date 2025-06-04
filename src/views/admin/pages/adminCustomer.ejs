@@ -1,292 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>WEARiT - Customer List</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css"
-        />
-        <link rel="stylesheet" href="/css/admin-navbar.css" />
-        <link rel="stylesheet" href="/css/admin-customer.css" />
-    </head>
-    <body>
-        <%- include('../partials/navbar', {activePage: 'customer'}) %>
-
-        <main class="admin-main">
-            <div class="admin-content">
-                <div class="page-header mb-4">
-                    <h2 class="page-title">Customer List</h2>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a
-                                    href="/admin/dashboard"
-                                    class="text-decoration-none"
-                                    >Dashboard</a
-                                >
-                            </li>
-                            <li
-                                class="breadcrumb-item active"
-                                aria-current="page"
-                            >
-                                Customers
-                            </li>
-                        </ol>
-                    </nav>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEARiT - Customer Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/admin-navbar.css">
+    <link rel="stylesheet" href="/css/admin-customer.css">
+</head>
+<body>
+    <%- include('../partials/navbar', {activePage: 'customer'}) %>
+    
+    <main class="admin-main">
+        <div class="admin-content">
+            <% if (locals.success_msg && success_msg.length > 0) { %>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <%= success_msg %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                <div
-                    class="d-flex justify-content-between align-items-center mb-4 search-section"
-                >
-                    <form
-                        action="/admin/customer"
-                        method="GET"
-                        class="input-group"
-                        style="max-width: 400px"
-                    >
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="fas fa-search text-muted"></i>
-                        </span>
-                        <input
-                            type="text"
-                            name="search"
-                            class="form-control border-start-0"
-                            placeholder="Search customer..."
-                            value="<%= locals.searchQuery ? searchQuery : '' %>"
-                        />
-                        <button type="submit" class="btn btn-primary">
-                            Search
-                        </button>
-                    </form>
+            <% } %>
 
+            <% if (locals.error_msg && error_msg.length > 0) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <%= error_msg %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <% } %>
+
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/admin/dashboard" class="text-decoration-none">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">Customers</li>
+                </ol>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 breadcrumb-section">
+                <h2 class="mb-0">Customer Management</h2>
+                <div class="header-stats">
+                    <div class="stat-card">
+                        <div class="stat-value"><%= totalUsers %></div>
+                        <div class="stat-label">Total Customers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Filter Section -->
+            <div class="filters-container mb-4">
+                <div class="filters-header">
+                    <h5 class="filters-title">
+                        <i class="fas fa-filter me-2"></i>
+                        Search & Filters
+                    </h5>
+                </div>
+
+                <div class="filters-content">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <form action="/admin/customer" method="GET" class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control border-start-0" 
+                                    placeholder="Search by name, email or phone..." 
+                                    value="<%= locals.searchQuery ? searchQuery : '' %>">
+                                <button type="submit" class="btn btn-primary">
+                                    Search
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-4 d-flex justify-content-end align-items-center mt-3 mt-md-0">
+                            <a href="/admin/customer" class="btn btn-outline-secondary">
+                                <i class="fas fa-sync-alt me-2"></i> Reset Filters
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Table -->
+            <div class="table-responsive customer-table mb-4">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
                     <div>
-                        <a href="/admin/customer" class="btn btn-light">
-                            <i class="fas fa-sync-alt me-2"></i> Reset
-                        </a>
+                        <h5 class="mb-0">Customers List</h5>
+                        <small class="text-muted">
+                            <%= totalUsers %> customer<%= totalUsers !== 1 ? 's' : '' %> found
+                        </small>
                     </div>
                 </div>
 
-                <% if (locals.success_msg && success_msg.length > 0) { %>
-                <div
-                    class="alert alert-success alert-dismissible fade show"
-                    role="alert"
-                >
-                    <%= success_msg %>
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Close"
-                    ></button>
-                </div>
-                <% } %> <% if (locals.error_msg && error_msg.length > 0) { %>
-                <div
-                    class="alert alert-danger alert-dismissible fade show"
-                    role="alert"
-                >
-                    <%= error_msg %>
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Close"
-                    ></button>
-                </div>
-                <% } %>
-                <div class="table-responsive customer-table mb-4">
+                <% if (users && users.length > 0) { %>
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Customer Name</th>
+                                <th>Customer</th>
                                 <th>Phone</th>
                                 <th>Orders</th>
-                                <th>Balance</th>
+                                <th>Total Spent</th>
+                                <th>Wallet Balance</th>
                                 <th>Status</th>
-                                <th>BLOCK/<br />UNBLOCK</th>
-                                <th>Action</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% if (users && users.length > 0) { %> <%
-                            users.forEach(user => { %>
-                            <tr>
-                                <td>
-                                    <div class="customer-info">
-                                        <div class="customer-avatar">
-                                            <% if (user.profileImage) { %>
-                                            <img
-                                                src="<%= user.profileImage %>"
-                                                alt="<%= user.name %>"
-                                                class="w-100 h-100 rounded-circle"
-                                            />
-                                            <% } else { %>
-                                            <i class="fas fa-user"></i>
-                                            <% } %>
+                            <% users.forEach(user => { %>
+                                <tr>
+                                    <td>
+                                        <div class="customer-info">
+                                            <div class="customer-avatar">
+                                                <% if (user.profileImage) { %>
+                                                    <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="w-100 h-100 rounded-circle">
+                                                <% } else { %>
+                                                    <i class="fas fa-user"></i>
+                                                <% } %>
+                                            </div>
+                                            <div>
+                                                <p class="customer-name"><%= user.name %></p>
+                                                <p class="customer-email"><%= user.email %></p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="customer-name">
-                                                <%= user.name %>
-                                            </p>
-                                            <p class="customer-email">
-                                                <%= user.email %>
-                                            </p>
+                                    </td>
+                                    <td><%= user.mobile || 'N/A' %></td>
+                                    <td><%= user.orderCount || 0 %></td>
+                                    <td>₹<%= user.totalSpent ? user.totalSpent.toFixed(2) : '0.00' %></td>
+                                    <td>₹<%= user.wallet && user.wallet.balance ? user.wallet.balance.toFixed(2) : '0.00' %></td>
+                                    <td>
+                                        <% if (user.isBlocked) { %>
+                                            <span class="status-badge status-blocked">
+                                                <i class="fas fa-ban me-1"></i>Blocked
+                                            </span>
+                                        <% } else { %>
+                                            <span class="status-badge status-active">
+                                                <i class="fas fa-check-circle me-1"></i>Active
+                                            </span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="/admin/customerdetails/<%= user._id %>" class="action-btn" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <form action="/admin/block-unblock-user/<%= user._id %>?returnTo=list&page=<%= currentPage %><%= searchQuery ? `&search=${searchQuery}` : '' %>" 
+                                                  method="POST" class="toggle-form d-inline">
+                                                <button type="submit" class="action-btn" title="<%= user.isBlocked ? 'Unblock User' : 'Block User' %>">
+                                                    <i class="fas <%= user.isBlocked ? 'fa-unlock' : 'fa-ban' %>"></i>
+                                                </button>
+                                            </form>
                                         </div>
-                                    </div>
-                                </td>
-                                <td><%= user.mobile || 'N/A' %></td>
-                                <td><%= user.orderCount|| 0 %></td>
-                                <td>
-                                    ₹<%= user.totalSpent ?
-                                    user.totalSpent.toFixed(2) : '0.00' %>
-                                </td>
-                                <td>
-                                    <% if (user.isBlocked) { %>
-                                    <span class="status-badge status-blocked"
-                                        >Blocked</span
-                                    >
-                                    <% } else { %>
-                                    <span class="status-badge status-active"
-                                        >Active</span
-                                    >
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <form
-                                        action="/admin/block-unblock-user/<%= user._id %>?returnTo=list&page=<%= currentPage %><%= searchQuery ? `&search=${searchQuery}` : '' %>"
-                                        method="POST"
-                                        class="toggle-form"
-                                    >
-                                        <label class="switch">
-                                            <input type="checkbox" <%=
-                                            user.isBlocked ? 'checked' : '' %>
-                                            onchange="this.form.submit()"
-                                            name="blockStatus" value="<%=
-                                            user.isBlocked ? 'unblock' : 'block'
-                                            %>" />
-                                            <span class="slider"></span>
-                                        </label>
-                                        <span class="switch-label"
-                                            ><%= user.isBlocked ? 'UNBLOCK' :
-                                            'BLOCK' %></span
-                                        >
-                                    </form>
-                                </td>
-                                <td>
-                                    <a
-                                        href="/admin/customerdetails/<%= user._id %>"
-                                        class="action-btn"
-                                    >
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            <% }); %> <% } else { %>
-                            <tr>
-                                <td colspan="7" class="text-center py-4">
-                                    No customers found
-                                </td>
-                            </tr>
-                            <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
                         </tbody>
                     </table>
-                </div>
-                <% if (users && users.length > 0) { %>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Customers Found</h5>
+                        <p class="text-muted">No customers match your search criteria.</p>
+                        <a href="/admin/customer" class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-2"></i>Reset Filters
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <p class="text-muted mb-0">
-                            Showing <%= (currentPage - 1) * limit + 1 %>-<%=
-                            Math.min(currentPage * limit, totalUsers) %> from
-                            <%= totalUsers %>
+                            Showing <%= (currentPage - 1) * limit + 1 %>-<%= Math.min(currentPage * limit, totalUsers) %> of <%= totalUsers %> customers
                         </p>
                     </div>
                     <nav aria-label="Page navigation">
                         <ul class="pagination mb-0">
-                            <% if (currentPage > 1) { %>
-                            <li class="page-item">
-                                <a
-                                    class="page-link"
-                                    href="/admin/customer?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>"
-                                    aria-label="Previous"
-                                >
+                            <li class="page-item <%= currentPage <= 1 ? 'disabled' : '' %>">
+                                <a class="page-link" href="/admin/customer?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>" aria-label="Previous">
                                     <i class="fas fa-chevron-left"></i>
                                 </a>
                             </li>
-                            <% } else { %>
-                            <li class="page-item disabled">
-                                <a
-                                    class="page-link"
-                                    href="#"
-                                    aria-label="Previous"
-                                >
-                                    <i class="fas fa-chevron-left"></i>
-                                </a>
-                            </li>
-                            <% } %> <% let startPage = Math.max(1, currentPage -
-                            2); let endPage = Math.min(totalPages, startPage +
-                            4); if (endPage - startPage < 4 && totalPages > 5) {
-                            startPage = Math.max(1, endPage - 4); } for (let i =
-                            startPage; i <= endPage; i++) { %>
-                            <li
-                                class="page-item <%= i === currentPage ? 'active' : '' %>"
-                            >
-                                <a
-                                    class="page-link"
-                                    href="/admin/customer?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>"
-                                    ><%= i %></a
-                                >
-                            </li>
-                            <% } %> <% if (endPage < totalPages) { %>
-                            <li class="page-item">
-                                <a class="page-link" href="#">...</a>
-                            </li>
-                            <li class="page-item">
-                                <a
-                                    class="page-link"
-                                    href="/admin/customer?page=<%= totalPages %><%= searchQuery ? '&search=' + searchQuery : '' %>"
-                                    ><%= totalPages %></a
-                                >
-                            </li>
-                            <% } %> <% if (currentPage < totalPages) { %>
-                            <li class="page-item">
-                                <a
-                                    class="page-link"
-                                    href="/admin/customer?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>"
-                                    aria-label="Next"
-                                >
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                            <% } else { %>
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" aria-label="Next">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
+                            
+                            <% 
+                                let startPage = Math.max(1, currentPage - 2);
+                                let endPage = Math.min(totalPages, currentPage + 2);
+                                
+                                if (startPage > 1) { 
+                            %>
+                                <li class="page-item">
+                                    <a class="page-link" href="/admin/customer?page=1<%= searchQuery ? '&search=' + searchQuery : '' %>">1</a>
+                                </li>
+                                <% if (startPage > 2) { %>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                <% } %>
                             <% } %>
+                            
+                            <% for (let i = startPage; i <= endPage; i++) { %>
+                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                    <a class="page-link" href="/admin/customer?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>">
+                                        <%= i %>
+                                    </a>
+                                </li>
+                            <% } %>
+                            
+                            <% if (endPage < totalPages) { %>
+                                <% if (endPage < totalPages - 1) { %>
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                <% } %>
+                                <li class="page-item">
+                                    <a class="page-link" href="/admin/customer?page=<%= totalPages %><%= searchQuery ? '&search=' + searchQuery : '' %>">
+                                        <%= totalPages %>
+                                    </a>
+                                </li>
+                            <% } %>
+                            
+                            <li class="page-item <%= currentPage >= totalPages ? 'disabled' : '' %>">
+                                <a class="page-link" href="/admin/customer?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>" aria-label="Next">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
                         </ul>
                     </nav>
                 </div>
-                <% } %>
-            </div>
-        </main>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
-        <script src="/js/admin-navbar.js"></script>
-        <script src="/js/admin-customer.js"></script>
-    </body>
+            <% } %>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script src="/js/admin-navbar.js"></script>
+    <script src="/js/admin-customer.js"></script>
+</body>
 </html>
