@@ -134,7 +134,7 @@ function drawCustomerInfo(doc, colors, order, user, isAdmin) {
       .font("Helvetica")
       .fontSize(10)
       .fillColor(colors.text)
-      .text(customerUser.name, 40, doc.y)
+      .text(customerUser?.name ?? "Unknown user", 40, doc.y)
       .text(address.address || address.addressLine1 || "", 40, doc.y + 3)
 
     if (address.addressLine2) {
@@ -144,14 +144,14 @@ function drawCustomerInfo(doc, colors, order, user, isAdmin) {
     doc
       .text(`${address.city}, ${address.state} - ${address.pincode || address.zipCode || ""}`, 40, doc.y + 3)
       .text(`Phone: ${address.mobile || address.phone || customerUser.mobile || "N/A"}`, 40, doc.y + 3)
-      .text(`Email: ${customerUser.email}`, 40, doc.y + 3)
+      .text(`Email: ${customerUser?.email ?? "N/A"}`, 40, doc.y + 3)
   } else {
     doc
       .font("Helvetica")
       .fontSize(10)
       .fillColor(colors.text)
       .text(customerUser.name, 40, doc.y)
-      .text(`Email: ${customerUser.email}`, 40, doc.y + 3)
+      .text(`Email: ${customerUser?.email ?? "N/A"}`, 40, doc.y + 3)
       .text(`Phone: ${customerUser.mobile || "N/A"}`, 40, doc.y + 3)
   }
 

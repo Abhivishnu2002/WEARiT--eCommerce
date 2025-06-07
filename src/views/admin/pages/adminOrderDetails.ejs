@@ -203,7 +203,7 @@
                                         </div>
                                         <div class="info-content">
                                             <div class="info-label">Name</div>
-                                            <div class="info-value"><%= order.user.name %></div>
+                                            <div class="info-value"><%= order.user?.name ?? 'Unknown user' %></div>
                                         </div>
                                     </div>
                                     <div class="info-item">
@@ -212,7 +212,7 @@
                                         </div>
                                         <div class="info-content">
                                             <div class="info-label">Email</div>
-                                            <div class="info-value"><%= order.user.email %></div>
+                                            <div class="info-value"><%= order.user?.email ?? 'N/A' %></div>
                                         </div>
                                     </div>
                                     <div class="info-item">
@@ -221,7 +221,7 @@
                                         </div>
                                         <div class="info-content">
                                             <div class="info-label">Phone</div>
-                                            <div class="info-value"><%= order.user.mobile || 'N/A' %></div>
+                                            <div class="info-value"><%= order.user?.mobile ?? 'N/A' %></div>
                                         </div>
                                     </div>
                                 </div>
