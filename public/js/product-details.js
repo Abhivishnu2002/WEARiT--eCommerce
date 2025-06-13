@@ -8,13 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const wishlistBtn = document.querySelector(".btn-wishlist")
   const wishlistIcon = wishlistBtn ? wishlistBtn.querySelector("i") : null
   let selectedSize = null
+
+  // Initialize default size selection
   if (sizeButtons.length > 0) {
     const smallSizeBtn = Array.from(sizeButtons).find((btn) => btn.getAttribute("data-size").toLowerCase() === "s")
-
     const defaultSizeBtn = smallSizeBtn || sizeButtons[0]
     defaultSizeBtn.classList.add("active")
     selectedSize = defaultSizeBtn.getAttribute("data-size")
-
     updateVariantAvailability(selectedSize)
   }
 
@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     checkWishlistStatus()
   }
 
+  // Size button event listeners
   sizeButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
       sizeButtons.forEach((b) => b.classList.remove("active"))
@@ -31,25 +32,39 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   })
 
+  // Quantity control event listeners with proper cleanup
   if (decreaseBtn && increaseBtn && quantityInput) {
-    decreaseBtn.addEventListener("click", () => {
-      const currentValue = Number.parseInt(quantityInput.value, 10)
-      if (currentValue > 1) {
-        quantityInput.value = currentValue - 1
-      }
-    })
+    // Remove any existing event listeners first
+    const newDecreaseBtn = decreaseBtn.cloneNode(true)
+    const newIncreaseBtn = increaseBtn.cloneNode(true)
+    decreaseBtn.parentNode.replaceChild(newDecreaseBtn, decreaseBtn)
+    increaseBtn.parentNode.replaceChild(newIncreaseBtn, increaseBtn)
 
-    increaseBtn.addEventListener("click", () => {
-      const currentValue = Number.parseInt(quantityInput.value, 10)
-      const maxValue = Number.parseInt(quantityInput.getAttribute("max"), 10)
-      if (currentValue < maxValue) {
-        quantityInput.value = currentValue + 1
-      } else {
-        showAlert("warning", `Maximum available quantity is ${maxValue}`)
-      }
-    })
+    // Add fresh event listeners
+    newDecreaseBtn.addEventListener("click", handleDecrease)
+    newIncreaseBtn.addEventListener("click", handleIncrease)
   }
 
+  // Separate handler functions to avoid closure issues
+  function handleDecrease() {
+    const currentValue = parseInt(quantityInput.value, 10)
+    if (currentValue > 1) {
+      quantityInput.value = currentValue - 1
+    }
+  }
+
+  function handleIncrease() {
+    const currentValue = parseInt(quantityInput.value, 10)
+    const maxValue = parseInt(quantityInput.getAttribute("max"), 10)
+    
+    if (currentValue < maxValue) {
+      quantityInput.value = currentValue + 1
+    } else {
+      showAlert("warning", `Maximum available quantity is ${maxValue}`)
+    }
+  }
+
+  // Add to cart event listener
   if (addToCartBtn && !addToCartBtn.classList.contains("disabled")) {
     addToCartBtn.addEventListener("click", () => {
       if (!selectedSize) {
@@ -58,11 +73,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
-      const quantity = Number.parseInt(quantityInput.value, 10)
+      const quantity = parseInt(quantityInput.value, 10)
       addToCart(productId, selectedSize, quantity)
     })
   }
 
+  // Wishlist event listener
   if (wishlistBtn) {
     wishlistBtn.addEventListener("click", () => {
       if (!isAuthenticated()) {
@@ -75,13 +91,14 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  // Rest of your functions remain the same...
   function updateVariantAvailability(size) {
     if (!size) return
 
     const variant = window.productVariants.find((v) => v.size === size)
     if (variant) {
       quantityInput.setAttribute("max", variant.varientquatity)
-      if (Number.parseInt(quantityInput.value, 10) > variant.varientquatity) {
+      if (parseInt(quantityInput.value, 10) > variant.varientquatity) {
         quantityInput.value = variant.varientquatity
       }
       updatePriceDisplay(variant)
