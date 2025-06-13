@@ -43,7 +43,7 @@
             </nav>
 
             <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4 breadcrumb-section">
+            <div class="breadcrumb-section">
                 <h2 class="mb-0">Customer Management</h2>
                 <div class="header-stats">
                     <div class="stat-card">
@@ -54,7 +54,7 @@
             </div>
 
             <!-- Enhanced Filter Section -->
-            <div class="filters-container mb-4">
+            <div class="filters-container">
                 <div class="filters-header">
                     <h5 class="filters-title">
                         <i class="fas fa-filter me-2"></i>
@@ -86,80 +86,152 @@
                 </div>
             </div>
 
-            <!-- Customers Table -->
-            <div class="table-responsive customer-table mb-4">
-                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-                    <div>
-                        <h5 class="mb-0">Customers List</h5>
-                        <small class="text-muted">
-                            <%= totalUsers %> customer<%= totalUsers !== 1 ? 's' : '' %> found
-                        </small>
+            <!-- Desktop Table View -->
+            <div class="customer-table-container">
+                <div class="table-responsive customer-table mb-4">
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                        <div>
+                            <h5 class="mb-0">Customers List</h5>
+                            <small class="text-muted">
+                                <%= totalUsers %> customer<%= totalUsers !== 1 ? 's' : '' %> found
+                            </small>
+                        </div>
                     </div>
-                </div>
 
-                <% if (users && users.length > 0) { %>
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th>Orders</th>
-                                <th>Total Spent</th>
-                                <th>Wallet Balance</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% users.forEach(user => { %>
+                    <% if (users && users.length > 0) { %>
+                        <table class="table table-hover mb-0">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <div class="customer-info">
-                                            <div class="customer-avatar">
-                                                <% if (user.profileImage) { %>
-                                                    <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="w-100 h-100 rounded-circle">
-                                                <% } else { %>
-                                                    <i class="fas fa-user"></i>
-                                                <% } %>
-                                            </div>
-                                            <div>
-                                                <p class="customer-name"><%= user.name %></p>
-                                                <p class="customer-email"><%= user.email %></p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><%= user.mobile || 'N/A' %></td>
-                                    <td><%= user.orderCount || 0 %></td>
-                                    <td>₹<%= user.totalSpent ? user.totalSpent.toFixed(2) : '0.00' %></td>
-                                    <td>₹<%= user.wallet && user.wallet.balance ? user.wallet.balance.toFixed(2) : '0.00' %></td>
-                                    <td>
-                                        <% if (user.isBlocked) { %>
-                                            <span class="status-badge status-blocked">
-                                                <i class="fas fa-ban me-1"></i>Blocked
-                                            </span>
-                                        <% } else { %>
-                                            <span class="status-badge status-active">
-                                                <i class="fas fa-check-circle me-1"></i>Active
-                                            </span>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <a href="/admin/customerdetails/<%= user._id %>" class="action-btn" title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <form action="/admin/block-unblock-user/<%= user._id %>?returnTo=list&page=<%= currentPage %><%= searchQuery ? `&search=${searchQuery}` : '' %>" 
-                                                  method="POST" class="toggle-form d-inline">
-                                                <button type="submit" class="action-btn" title="<%= user.isBlocked ? 'Unblock User' : 'Block User' %>">
-                                                    <i class="fas <%= user.isBlocked ? 'fa-unlock' : 'fa-ban' %>"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    <th>Customer</th>
+                                    <th>Phone</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>Wallet Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <% users.forEach(user => { %>
+                                    <tr>
+                                        <td>
+                                            <div class="customer-info">
+                                                <div class="customer-avatar">
+                                                    <% if (user.profileImage) { %>
+                                                        <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="w-100 h-100 rounded-circle">
+                                                    <% } else { %>
+                                                        <i class="fas fa-user"></i>
+                                                    <% } %>
+                                                </div>
+                                                <div>
+                                                    <p class="customer-name"><%= user.name %></p>
+                                                    <p class="customer-email"><%= user.email %></p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><%= user.mobile || 'N/A' %></td>
+                                        <td><%= user.orderCount || 0 %></td>
+                                        <td>₹<%= user.totalSpent ? user.totalSpent.toFixed(2) : '0.00' %></td>
+                                        <td>₹<%= user.wallet && user.wallet.balance ? user.wallet.balance.toFixed(2) : '0.00' %></td>
+                                        <td>
+                                            <% if (user.isBlocked) { %>
+                                                <span class="status-badge status-blocked">
+                                                    <i class="fas fa-ban me-1"></i>Blocked
+                                                </span>
+                                            <% } else { %>
+                                                <span class="status-badge status-active">
+                                                    <i class="fas fa-check-circle me-1"></i>Active
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="/admin/customerdetails/<%= user._id %>" class="action-btn" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <form action="/admin/block-unblock-user/<%= user._id %>?returnTo=list&page=<%= currentPage %><%= searchQuery ? `&search=${searchQuery}` : '' %>" 
+                                                      method="POST" class="toggle-form d-inline">
+                                                    <button type="submit" class="action-btn" title="<%= user.isBlocked ? 'Unblock User' : 'Block User' %>">
+                                                        <i class="fas <%= user.isBlocked ? 'fa-unlock' : 'fa-ban' %>"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Customers Found</h5>
+                            <p class="text-muted">No customers match your search criteria.</p>
+                            <a href="/admin/customer" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-2"></i>Reset Filters
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Mobile Cards View -->
+            <div class="customer-cards-container">
+                <% if (users && users.length > 0) { %>
+                    <% users.forEach(user => { %>
+                        <div class="customer-card">
+                            <div class="customer-card-header">
+                                <div class="customer-card-title">
+                                    <div class="customer-avatar me-2">
+                                        <% if (user.profileImage) { %>
+                                            <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="w-100 h-100 rounded-circle">
+                                        <% } else { %>
+                                            <i class="fas fa-user"></i>
+                                        <% } %>
+                                    </div>
+                                    <%= user.name %>
+                                </div>
+                                <% if (user.isBlocked) { %>
+                                    <span class="badge bg-danger">Blocked</span>
+                                <% } else { %>
+                                    <span class="badge bg-success">Active</span>
+                                <% } %>
+                            </div>
+                            <div class="customer-card-body">
+                                <div class="customer-card-row">
+                                    <span class="customer-card-label">Email:</span>
+                                    <span class="customer-card-value"><%= user.email %></span>
+                                </div>
+                                <div class="customer-card-row">
+                                    <span class="customer-card-label">Phone:</span>
+                                    <span class="customer-card-value"><%= user.mobile || 'N/A' %></span>
+                                </div>
+                                <div class="customer-card-row">
+                                    <span class="customer-card-label">Orders:</span>
+                                    <span class="customer-card-value"><%= user.orderCount || 0 %></span>
+                                </div>
+                                <div class="customer-card-row">
+                                    <span class="customer-card-label">Total Spent:</span>
+                                    <span class="customer-card-value">₹<%= user.totalSpent ? user.totalSpent.toFixed(2) : '0.00' %></span>
+                                </div>
+                                <div class="customer-card-row">
+                                    <span class="customer-card-label">Wallet Balance:</span>
+                                    <span class="customer-card-value">₹<%= user.wallet && user.wallet.balance ? user.wallet.balance.toFixed(2) : '0.00' %></span>
+                                </div>
+                            </div>
+                            <div class="customer-card-actions">
+                                <a href="/admin/customerdetails/<%= user._id %>" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </a>
+                                <form action="/admin/block-unblock-user/<%= user._id %>?returnTo=list&page=<%= currentPage %><%= searchQuery ? `&search=${searchQuery}` : '' %>" 
+                                      method="POST" class="toggle-form">
+                                    <button type="submit" class="btn btn-sm <%= user.isBlocked ? 'btn-success' : 'btn-danger' %>">
+                                        <i class="fas <%= user.isBlocked ? 'fa-unlock' : 'fa-ban' %> me-1"></i>
+                                        <%= user.isBlocked ? 'Unblock' : 'Block' %>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <% }); %>
                 <% } else { %>
                     <div class="text-center py-5">
                         <i class="fas fa-users fa-3x text-muted mb-3"></i>

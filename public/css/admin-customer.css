@@ -1,4 +1,18 @@
-/* Admin Customer CSS - Aligned with Orders Page */
+/* Admin Customer CSS - Enhanced Responsive Design */
+
+/* CSS Variables for Consistency */
+:root {
+  --primary-color: #212529;
+  --secondary-color: #f8f9fa;
+  --accent-color: #667eea;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --border-color: #dee2e6;
+  --text-muted: #6c757d;
+}
 
 /* Base Styles */
 body {
@@ -8,7 +22,7 @@ body {
   line-height: 1.6;
 }
 
-/* Main Layout - Matching Orders Page */
+/* Main Layout */
 .admin-main {
   margin-left: 250px;
   min-height: 100vh;
@@ -28,6 +42,9 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .breadcrumb-section h2 {
@@ -178,60 +195,6 @@ body {
   color: #721c24;
 }
 
-/* Toggle Switch */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 30px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
-  border-radius: 34px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 22px;
-  width: 22px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: 0.4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #f44336;
-}
-
-input:checked + .slider:before {
-  transform: translateX(30px);
-}
-
-.switch-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  display: block;
-  margin-top: 5px;
-}
-
 /* Action Buttons */
 .action-buttons {
   display: flex;
@@ -276,12 +239,60 @@ input:checked + .slider:before {
   border-color: #dee2e6;
 }
 
-/* Search Section */
-.search-section {
+/* Mobile Card Layout */
+.customer-cards-container {
+  display: none;
+}
+
+.customer-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.customer-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--light-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.customer-card-title {
+  font-weight: 600;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.customer-card-body {
+  padding: 1rem;
+}
+
+.customer-card-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.customer-card-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.customer-card-value {
+  font-weight: 500;
+}
+
+.customer-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Responsive Design */
@@ -295,54 +306,93 @@ input:checked + .slider:before {
   }
 }
 
-@media (max-width: 768px) {
-  .admin-content {
-    padding: 1rem;
-  }
-
-  .search-section {
+@media (max-width: 991.98px) {
+  .breadcrumb-section {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 
-  .search-section > div,
-  .search-section > form {
-    width: 100%;
+  .customer-table-container {
+    display: none;
   }
 
-  .table-responsive {
-    font-size: 0.875rem;
+  .customer-cards-container {
+    display: block;
   }
 
-  .action-buttons {
+  .filters-content .row {
     flex-direction: column;
-    gap: 0.25rem;
+  }
+
+  .filters-content .col-md-8,
+  .filters-content .col-md-4 {
+    width: 100%;
+    margin-bottom: 1rem;
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 767.98px) {
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem 1rem;
+    min-width: 100px;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .filters-content {
+    padding: 1rem;
+  }
+
+  .customer-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .customer-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .customer-card-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575.98px) {
   .admin-content {
     padding: 0.75rem;
   }
 
-  .table thead th,
-  .table tbody td {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
+  .customer-card-row {
+    flex-direction: column;
+    gap: 0.25rem;
   }
 
-  .switch {
-    width: 50px;
-    height: 25px;
+  .customer-card-label {
+    font-size: 0.875rem;
   }
 
-  .slider:before {
-    height: 17px;
-    width: 17px;
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Desktop Table View */
+@media (min-width: 992px) {
+  .customer-cards-container {
+    display: none;
   }
 
-  input:checked + .slider:before {
-    transform: translateX(25px);
+  .customer-table-container {
+    display: block;
   }
 }

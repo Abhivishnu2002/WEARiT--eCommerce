@@ -18,7 +18,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="/css/admin-navbar.css">
     <link rel="stylesheet" href="/css/admin-coupons.css">
-    <link rel="stylesheet" href="/css/toast-notifications.css">
 </head>
 <body>
     <%- include('../partials/navbar', {activePage: 'coupons'}) %>
@@ -35,7 +34,7 @@
                 </ol>
             </nav>
 
-            <div class="d-flex justify-content-between align-items-center mb-4 breadcrumb-section">
+            <div class="breadcrumb-section">
                 <h2 class="mb-0">Coupon Management</h2>
                 <a href="/admin/coupons/add" class="btn btn-primary">
                     Add New Coupon <i class="fas fa-plus ms-2"></i>
@@ -104,102 +103,206 @@
                 </div>
             </form>
 
-            <div class="table-responsive coupon-table mb-4">
-                <table class="table table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Discount</th>
-                            <th>Min. Purchase</th>
-                            <th>Validity</th>
-                            <th>Usage</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (coupons && coupons.length > 0) { %>
-                            <% coupons.forEach(coupon => { %>
-                                <tr>
-                                    <td class="coupon-code">
-                                        <%= coupon.code %>
-                                        <% if (coupon.userSpecific) { %>
-                                            <span class="badge bg-info ms-1" title="User-specific coupon">
-                                                <i class="fas fa-user"></i>
+            <!-- Desktop Table View -->
+            <div class="coupon-table-container">
+                <div class="table-responsive coupon-table mb-4">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Discount</th>
+                                <th>Min. Purchase</th>
+                                <th>Validity</th>
+                                <th>Usage</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (coupons && coupons.length > 0) { %>
+                                <% coupons.forEach(coupon => { %>
+                                    <tr>
+                                        <td class="coupon-code">
+                                            <%= coupon.code %>
+                                            <% if (coupon.userSpecific) { %>
+                                                <span class="badge bg-info ms-1" title="User-specific coupon">
+                                                    <i class="fas fa-user"></i>
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue %>
+                                            <% if (coupon.discountType === 'percentage' && coupon.maximumDiscount) { %>
+                                                <small class="text-muted">(max: ₹<%= coupon.maximumDiscount %>)</small>
+                                            <% } %>
+                                        </td>
+                                        <td>₹<%= coupon.minimumPurchase %></td>
+                                        <td>
+                                            <span class="validity-dates">
+                                                <%= new Date(coupon.startDate).toLocaleDateString() %> to <%= new Date(coupon.endDate).toLocaleDateString() %>
                                             </span>
-                                        <% } %>
-                                    </td>
-                                    <td>
+                                        </td>
+                                        <td>
+                                            <div class="usage-count">
+                                                <%= coupon.usedCount %>/<%= coupon.usageLimit %>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <% 
+                                            let canToggle = true;
+                                            let isDisabled = "";
+                                            let tooltipText = "";
+                                            
+                                            if (coupon.status === "Expired") {
+                                                canToggle = false;
+                                                isDisabled = "disabled";
+                                                tooltipText = "Cannot activate expired coupons";
+                                            } else if (coupon.status === "Limit Reached") {
+                                                canToggle = false;
+                                                isDisabled = "disabled";
+                                                tooltipText = "Usage limit reached";
+                                            }
+                                            %>
+                                            
+                                            <div class="d-flex align-items-center">
+                                                <div class="form-check form-switch me-2">
+                                                    <input 
+                                                        class="form-check-input coupon-status-toggle" 
+                                                        type="checkbox" 
+                                                        role="switch" 
+                                                        id="couponStatus<%= coupon._id %>" 
+                                                        data-id="<%= coupon._id %>" 
+                                                        data-code="<%= coupon.code %>"
+                                                        <%= coupon.isActive ? 'checked' : '' %>
+                                                        <%= isDisabled %>
+                                                        <%= tooltipText ? 'title="' + tooltipText + '"' : '' %>
+                                                    >
+                                                </div>
+                                                <span class="status-badge badge bg-<%= coupon.status === 'Active' ? 'success' : (coupon.status === 'Inactive' ? 'danger' : (coupon.status === 'Expired' ? 'warning' : 'info')) %>">
+                                                    <%= coupon.status %>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="/admin/coupons/edit/<%= coupon._id %>" class="action-btn">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No coupons found</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile Cards View -->
+            <div class="coupon-cards-container">
+                <% if (coupons && coupons.length > 0) { %>
+                    <% coupons.forEach(coupon => { %>
+                        <div class="coupon-card">
+                            <div class="coupon-card-header">
+                                <div class="coupon-card-code">
+                                    <%= coupon.code %>
+                                    <% if (coupon.userSpecific) { %>
+                                        <span class="badge bg-info ms-1" title="User-specific coupon">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                    <% } %>
+                                </div>
+                                <span class="badge bg-<%= coupon.status === 'Active' ? 'success' : (coupon.status === 'Inactive' ? 'danger' : (coupon.status === 'Expired' ? 'warning' : 'info')) %>">
+                                    <%= coupon.status %>
+                                </span>
+                            </div>
+                            <div class="coupon-card-body">
+                                <div class="coupon-card-row">
+                                    <span class="coupon-card-label">Discount:</span>
+                                    <span class="coupon-card-value">
                                         <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue %>
                                         <% if (coupon.discountType === 'percentage' && coupon.maximumDiscount) { %>
                                             <small class="text-muted">(max: ₹<%= coupon.maximumDiscount %>)</small>
                                         <% } %>
-                                    </td>
-                                    <td>₹<%= coupon.minimumPurchase %></td>
-                                    <td>
-                                        <span class="validity-dates">
-                                            <%= new Date(coupon.startDate).toLocaleDateString() %> to <%= new Date(coupon.endDate).toLocaleDateString() %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="usage-count">
+                                    </span>
+                                </div>
+                                <div class="coupon-card-row">
+                                    <span class="coupon-card-label">Min. Purchase:</span>
+                                    <span class="coupon-card-value">₹<%= coupon.minimumPurchase %></span>
+                                </div>
+                                <div class="coupon-card-row">
+                                    <span class="coupon-card-label">Validity:</span>
+                                    <span class="coupon-card-value">
+                                        <%= new Date(coupon.startDate).toLocaleDateString() %> to <%= new Date(coupon.endDate).toLocaleDateString() %>
+                                    </span>
+                                </div>
+                                <div class="coupon-card-row">
+                                    <span class="coupon-card-label">Usage:</span>
+                                    <span class="coupon-card-value">
+                                        <span class="usage-count">
                                             <%= coupon.usedCount %>/<%= coupon.usageLimit %>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <% 
-                                        let canToggle = true;
-                                        let isDisabled = "";
-                                        let tooltipText = "";
-                                        
-                                        // Check if coupon can be toggled
-                                        if (coupon.status === "Expired") {
-                                            canToggle = false;
-                                            isDisabled = "disabled";
-                                            tooltipText = "Cannot activate expired coupons";
-                                        } else if (coupon.status === "Limit Reached") {
-                                            canToggle = false;
-                                            isDisabled = "disabled";
-                                            tooltipText = "Usage limit reached";
-                                        }
-                                        %>
-                                        
-                                        <div class="d-flex align-items-center">
-                                            <div class="form-check form-switch me-2">
-                                                <input 
-                                                    class="form-check-input coupon-status-toggle" 
-                                                    type="checkbox" 
-                                                    role="switch" 
-                                                    id="couponStatus<%= coupon._id %>" 
-                                                    data-id="<%= coupon._id %>" 
-                                                    data-code="<%= coupon.code %>"
-                                                    <%= coupon.isActive ? 'checked' : '' %>
-                                                    <%= isDisabled %>
-                                                    <%= tooltipText ? 'title="' + tooltipText + '"' : '' %>
-                                                >
-                                            </div>
-                                            <span class="status-badge badge bg-<%= coupon.status === 'Active' ? 'success' : (coupon.status === 'Inactive' ? 'danger' : (coupon.status === 'Expired' ? 'warning' : 'info')) %>">
-                                                <%= coupon.status %>
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <a href="/admin/coupons/edit/<%= coupon._id %>" class="action-btn">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <!-- Delete button removed to streamline UI and prevent accidental deletions -->
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="7" class="text-center py-4">No coupons found</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="coupon-card-actions">
+                                <div class="coupon-card-toggle">
+                                    <% 
+                                    let canToggle = true;
+                                    let isDisabled = "";
+                                    let tooltipText = "";
+                                    
+                                    if (coupon.status === "Expired") {
+                                        canToggle = false;
+                                        isDisabled = "disabled";
+                                        tooltipText = "Cannot activate expired coupons";
+                                    } else if (coupon.status === "Limit Reached") {
+                                        canToggle = false;
+                                        isDisabled = "disabled";
+                                        tooltipText = "Usage limit reached";
+                                    }
+                                    %>
+                                    
+                                    <div class="form-check form-switch">
+                                        <input 
+                                            class="form-check-input coupon-status-toggle" 
+                                            type="checkbox" 
+                                            role="switch" 
+                                            id="couponStatusMobile<%= coupon._id %>" 
+                                            data-id="<%= coupon._id %>" 
+                                            data-code="<%= coupon.code %>"
+                                            <%= coupon.isActive ? 'checked' : '' %>
+                                            <%= isDisabled %>
+                                            <%= tooltipText ? 'title="' + tooltipText + '"' : '' %>
+                                        >
+                                        <label class="form-check-label" for="couponStatusMobile<%= coupon._id %>">
+                                            <%= coupon.isActive ? 'Active' : 'Inactive' %>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="coupon-card-buttons">
+                                    <a href="/admin/coupons/edit/<%= coupon._id %>" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i> Edit
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-5">
+                        <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Coupons Found</h5>
+                        <p class="text-muted">No coupons match your current filter criteria.</p>
+                        <a href="/admin/coupons" class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-2"></i>Reset Filters
+                        </a>
+                    </div>
+                <% } %>
             </div>
             
+            <!-- Pagination -->
             <% if (totalPages > 1) { %>
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -271,8 +374,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script src="/js/admin-navbar.js"></script>
-    <script src="/js/toast-notifications.js"></script>
-    <script src="/js/admin-toast-handler.js"></script>
     <script src="/js/admin-coupons.js"></script>
 </body>
 </html>
