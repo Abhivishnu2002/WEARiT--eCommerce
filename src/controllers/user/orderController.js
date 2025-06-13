@@ -195,6 +195,14 @@ const cancelProduct = async (req, res) => {
     productItem.cancelledAt = new Date()
     productItem.cancelledBy = req.user._id
 
+    
+    if(nonCancellableStatuses === "cancelled"){
+      const product = await Product.findById(productItem.product._id).limit(1)
+      if(product.offer > 80){
+        order.refundAmount === 1000;
+      }
+    }
+
     const product = await Product.findById(productItem.product._id).session(session)
     if (product) {
       const variant = product.variants.find((v) => v.size === productItem.variant.size)
