@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const wishlistIcon = wishlistBtn ? wishlistBtn.querySelector("i") : null
   let selectedSize = null
 
-  // Initialize default size selection
   if (sizeButtons.length > 0) {
     const smallSizeBtn = Array.from(sizeButtons).find((btn) => btn.getAttribute("data-size").toLowerCase() === "s")
     const defaultSizeBtn = smallSizeBtn || sizeButtons[0]
@@ -22,7 +21,6 @@ document.addEventListener("DOMContentLoaded", () => {
     checkWishlistStatus()
   }
 
-  // Size button event listeners
   sizeButtons.forEach((btn) => {
     btn.addEventListener("click", function () {
       sizeButtons.forEach((b) => b.classList.remove("active"))
@@ -32,20 +30,16 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   })
 
-  // Quantity control event listeners with proper cleanup
   if (decreaseBtn && increaseBtn && quantityInput) {
-    // Remove any existing event listeners first
     const newDecreaseBtn = decreaseBtn.cloneNode(true)
     const newIncreaseBtn = increaseBtn.cloneNode(true)
     decreaseBtn.parentNode.replaceChild(newDecreaseBtn, decreaseBtn)
     increaseBtn.parentNode.replaceChild(newIncreaseBtn, increaseBtn)
 
-    // Add fresh event listeners
     newDecreaseBtn.addEventListener("click", handleDecrease)
     newIncreaseBtn.addEventListener("click", handleIncrease)
   }
 
-  // Separate handler functions to avoid closure issues
   function handleDecrease() {
     const currentValue = parseInt(quantityInput.value, 10)
     if (currentValue > 1) {
@@ -64,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Add to cart event listener
   if (addToCartBtn && !addToCartBtn.classList.contains("disabled")) {
     addToCartBtn.addEventListener("click", () => {
       if (!selectedSize) {
@@ -78,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // Wishlist event listener
   if (wishlistBtn) {
     wishlistBtn.addEventListener("click", () => {
       if (!isAuthenticated()) {
@@ -91,7 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // Rest of your functions remain the same...
   function updateVariantAvailability(size) {
     if (!size) return
 
