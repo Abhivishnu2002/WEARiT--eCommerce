@@ -233,12 +233,7 @@ const deleteCategory = async (req, res) => {
       })
     }
 
-    if(productsUsingCategory<5){
-      await Product.findByIdAndDelete(productsUsingCategory.productId)
-    }
     await Category.findByIdAndDelete(categoryId)
-
-    
     return res.status(200).json({
       success: true,
       message: "Category deleted successfully",

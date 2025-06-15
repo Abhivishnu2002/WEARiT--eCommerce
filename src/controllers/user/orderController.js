@@ -107,6 +107,156 @@ function normalizePaymentMethod(order) {
   return order.paymentMethod || "COD"
 }
 
+// Enhanced order failure page with comprehensive error handling
+const orderFailure = async (req, res) => {
+  try {
+    const orderId = req.params.id
+
+    if (!orderId) {
+      req.flash("error_msg", "Order ID is missing")
+      return res.redirect("/orders")
+    }
+
+    const order = await Order.findOne({
+      _id: orderId,
+      user: req.user._id,
+    }).populate("address")
+
+    if (!order) {
+      req.flash("error_msg", "Order not found")
+      return res.redirect("/orders")
+    }
+
+    // Normalize payment method
+    if (!order.paymentMethod && order.paymentMentod) {
+      order.paymentMethod = order.paymentMentod
+      await order.save()
+    }
+
+    if (order.paymentStatus !== "failed") {
+      order.paymentStatus = "failed"
+      await order.save()
+    }
+
+    // Get the latest failed transaction for this order
+    const failedTransaction = await Transaction.findOne({
+      order: orderId,
+      status: "failed",
+    }).sort({ createdAt: -1 })
+
+    // Determine error details
+    const errorDetails = {
+      code: "PAYMENT_FAILED",
+      message: "Payment failed",
+      userMessage: "Your payment could not be processed. Please try again.",
+      retryable: true,
+      suggestions: [
+        "Check your payment method details",
+        "Ensure sufficient balance in your account",
+        "Try a different payment method",
+        "Contact your bank if the issue persists",
+      ],
+    }
+
+    if (order.failureReason) {
+      errorDetails.message = order.failureReason
+
+      // Parse common error scenarios for better user experience
+      const failureReason = order.failureReason.toLowerCase()
+
+      if (failureReason.includes("insufficient")) {
+        errorDetails.code = "INSUFFICIENT_FUNDS"
+        errorDetails.userMessage = "Insufficient funds in your account."
+        errorDetails.suggestions = [
+          "Check your account balance",
+          "Add funds to your account",
+          "Try a different payment method",
+          "Use wallet balance if available",
+        ]
+      } else if (failureReason.includes("declined") || failureReason.includes("reject")) {
+        errorDetails.code = "CARD_DECLINED"
+        errorDetails.userMessage = "Your card was declined by the bank."
+        errorDetails.suggestions = [
+          "Contact your bank to authorize the transaction",
+          "Check if your card is active and not expired",
+          "Verify your card details are correct",
+          "Try a different card",
+        ]
+      } else if (failureReason.includes("network") || failureReason.includes("connection")) {
+        errorDetails.code = "NETWORK_ERROR"
+        errorDetails.userMessage = "Network connectivity issue during payment."
+        errorDetails.suggestions = [
+          "Check your internet connection",
+          "Try again in a few moments",
+          "Switch to a different network if possible",
+          "Contact support if the issue persists",
+        ]
+      } else if (failureReason.includes("timeout")) {
+        errorDetails.code = "TIMEOUT_ERROR"
+        errorDetails.userMessage = "Payment request timed out."
+        errorDetails.suggestions = [
+          "Try the payment again",
+          "Ensure stable internet connection",
+          "Complete the payment quickly when prompted",
+          "Contact support if timeouts continue",
+        ]
+      } else if (failureReason.includes("cancelled")) {
+        errorDetails.code = "USER_CANCELLED"
+        errorDetails.userMessage = "Payment was cancelled."
+        errorDetails.suggestions = [
+          "Complete the payment process",
+          "Don't close the payment window",
+          "Follow all payment prompts",
+          "Try again when ready",
+        ]
+      }
+    }
+
+    // Get additional transaction details if available
+    if (failedTransaction && failedTransaction.paymentDetails) {
+      const paymentDetails = failedTransaction.paymentDetails
+
+      if (paymentDetails.errorCode) {
+        errorDetails.code = paymentDetails.errorCode
+      }
+
+      if (paymentDetails.errorDescription) {
+        errorDetails.technicalMessage = paymentDetails.errorDescription
+      }
+    }
+
+    const wishlistCount = await getWishlistCount(req.user._id)
+    const user = await User.findById(req.user._id)
+
+    // Check available payment options for retry
+    const paymentOptions = {
+      hasWalletBalance: user.wallet && user.wallet.balance >= order.finalAmount,
+      canUseCOD: order.finalAmount < 1000,
+      walletBalance: user.wallet ? user.wallet.balance : 0,
+      orderAmount: order.finalAmount,
+    }
+
+    // Get order calculation details
+    const calculatedTotals = priceCalculator.calculateOrderDetailsTotals(order)
+
+    res.render("pages/order-failure", {
+      user: req.user,
+      order: order,
+      errorDetails: errorDetails,
+      paymentOptions: paymentOptions,
+      calculatedTotals: calculatedTotals,
+      wishlistCount,
+      activePage: "orders",
+      messages: req.flash(),
+    })
+  } catch (error) {
+    console.error("Error loading order failure page:", error)
+    req.flash("error_msg", "Error loading order failure page: " + error.message)
+    res.redirect("/orders")
+  }
+}
+
+// Rest of the existing methods remain the same...
 const cancelProduct = async (req, res) => {
   const session = await mongoose.startSession()
 
@@ -195,11 +345,10 @@ const cancelProduct = async (req, res) => {
     productItem.cancelledAt = new Date()
     productItem.cancelledBy = req.user._id
 
-    
-    if(nonCancellableStatuses === "cancelled"){
+    if (nonCancellableStatuses === "cancelled") {
       const product = await Product.findById(productItem.product._id).limit(1)
-      if(product.offer > 80){
-        order.refundAmount === 1000;
+      if (product.offer > 80) {
+        order.refundAmount === 1000
       }
     }
 
@@ -1387,54 +1536,6 @@ const orderSuccess = async (req, res) => {
   } catch (error) {
     console.error("Error loading order success page:", error)
     req.flash("error_msg", "Error loading order success page: " + error.message)
-    res.redirect("/orders")
-  }
-}
-
-const orderFailure = async (req, res) => {
-  try {
-    const orderId = req.params.id
-
-    if (!orderId) {
-      req.flash("error_msg", "Order ID is missing")
-      return res.redirect("/orders")
-    }
-
-    const order = await Order.findOne({
-      _id: orderId,
-      user: req.user._id,
-    })
-
-    if (!order) {
-      req.flash("error_msg", "Order not found")
-      return res.redirect("/orders")
-    }
-
-    if (!order.paymentMethod && order.paymentMentod) {
-      order.paymentMethod = order.paymentMentod
-      await order.save()
-    }
-
-    if (order.paymentStatus !== "failed") {
-      order.paymentStatus = "failed"
-      await order.save()
-    }
-
-    const wishlistCount = await getWishlistCount(req.user._id)
-    const user = await User.findById(req.user._id)
-    const hasWalletBalance = user.wallet && user.wallet.balance >= order.finalAmount
-
-    res.render("pages/order-failure", {
-      user: req.user,
-      order: order,
-      wishlistCount,
-      hasWalletBalance,
-      activePage: "orders",
-      messages: req.flash(),
-    })
-  } catch (error) {
-    console.error("Error loading order failure page:", error)
-    req.flash("error_msg", "Error loading order failure page: " + error.message)
     res.redirect("/orders")
   }
 }

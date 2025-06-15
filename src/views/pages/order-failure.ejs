@@ -12,260 +12,520 @@
   <link rel="stylesheet" href="/css/header.css" />
   <link rel="stylesheet" href="/css/footer.css" />
   <link rel="stylesheet" href="/css/order-flow.css" />
+  <style>
+    .failure-container {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .failure-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      padding: 3rem;
+      max-width: 800px;
+      width: 100%;
+      margin: 2rem;
+    }
+    
+    .failure-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+      animation: pulse 2s infinite;
+    }
+    
+    .failure-icon i {
+      font-size: 2.5rem;
+      color: white;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .error-code {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+    
+    .suggestions-list {
+      background: #f8f9fa;
+      border-left: 4px solid #007bff;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .suggestions-list ul {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    
+    .suggestions-list li {
+      margin-bottom: 0.5rem;
+      color: #495057;
+    }
+    
+    .payment-options {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .payment-option {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .payment-option:hover {
+      border-color: #007bff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+    }
+    
+    .payment-option.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #f8f9fa;
+    }
+    
+    .payment-option.disabled:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: #e9ecef;
+    }
+    
+    .retry-btn {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border: none;
+      border-radius: 50px;
+      padding: 1rem 2.5rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+    }
+    
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+    }
+    
+    .order-summary {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0;
+    }
+    
+    .summary-row.total {
+      border-top: 2px solid #dee2e6;
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    .loading-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 300px;
+    }
+  </style>
 </head>
 <body>
   <%- include('../partials/header') %>
   
-  <div class="order-flow-container">
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <div class="order-flow-card">
-          <div class="order-flow-header">
-            <div class="status-icon failure">
-              <i class="bi bi-x-circle-fill"></i>
-            </div>
-            <h1 class="order-flow-title">Payment Failed</h1>
-            <p class="order-flow-subtitle">We're sorry, but there was an issue processing your payment. Your order has not been confirmed.</p>
-          </div>
-          
-          <% if (messages && messages.error_msg) { %>
-          <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle me-2"></i>
-            <%= messages.error_msg %>
-          </div>
+  <div class="failure-container">
+    <div class="failure-card">
+      <!-- Failure Icon -->
+      <div class="failure-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      
+      <!-- Main Error Message -->
+      <div class="text-center mb-4">
+        <h1 class="h2 text-danger mb-3">Payment Failed</h1>
+        <p class="lead text-muted mb-0">
+          <% if (typeof errorDetails !== 'undefined' && errorDetails.userMessage) { %>
+            <%= errorDetails.userMessage %>
+          <% } else { %>
+            We couldn't process your payment. Please try again.
           <% } %>
-          
-          <div class="order-details-card">
-            <h5 class="order-details-title">Order Details</h5>
-            
-            <div class="order-detail-row">
-              <span class="order-detail-label">Order ID:</span>
-              <span class="order-detail-value"><%= order.orderID %></span>
+        </p>
+      </div>
+      
+      <!-- Order Information -->
+      <div class="text-center mb-4">
+        <p class="mb-1"><strong>Order ID:</strong> <%= order.orderID %></p>
+        <p class="mb-0"><strong>Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
+      </div>
+      
+      <!-- Error Details -->
+      <% if (typeof errorDetails !== 'undefined' && errorDetails.code && errorDetails.code !== 'PAYMENT_FAILED') { %>
+      <div class="error-code">
+        <strong>Error Code:</strong> <%= errorDetails.code %><br>
+        <% if (errorDetails.technicalMessage) { %>
+        <strong>Details:</strong> <%= errorDetails.technicalMessage %>
+        <% } %>
+      </div>
+      <% } %>
+      
+      <!-- Suggestions -->
+      <% if (typeof errorDetails !== 'undefined' && errorDetails.suggestions && errorDetails.suggestions.length > 0) { %>
+      <div class="suggestions-list">
+        <h6 class="mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>What you can try:</h6>
+        <ul>
+          <% errorDetails.suggestions.forEach(suggestion => { %>
+          <li><%= suggestion %></li>
+          <% }); %>
+        </ul>
+      </div>
+      <% } %>
+      
+      <!-- Payment Options for Retry -->
+      <% if (typeof errorDetails === 'undefined' || errorDetails.retryable !== false) { %>
+      <div class="payment-options">
+        <h5 class="mb-3">Choose a payment method to retry:</h5>
+        
+        <!-- Razorpay Option -->
+        <div class="payment-option" data-method="razorpay">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-credit-card text-primary me-3 fs-4"></i>
+            <div>
+              <h6 class="mb-1">Credit/Debit Card, UPI, Net Banking</h6>
+              <small class="text-muted">Secure payment with Razorpay</small>
             </div>
-            
-            <div class="order-detail-row">
-              <span class="order-detail-label">Order Date:</span>
-              <span class="order-detail-value"><%= new Date(order.orderDate).toLocaleString() %></span>
-            </div>
-            
-            <div class="order-detail-row">
-              <span class="order-detail-label">Total Amount:</span>
-              <span class="order-detail-value">₹<%= order.finalAmount.toFixed(2) %></span>
-            </div>
-            
-            <div class="order-detail-row">
-              <span class="order-detail-label">Payment Method:</span>
-              <span class="order-detail-value">
-                <% if (order.paymentMethod === 'COD') { %>
-                  Cash on Delivery
-                <% } else if (order.paymentMethod === 'paypal') { %>
-                  PayPal
-                <% } else if (order.paymentMethod === 'wallet') { %>
-                  Wallet Payment
-                <% } else { %>
-                  <%= order.paymentMethod.charAt(0).toUpperCase() + order.paymentMethod.slice(1) %>
-                <% } %>
-              </span>
-            </div>
-            
-            <div class="order-detail-row">
-              <span class="order-detail-label">Payment Status:</span>
-              <span class="order-detail-value text-danger">Failed</span>
-            </div>
-          </div>
-          
-          <div class="action-buttons">
-            <button id="retryPaymentBtn" class="btn btn-primary">
-              <i class="bi bi-arrow-repeat me-2"></i> Retry Payment
-            </button>
-            <a href="/orders/details/<%= order._id %>" class="btn btn-outline-primary">
-              <i class="bi bi-file-text me-2"></i> View Order Details
-            </a>
           </div>
         </div>
+        
+        <!-- PayPal Option -->
+        <div class="payment-option" data-method="paypal">
+          <div class="d-flex align-items-center">
+            <i class="fab fa-paypal text-primary me-3 fs-4"></i>
+            <div>
+              <h6 class="mb-1">PayPal</h6>
+              <small class="text-muted">Pay securely with PayPal</small>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Wallet Option -->
+        <% if (typeof paymentOptions !== 'undefined' && paymentOptions.hasWalletBalance) { %>
+        <div class="payment-option" data-method="wallet">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-wallet text-success me-3 fs-4"></i>
+            <div>
+              <h6 class="mb-1">Wallet Balance</h6>
+              <small class="text-success">Available: ₹<%= paymentOptions.walletBalance.toFixed(2) %></small>
+            </div>
+          </div>
+        </div>
+        <% } else if (typeof paymentOptions !== 'undefined') { %>
+        <div class="payment-option disabled">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-wallet text-muted me-3 fs-4"></i>
+            <div>
+              <h6 class="mb-1 text-muted">Wallet Balance</h6>
+              <small class="text-danger">Insufficient balance (₹<%= paymentOptions.walletBalance.toFixed(2) %> available)</small>
+            </div>
+          </div>
+        </div>
+        <% } %>
+        
+        <!-- COD Option -->
+        <% if (typeof paymentOptions !== 'undefined' && paymentOptions.canUseCOD) { %>
+        <div class="payment-option" data-method="COD">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-money-bill-wave text-warning me-3 fs-4"></i>
+            <div>
+              <h6 class="mb-1">Cash on Delivery</h6>
+              <small class="text-muted">Pay when you receive your order</small>
+            </div>
+          </div>
+        </div>
+        <% } else if (typeof paymentOptions !== 'undefined') { %>
+        <div class="payment-option disabled">
+          <div class="d-flex align-items-center">
+            <i class="fas fa-money-bill-wave text-muted me-3 fs-4"></i>
+            <div>
+              <h6 class="mb-1 text-muted">Cash on Delivery</h6>
+              <small class="text-danger">Not available for orders ₹1000 and above</small>
+            </div>
+          </div>
+        </div>
+        <% } %>
       </div>
+      
+      <!-- Action Buttons -->
+      <div class="text-center mt-4">
+        <button id="retryPaymentBtn" class="btn btn-primary retry-btn me-3" disabled>
+          <i class="fas fa-redo me-2"></i>Retry Payment
+        </button>
+        <a href="/orders" class="btn btn-outline-secondary">
+          <i class="fas fa-list me-2"></i>View Orders
+        </a>
+      </div>
+      <% } else { %>
+      <!-- Non-retryable error -->
+      <div class="text-center mt-4">
+        <p class="text-muted mb-3">This payment cannot be retried automatically. Please contact support for assistance.</p>
+        <a href="/orders" class="btn btn-primary me-3">
+          <i class="fas fa-list me-2"></i>View Orders
+        </a>
+        <a href="/contact" class="btn btn-outline-secondary">
+          <i class="fas fa-headset me-2"></i>Contact Support
+        </a>
+      </div>
+      <% } %>
+      
+      <!-- Order Summary -->
+      <% if (typeof calculatedTotals !== 'undefined') { %>
+      <div class="order-summary">
+        <h6 class="mb-3">Order Summary</h6>
+        <div class="summary-row">
+          <span>Subtotal:</span>
+          <span>₹<%= calculatedTotals.itemsTotal.toFixed(2) %></span>
+        </div>
+        <% if (calculatedTotals.discount > 0) { %>
+        <div class="summary-row">
+          <span>Discount:</span>
+          <span class="text-success">-₹<%= calculatedTotals.discount.toFixed(2) %></span>
+        </div>
+        <% } %>
+        <% if (calculatedTotals.couponDiscount > 0) { %>
+        <div class="summary-row">
+          <span>Coupon Discount:</span>
+          <span class="text-success">-₹<%= calculatedTotals.couponDiscount.toFixed(2) %></span>
+        </div>
+        <% } %>
+        <div class="summary-row">
+          <span>Shipping:</span>
+          <span><%= calculatedTotals.shippingCharge === 0 ? 'Free' : '₹' + calculatedTotals.shippingCharge.toFixed(2) %></span>
+        </div>
+        <div class="summary-row total">
+          <span>Total:</span>
+          <span>₹<%= calculatedTotals.grandTotal.toFixed(2) %></span>
+        </div>
+      </div>
+      <% } %>
     </div>
   </div>
   
-  <!-- Payment Method Modal -->
-  <div class="modal fade" id="paymentMethodModal" tabindex="-1" aria-labelledby="paymentMethodModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="paymentMethodModalLabel">Select Payment Method</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div id="payment-modal-error" class="alert alert-danger mb-3 d-none"></div>
-          <form id="paymentMethodForm">
-            <div class="payment-method-card mb-3" data-method="paypal">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal" checked>
-                <label class="form-check-label" for="paymentMethodPaypal">
-                  <div class="d-flex align-items-center">
-                    <i class="fa-brands fa-paypal me-3 fs-4 text-primary"></i>
-                    <div>
-                      <span class="d-block fw-bold">PayPal</span>
-                      <small class="text-muted">Pay securely with PayPal</small>
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-            
-            <% if (hasWalletBalance) { %>
-            <div class="payment-method-card mb-3" data-method="wallet">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodWallet" value="wallet">
-                <label class="form-check-label" for="paymentMethodWallet">
-                  <div class="d-flex align-items-center">
-                    <i class="fa-solid fa-wallet me-3 fs-4"></i>
-                    <div>
-                      <span class="d-block fw-bold">Wallet Balance</span>
-                      <small class="text-success">
-                        Available: ₹<%= user.wallet.balance.toFixed(2) %>
-                      </small>
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-            <% } %>
-            
-            <div class="payment-method-card mb-3" data-method="COD">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD">
-                <label class="form-check-label" for="paymentMethodCOD">
-                  <div class="d-flex align-items-center">
-                    <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>
-                    <div>
-                      <span class="d-block fw-bold">Cash on Delivery</span>
-                      <small class="text-muted">Pay when you receive your order</small>
-                    </div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" id="confirmPaymentMethod">Proceed</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Loading Overlay -->
-  <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none">
-    <div class="position-absolute top-50 start-50 translate-middle text-white text-center">
-      <div class="spinner-border" role="status">
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner-border text-primary mb-3" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <p class="mt-2" id="loading-message">Processing your payment...</p>
-      <p class="small text-white-50">Please do not close this window</p>
+      <p class="mb-0" id="loading-message">Processing your payment...</p>
+      <small class="text-muted">Please do not close this window</small>
     </div>
   </div>
   
   <%- include('../partials/footer') %>
+  
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const retryPaymentBtn = document.getElementById('retryPaymentBtn');
-      const confirmPaymentMethodBtn = document.getElementById('confirmPaymentMethod');
-      const paymentMethodModal = new bootstrap.Modal(document.getElementById('paymentMethodModal'));
-      const loadingOverlay = document.getElementById('loading-overlay');
-      const loadingMessage = document.getElementById('loading-message');
-      const paymentModalError = document.getElementById('payment-modal-error');
-      const paymentMethodCards = document.querySelectorAll('.payment-method-card');
+      const paymentOptions = document.querySelectorAll('.payment-option:not(.disabled)')
+      const retryBtn = document.getElementById('retryPaymentBtn')
+      const loadingOverlay = document.getElementById('loading-overlay')
+      const loadingMessage = document.getElementById('loading-message')
+      let selectedPaymentMethod = null
       
-      // Handle payment method card clicks in modal
-      paymentMethodCards.forEach(function(card) {
-        card.addEventListener('click', function() {
-          const method = this.dataset.method;
-          const input = document.getElementById('paymentMethod' + method.charAt(0).toUpperCase() + method.slice(1));
+      // Validate required DOM elements
+      if (!loadingOverlay) {
+        console.warn('Loading overlay element not found')
+      }
+      if (!loadingMessage) {
+        console.warn('Loading message element not found')
+      }
+      if (!retryBtn) {
+        console.warn('Retry button element not found')
+        return
+      }
+      
+      // Payment option selection
+      paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          // Remove previous selection
+          paymentOptions.forEach(opt => opt.classList.remove('border-primary', 'bg-light'))
           
-          if (input && !input.disabled) {
-            input.checked = true;
-            
-            // Update selected card styling
-            paymentMethodCards.forEach(function(c) {
-              if (c.dataset.method === method) {
-                c.classList.add('selected');
-              } else {
-                c.classList.remove('selected');
+          // Add selection to clicked option
+          this.classList.add('border-primary', 'bg-light')
+          selectedPaymentMethod = this.dataset.method
+          retryBtn.disabled = false
+        })
+      })
+      
+      // Retry payment button
+      retryBtn.addEventListener('click', async function() {
+        if (!selectedPaymentMethod) {
+          alert('Please select a payment method')
+          return
+        }
+        
+        try {
+          if (loadingOverlay) {
+            loadingOverlay.style.display = 'flex'
+          }
+          
+          const response = await fetch(`/order/retry-payment/<%= order._id %>`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              paymentMethod: selectedPaymentMethod
+            })
+          })
+          
+          const data = await response.json()
+          
+          if (data.success) {
+            if (data.redirect) {
+              window.location.href = data.redirect
+            } else if (data.razorpayOrderId) {
+              // Handle Razorpay payment
+              const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: data.currency,
+                name: data.name,
+                description: data.description,
+                order_id: data.razorpayOrderId,
+                prefill: data.prefill,
+                theme: data.theme,
+                handler: async function(response) {
+                  try {
+                    const verifyResponse = await fetch('/payment/razorpay/verify', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        orderId: data.orderId
+                      })
+                    })
+                    
+                    const verifyData = await verifyResponse.json()
+                    if (loadingOverlay) {
+                      loadingOverlay.style.display = 'none'
+                    }
+                    
+                    if (verifyData.success) {
+                      window.location.href = verifyData.redirectUrl
+                    } else {
+                      window.location.reload()
+                    }
+                  } catch (error) {
+                    if (loadingOverlay) {
+                      loadingOverlay.style.display = 'none'
+                    }
+                    alert('Payment verification failed. Please try again.')
+                  }
+                },
+                modal: {
+                  ondismiss: function() {
+                    if (loadingOverlay) {
+                      loadingOverlay.style.display = 'none'
+                    }
+                  }
+                }
               }
-            });
-          }
-        });
-      });
-      
-      retryPaymentBtn.addEventListener('click', function() {
-        paymentModalError.classList.add('d-none');
-        paymentMethodModal.show();
-        
-        // Initialize selected card in modal
-        const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-        paymentMethodCards.forEach(function(card) {
-          if (card.dataset.method === selectedMethod) {
-            card.classList.add('selected');
-          } else {
-            card.classList.remove('selected');
-          }
-        });
-      });
-      
-      confirmPaymentMethodBtn.addEventListener('click', function() {
-        const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-        
-        // Show loading state
-        confirmPaymentMethodBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-        confirmPaymentMethodBtn.disabled = true;
-        paymentModalError.classList.add('d-none');
-        
-        // Send request to retry payment
-        fetch('/order/retry-payment/<%= order._id %>', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ paymentMethod: selectedMethod }),
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success && data.redirect) {
-            // Show loading overlay before redirecting
-            paymentMethodModal.hide();
-            loadingOverlay.classList.remove('d-none');
-            
-            if (loadingMessage) {
-              loadingMessage.textContent = 'Redirecting to payment...';
+              
+              const rzp = new Razorpay(options)
+              rzp.on('payment.failed', function(response) {
+                if (loadingOverlay) {
+                  loadingOverlay.style.display = 'none'
+                }
+                // Send failure data to server
+                fetch('/payment/razorpay/failure', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    error: response.error,
+                    orderId: data.orderId
+                  })
+                }).then(() => {
+                  window.location.reload()
+                })
+              })
+              
+              if (loadingOverlay) {
+                loadingOverlay.style.display = 'none'
+              }
+              rzp.open()
             }
-            
-            // Redirect after a short delay to show the loading state
-            setTimeout(() => {
-              window.location.href = data.redirect;
-            }, 500);
           } else {
-            throw new Error(data.message || 'Failed to process payment. Please try again.');
+            if (loadingOverlay) {
+              loadingOverlay.style.display = 'none'
+            }
+            alert(data.message || 'Failed to retry payment. Please try again.')
           }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          paymentModalError.textContent = error.message || 'An error occurred. Please try again.';
-          paymentModalError.classList.remove('d-none');
-          confirmPaymentMethodBtn.innerHTML = 'Proceed';
-          confirmPaymentMethodBtn.disabled = false;
-        });
-      });
-    });
+        } catch (error) {
+          if (loadingOverlay) {
+            loadingOverlay.style.display = 'none'
+          }
+          console.error('Error retrying payment:', error)
+          alert('An error occurred. Please try again.')
+        }
+      })
+    })
   </script>
 </body>
 </html>

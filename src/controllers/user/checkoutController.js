@@ -188,6 +188,7 @@ const loadPayment = async (req, res) => {
       wishlistCount,
       messages: req.flash(),
       activePage: "payment",
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     })
   } catch (error) {
     console.error("Payment page error:", error)
@@ -284,7 +285,7 @@ const placeOrder = async (req, res) => {
       paymentStatus: "pending",
       orderStatus: "pending",
       orderDate: new Date(),
-      isTemporary: paymentMethod === "paypal",
+      isTemporary: ["paypal", "razorpay"].includes(paymentMethod),
     }
 
     if (appliedCoupon) {
@@ -410,7 +411,7 @@ const placeOrder = async (req, res) => {
 
       await Cart.findOneAndUpdate({ user: req.user._id }, { $set: { products: [] } })
       return res.redirect(`/order-success/${order._id}`)
-    } else if (paymentMethod === "paypal") {
+    } else if (paymentMethod === "paypal" || paymentMethod === "razorpay") {
       return res.redirect(`/payment?orderId=${order._id}`)
     } else {
       return res.redirect(`/payment?orderId=${order._id}`)
@@ -448,7 +449,7 @@ const orderSuccess = async (req, res) => {
       await order.save()
     }
 
-    if (order.paymentMethod === "wallet" && order.paymentStatus !== "completed") {
+    if (["wallet", "razorpay"].includes(order.paymentMethod) && order.paymentStatus !== "completed") {
       order.paymentStatus = "completed"
       await order.save()
     }

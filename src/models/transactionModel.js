@@ -22,7 +22,7 @@ const transactionSchema = new Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["paypal", "wallet", "COD", "card"],
+      enum: ["paypal", "wallet", "COD", "card", "razorpay"],
       required: true,
     },
     amount: {
