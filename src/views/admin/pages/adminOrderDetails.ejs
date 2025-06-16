@@ -428,13 +428,25 @@
                                                 data-variant-size="<%= item.variant?.size || 'N/A' %>">
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <img src="<%= item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/images/placeholder.jpg' %>" 
-                                                            alt="<%= item.product.name %>" 
-                                                            class="product-img me-3" 
-                                                            width="50" height="50">
+                                                        <% if (item.product && item.product.images && item.product.images.length > 0) { %>
+                                                            <img src="<%= item.product.images[0].url %>"
+                                                                alt="<%= item.product.name %>"
+                                                                class="product-img me-3"
+                                                                width="50" height="50">
+                                                        <% } else { %>
+                                                            <img src="/images/placeholder.jpg"
+                                                                alt="Product Deleted"
+                                                                class="product-img me-3 opacity-50"
+                                                                width="50" height="50">
+                                                        <% } %>
                                                         <div>
-                                                            <h6 class="mb-0"><%= item.product.name %></h6>
-                                                            <small class="text-muted"><%= item.product.color || 'N/A' %></small>
+                                                            <h6 class="mb-0">
+                                                                <%= item.product ? item.product.name : 'Product Deleted' %>
+                                                                <% if (!item.product) { %>
+                                                                    <span class="badge bg-secondary ms-2">Deleted</span>
+                                                                <% } %>
+                                                            </h6>
+                                                            <small class="text-muted"><%= item.product ? (item.product.color || 'N/A') : 'N/A' %></small>
                                                             <div class="variant-identifier">
                                                                 Variant #<%= index + 1 %> | ID: <%= item.uniqueId %>
                                                             </div>
@@ -475,24 +487,32 @@
                                                 </td>
                                                 <td>
                                                     <% if (item.status === 'return pending') { %>
-                                                        <button class="btn btn-sm btn-warning process-return-btn" 
-                                                                data-order-id="<%= order._id %>" 
-                                                                data-product-id="<%= item.product._id %>"
-                                                                data-variant-size="<%= item.variant?.size || '' %>"
-                                                                data-variant-index="<%= index %>"
-                                                                data-product-name="<%= item.product.name %> (<%= item.variant?.size || 'N/A' %>)">
-                                                            Process Return
-                                                        </button>
+                                                        <% if (item.product) { %>
+                                                            <button class="btn btn-sm btn-warning process-return-btn"
+                                                                    data-order-id="<%= order._id %>"
+                                                                    data-product-id="<%= item.product._id %>"
+                                                                    data-variant-size="<%= item.variant?.size || '' %>"
+                                                                    data-variant-index="<%= index %>"
+                                                                    data-product-name="<%= item.product.name %> (<%= item.variant?.size || 'N/A' %>)">
+                                                                Process Return
+                                                            </button>
+                                                        <% } else { %>
+                                                            <span class="badge bg-secondary">Product Deleted - Cannot Process Return</span>
+                                                        <% } %>
                                                     <% } else if (item.status !== 'cancelled' && item.status !== 'delivered' && item.status !== 'returned') { %>
-                                                        <button class="btn btn-sm btn-primary update-status-btn" 
-                                                                data-order-id="<%= order._id %>" 
-                                                                data-product-id="<%= item.product._id %>"
-                                                                data-variant-size="<%= item.variant?.size || '' %>"
-                                                                data-variant-index="<%= index %>"
-                                                                data-current-status="<%= item.status %>"
-                                                                title="Update status for <%= item.product.name %> (<%= item.variant?.size || 'N/A' %>)">
-                                                            Update Status
-                                                        </button>
+                                                        <% if (item.product) { %>
+                                                            <button class="btn btn-sm btn-primary update-status-btn"
+                                                                    data-order-id="<%= order._id %>"
+                                                                    data-product-id="<%= item.product._id %>"
+                                                                    data-variant-size="<%= item.variant?.size || '' %>"
+                                                                    data-variant-index="<%= index %>"
+                                                                    data-current-status="<%= item.status %>"
+                                                                    title="Update status for <%= item.product.name %> (<%= item.variant?.size || 'N/A' %>)">
+                                                                Update Status
+                                                            </button>
+                                                        <% } else { %>
+                                                            <span class="badge bg-secondary">Product Deleted - Cannot Update Status</span>
+                                                        <% } %>
                                                     <% } %>
                                                 </td>
                                             </tr>

@@ -271,14 +271,25 @@ const adminOrderController = {
         const salePrice = (Number(product.variant?.salePrice) || 0) * (Number(product.quantity) || 0)
         const itemDiscount = regularPrice - salePrice
 
+        // Handle deleted products gracefully
+        const productData = product.product || {
+          _id: 'deleted',
+          name: 'Product Deleted',
+          images: [],
+          color: 'N/A',
+          variants: []
+        }
+
         return {
           ...product.toObject(),
+          product: productData,
           regularPrice: Math.round(regularPrice * 100) / 100,
           salePrice: Math.round(salePrice * 100) / 100,
           itemDiscount: Math.round(itemDiscount * 100) / 100,
           isActive: product.status !== "cancelled" && product.status !== "returned",
           variantIndex: index,
-          uniqueId: `${product.product._id}_${product.variant?.size || "default"}_${index}`,
+          uniqueId: `${productData._id}_${product.variant?.size || "default"}_${index}`,
+          isProductDeleted: !product.product, // Flag to indicate if product was deleted
         }
       })
 
@@ -458,7 +469,7 @@ const adminOrderController = {
           location: req.body.location || "Processing Center",
           timestamp: new Date(),
           description:
-            `${productItem.product.name} (${productItem.variant?.size || "N/A"}) status updated to ${status}. ${note || ""}`.trim(),
+            `${productItem.product?.name || "Product Deleted"} (${productItem.variant?.size || "N/A"}) status updated to ${status}. ${note || ""}`.trim(),
         })
       } else {
         const previousStatus = order.orderStatus
@@ -705,7 +716,7 @@ const adminOrderController = {
           status: "Return Approved",
           location: "Return Center",
           timestamp: new Date(),
-          description: `Return request approved for ${productItem.product.name} (${productItem.variant?.size || "N/A"}). Refund of ₹${refundAmount.toFixed(2)} issued to wallet.`,
+          description: `Return request approved for ${productItem.product?.name || "Product Deleted"} (${productItem.variant?.size || "N/A"}). Refund of ₹${refundAmount.toFixed(2)} issued to wallet.`,
         })
       } else {
         productItem.status = "delivered"
@@ -717,7 +728,7 @@ const adminOrderController = {
           status: "Return Rejected",
           location: "Return Center",
           timestamp: new Date(),
-          description: `Return request rejected for ${productItem.product.name} (${productItem.variant?.size || "N/A"}). Reason: ${reason || "No reason provided"}`,
+          description: `Return request rejected for ${productItem.product?.name || "Product Deleted"} (${productItem.variant?.size || "N/A"}). Reason: ${reason || "No reason provided"}`,
         })
       }
 
@@ -780,7 +791,7 @@ const adminOrderController = {
 
       res.json({
         success: true,
-        message: `Return request ${action === "approve" ? "approved" : "rejected"} successfully for ${productItem.product.name} (${productItem.variant?.size || "N/A"})`,
+        message: `Return request ${action === "approve" ? "approved" : "rejected"} successfully for ${productItem.product?.name || "Product Deleted"} (${productItem.variant?.size || "N/A"})`,
         updatedTotals: {
           regularTotal: newCalculatedTotals.regularTotal,
           itemsTotal: newCalculatedTotals.itemsTotal,

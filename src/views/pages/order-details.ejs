@@ -119,12 +119,17 @@
                           <% const mainImage = product.product.images.find(img => img.isMain) || product.product.images[0]; %>
                           <img src="<%= mainImage ? mainImage.url : '/images/placeholder.jpg' %>" alt="<%= product.product.name %>" class="img-fluid" />
                         <% } else { %>
-                          <img src="/images/placeholder.jpg" alt="Product Image" class="img-fluid" />
+                          <img src="/images/placeholder.jpg" alt="<%= product.product ? 'Product Image' : 'Product Deleted' %>" class="img-fluid opacity-50" />
                         <% } %>
                       </div>
                     </div>
                     <div class="col-md-5">
-                      <h5 class="product-name"><%= product.product ? product.product.name : 'Product' %></h5>
+                      <h5 class="product-name">
+                        <%= product.product ? product.product.name : 'Product Deleted' %>
+                        <% if (!product.product) { %>
+                          <span class="badge bg-secondary ms-2">Deleted</span>
+                        <% } %>
+                      </h5>
                       <p class="product-details">
                         <strong>Size:</strong> <%= product.variant ? product.variant.size : 'N/A' %>
                       </p>
