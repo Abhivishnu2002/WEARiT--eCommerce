@@ -69,7 +69,7 @@ const loadCustomer = async (req, res) => {
       searchQuery,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadCustomer error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminCustomer", { error_msg: "Server error" })
   }
@@ -103,7 +103,7 @@ const blockUnblockUser = async (req, res) => {
       return res.redirect(`/admin/customer?page=${page}${search ? `&search=${search}` : ""}`)
     }
   } catch (error) {
-    console.error(error)
+    console.error("Admin blockUnblockUser error:", error)
     req.flash("error_msg", "Server Error")
     res.redirect("/admin/customer")
   }
@@ -157,7 +157,7 @@ const loadCustomerDetails = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadCustomerDetails error:", error)
     req.flash("error_msg", "Server error")
     res.redirect("/admin/customer")
   }

@@ -15,38 +15,77 @@ window.stockValidator = {
         throw new Error(data.message || "Failed to validate stock")
       }
 
+      // Check for unavailable products first
+      if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
+        let unavailableMessage = '<div class="unavailable-products">'
+        unavailableMessage += '<p><strong>The following products are no longer available:</strong></p>'
+        unavailableMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+        data.unavailableProducts.forEach(item => {
+          unavailableMessage += `<li><strong>${item.productName}</strong> (Size: ${item.size}) - ${item.reason}</li>`
+        })
+
+        unavailableMessage += '</ul>'
+        unavailableMessage += '<p>Please remove these items from your cart to continue.</p>'
+        unavailableMessage += '</div>'
+
+        const Swal = window.Swal
+        const result = await Swal.fire({
+          title: 'Products Unavailable',
+          html: unavailableMessage,
+          icon: 'error',
+          showCancelButton: true,
+          confirmButtonText: 'Go to Cart',
+          cancelButtonText: 'Stay Here',
+          confirmButtonColor: '#1a1a1a',
+          cancelButtonColor: '#6c757d'
+        })
+
+        if (result.isConfirmed) {
+          window.location.href = '/cart'
+        }
+
+        return false
+      }
+
       if (data.hasStockIssues && data.stockIssues.length > 0) {
         let stockIssueMessage = '<div class="stock-issues">'
-        stockIssueMessage += "<p>The following items in your cart have stock issues:</p>"
-        stockIssueMessage += "<ul>"
+        stockIssueMessage += "<p><strong>Stock issues detected:</strong></p>"
+        stockIssueMessage += '<ul style="text-align: left; margin: 10px 0;">'
 
         data.stockIssues.forEach((issue) => {
           if (issue.availableStock === 0) {
-            stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) is out of stock</li>`
+            stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) is <span style="color: #dc3545;">out of stock</span></li>`
           } else if (issue.isPartialStock) {
             stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) - Only ${issue.availableStock} available (you requested ${issue.requestedQuantity})</li>`
           }
         })
 
         stockIssueMessage += "</ul>"
-        stockIssueMessage += "<p>Please update your cart before proceeding.</p>"
+        stockIssueMessage += "<p>Please update quantities or remove out-of-stock items to continue.</p>"
         stockIssueMessage += "</div>"
 
         const Swal = window.Swal
-        await Swal.fire({
+        const result = await Swal.fire({
           title: "Stock Issues Detected",
           html: stockIssueMessage,
           icon: "error",
-          confirmButtonText: "Update Cart",
-          confirmButtonColor: "#3085d6",
+          showCancelButton: true,
+          confirmButtonText: "Go to Cart",
+          cancelButtonText: "Stay Here",
+          confirmButtonColor: "#1a1a1a",
+          cancelButtonColor: "#6c757d",
         })
+
+        if (result.isConfirmed) {
+          window.location.href = '/cart'
+        }
 
         return false
       }
 
       return true
     } catch (error) {
-      console.error("Stock validation error:", error)
       const Swal = window.Swal
       await Swal.fire({
         title: "Error",

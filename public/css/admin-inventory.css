@@ -1,238 +1,1 @@
-/* public/css/admin-inventory.css */
-/* General Styles */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f8f9fa;
-    overflow-x: hidden;
-}
-
-/* Inventory Header */
-.inventory-header {
-    margin-bottom: 20px;
-}
-
-.inventory-header h2 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 5px;
-}
-
-.breadcrumb-nav {
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-}
-
-.breadcrumb-nav a {
-    color: #333843;
-    text-decoration: none;
-}
-
-.breadcrumb-nav .separator {
-    margin: 0 8px;
-    color: #9197b3;
-}
-
-.breadcrumb-nav .current {
-    color: #9197b3;
-}
-
-/* Inventory Filters */
-.inventory-filters {
-    margin-bottom: 20px;
-}
-
-.threshold-form {
-    max-width: 400px;
-}
-
-/* Inventory Table */
-.inventory-table-container {
-    background-color: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-}
-
-.inventory-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.inventory-table th {
-    background-color: #000000;
-    color: #ffffff;
-    font-weight: 500;
-    padding: 15px;
-    text-align: left;
-    font-size: 14px;
-}
-
-.inventory-table td {
-    padding: 15px;
-    border-bottom: 1px solid #e0e2e7;
-    vertical-align: middle;
-}
-
-.product-cell {
-    min-width: 250px;
-}
-
-.product-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.product-img {
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
-    border-radius: 4px;
-    background-color: #f0f1f3;
-}
-
-.product-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.product-name {
-    font-weight: 500;
-    margin-bottom: 2px;
-}
-
-.variant-cell {
-    font-weight: 500;
-}
-
-.stock-cell {
-    font-weight: 600;
-    color: #f04438;
-}
-
-.status-cell {
-    min-width: 120px;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-out {
-    background-color: #fcdad7;
-    color: #f04438;
-}
-
-.status-low {
-    background-color: #fdf1e8;
-    color: #e46a11;
-}
-
-.action-cell {
-    white-space: nowrap;
-}
-
-.update-stock-btn {
-    background-color: #5c59e8;
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    padding: 8px 12px;
-    font-size: 12px;
-    cursor: pointer;
-}
-
-.update-stock-btn:hover {
-    background-color: #4a47d5;
-}
-
-.no-products {
-    text-align: center;
-    padding: 30px;
-    color: #9197b3;
-}
-
-/* Pagination */
-.pagination-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-}
-
-.showing-info {
-    font-size: 14px;
-    color: #727272;
-}
-
-.pagination {
-    display: flex;
-    gap: 5px;
-}
-
-.pagination-btn {
-    width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #e0e2e7;
-    background-color: #ffffff;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.pagination-btn.active {
-    background-color: #000000;
-    color: #ffffff;
-    border-color: #000000;
-}
-
-.pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Responsive Styles */
-@media (max-width: 767.98px) {
-    .inventory-table th, .inventory-table td {
-        padding: 10px 8px;
-        font-size: 14px;
-    }
-    
-    .product-img {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .update-stock-btn {
-        padding: 6px 10px;
-        font-size: 11px;
-    }
-    
-    .pagination-btn {
-        width: 30px;
-        height: 30px;
-    }
-}
-
-@media (max-width: 575.98px) {
-    .threshold-form {
-        max-width: 100%;
-    }
-    
-    .inventory-table-container {
-        overflow-x: auto;
-    }
-    
-    .inventory-table {
-        min-width: 600px;
-    }
-}
+body {    font-family: 'Inter', sans-serif;    background-color: #f8f9fa;    overflow-x: hidden;}.inventory-header {    margin-bottom: 20px;}.inventory-header h2 {    font-size: 24px;    font-weight: 600;    margin-bottom: 5px;}.breadcrumb-nav {    display: flex;    align-items: center;    font-size: 14px;}.breadcrumb-nav a {    color: #333843;    text-decoration: none;}.breadcrumb-nav .separator {    margin: 0 8px;    color: #9197b3;}.breadcrumb-nav .current {    color: #9197b3;}.inventory-filters {    margin-bottom: 20px;}.threshold-form {    max-width: 400px;}.inventory-table-container {    background-color: #ffffff;    border-radius: 8px;    overflow: hidden;    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);    margin-bottom: 20px;}.inventory-table {    width: 100%;    border-collapse: collapse;}.inventory-table th {    background-color: #000000;    color: #ffffff;    font-weight: 500;    padding: 15px;    text-align: left;    font-size: 14px;}.inventory-table td {    padding: 15px;    border-bottom: 1px solid #e0e2e7;    vertical-align: middle;}.product-cell {    min-width: 250px;}.product-info {    display: flex;    align-items: center;    gap: 10px;}.product-img {    width: 40px;    height: 40px;    object-fit: cover;    border-radius: 4px;    background-color: #f0f1f3;}.product-details {    display: flex;    flex-direction: column;}.product-name {    font-weight: 500;    margin-bottom: 2px;}.variant-cell {    font-weight: 500;}.stock-cell {    font-weight: 600;    color: #f04438;}.status-cell {    min-width: 120px;}.status-badge {    display: inline-block;    padding: 5px 10px;    border-radius: 5px;    font-size: 12px;    font-weight: 500;}.status-out {    background-color: #fcdad7;    color: #f04438;}.status-low {    background-color: #fdf1e8;    color: #e46a11;}.action-cell {    white-space: nowrap;}.update-stock-btn {    background-color: #5c59e8;    color: #ffffff;    border: none;    border-radius: 5px;    padding: 8px 12px;    font-size: 12px;    cursor: pointer;}.update-stock-btn:hover {    background-color: #4a47d5;}.no-products {    text-align: center;    padding: 30px;    color: #9197b3;}.pagination-container {    display: flex;    justify-content: space-between;    align-items: center;    margin-top: 20px;}.showing-info {    font-size: 14px;    color: #727272;}.pagination {    display: flex;    gap: 5px;}.pagination-btn {    width: 35px;    height: 35px;    display: flex;    align-items: center;    justify-content: center;    border: 1px solid #e0e2e7;    background-color: #ffffff;    border-radius: 5px;    cursor: pointer;    font-size: 14px;}.pagination-btn.active {    background-color: #000000;    color: #ffffff;    border-color: #000000;}.pagination-btn:disabled {    opacity: 0.5;    cursor: not-allowed;}@media (max-width: 767.98px) {    .inventory-table th, .inventory-table td {        padding: 10px 8px;        font-size: 14px;    }    .product-img {        width: 30px;        height: 30px;    }    .update-stock-btn {        padding: 6px 10px;        font-size: 11px;    }    .pagination-btn {        width: 30px;        height: 30px;    }}@media (max-width: 575.98px) {    .threshold-form {        max-width: 100%;    }    .inventory-table-container {        overflow-x: auto;    }    .inventory-table {        min-width: 600px;    }}

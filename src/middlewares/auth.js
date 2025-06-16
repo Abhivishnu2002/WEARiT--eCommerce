@@ -17,13 +17,11 @@ const checkUserStatus = async (req, res, next) => {
             
             return req.logout((err) => {
                 if (err) {
-                    console.error('Logout error:', err);
                     return next(err);
                 }
                 req.session.save(err => {
                     if (err) {
-                        console.error('Session save error during logout:', err);
-                    }
+                        }
                     return res.redirect('/login');
                 });
             });
@@ -31,7 +29,6 @@ const checkUserStatus = async (req, res, next) => {
             return next();
         }
     } catch (error) {
-        console.error('Error checking user status:', error);
         return next(error);
     }
 }

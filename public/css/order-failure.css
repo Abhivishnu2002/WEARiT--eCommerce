@@ -1,165 +1,1 @@
-.failure-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
-}
-
-.failure-icon {
-  font-size: 60px;
-  color: #dc3545;
-  margin-bottom: 20px;
-}
-
-.failure-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.failure-message {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 30px;
-}
-
-.order-details-section {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-}
-
-.order-details-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.detail-label {
-  font-weight: 500;
-  color: #666;
-}
-
-.detail-value {
-  font-weight: 600;
-  color: #333;
-}
-
-.payment-options-section {
-  margin-bottom: 30px;
-}
-
-.payment-options-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 15px;
-  color: #333;
-}
-
-.payment-option {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.payment-option:hover {
-  background-color: #e9ecef;
-}
-
-.payment-option.selected {
-  background-color: #e9ecef;
-  border: 1px solid #0d6efd;
-}
-
-.payment-option-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.payment-option-icon {
-  font-size: 24px;
-  color: #0d6efd;
-}
-
-.payment-option-title {
-  font-weight: 600;
-  color: #333;
-}
-
-.payment-option-description {
-  font-size: 14px;
-  color: #666;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.retry-payment-btn {
-  background-color: #ffc107;
-  color: #212529;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
-
-.retry-payment-btn:hover {
-  background-color: #e0a800;
-  color: #212529;
-}
-
-.back-to-orders-btn {
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #6c757d;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.back-to-orders-btn:hover {
-  background-color: #6c757d;
-  color: #fff;
-}
-
-@media (max-width: 767px) {
-  .failure-container {
-    padding: 20px;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-  }
-
-  .retry-payment-btn,
-  .back-to-orders-btn {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-  }
-}
-    
+.failure-container {  max-width: 800px;  margin: 0 auto;  padding: 30px;  background-color: #fff;  border-radius: 10px;  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);}.failure-icon {  font-size: 60px;  color: #dc3545;  margin-bottom: 20px;}.failure-title {  font-size: 24px;  font-weight: 600;  margin-bottom: 15px;  color: #333;}.failure-message {  font-size: 16px;  color: #666;  margin-bottom: 30px;}.order-details-section {  background-color: #f8f9fa;  padding: 20px;  border-radius: 8px;  margin-bottom: 30px;}.order-details-section h3 {  font-size: 18px;  font-weight: 600;  margin-bottom: 15px;  color: #333;}.detail-row {  display: flex;  justify-content: space-between;  margin-bottom: 10px;}.detail-label {  font-weight: 500;  color: #666;}.detail-value {  font-weight: 600;  color: #333;}.payment-options-section {  margin-bottom: 30px;}.payment-options-section h3 {  font-size: 18px;  font-weight: 600;  margin-bottom: 15px;  color: #333;}.payment-option {  background-color: #f8f9fa;  padding: 15px;  border-radius: 8px;  margin-bottom: 15px;  cursor: pointer;  transition: all 0.3s ease;}.payment-option:hover {  background-color: #e9ecef;}.payment-option.selected {  background-color: #e9ecef;  border: 1px solid #0d6efd;}.payment-option-header {  display: flex;  align-items: center;  gap: 10px;  margin-bottom: 10px;}.payment-option-icon {  font-size: 24px;  color: #0d6efd;}.payment-option-title {  font-weight: 600;  color: #333;}.payment-option-description {  font-size: 14px;  color: #666;}.action-buttons {  display: flex;  gap: 15px;  margin-top: 20px;}.retry-payment-btn {  background-color: #ffc107;  color: #212529;  border: none;  padding: 10px 20px;  border-radius: 4px;  font-weight: 500;  display: inline-flex;  align-items: center;  gap: 8px;  transition: all 0.3s ease;}.retry-payment-btn:hover {  background-color: #e0a800;  color: #212529;}.back-to-orders-btn {  background-color: transparent;  color: #6c757d;  border: 1px solid #6c757d;  padding: 10px 20px;  border-radius: 4px;  font-weight: 500;  transition: all 0.3s ease;}.back-to-orders-btn:hover {  background-color: #6c757d;  color: #fff;}@media (max-width: 767px) {  .failure-container {    padding: 20px;  }  .action-buttons {    flex-direction: column;  }  .retry-payment-btn,  .back-to-orders-btn {    width: 100%;    text-align: center;    justify-content: center;  }}

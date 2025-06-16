@@ -141,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .catch((err) => {
               hideLoading()
-              console.error("PayPal create order error:", err)
               Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -163,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         onError: (err) => {
           hideLoading()
-          console.error("PayPal error:", err)
           Swal.fire({
             icon: "error",
             title: "Error",
@@ -240,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
                   }
                 })
                 .catch((error) => {
-                  console.error("Error:", error)
                   Swal.fire({
                     icon: "error",
                     title: "Error",
@@ -268,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Error:", error)
           Swal.fire({
             icon: "error",
             title: "Error",

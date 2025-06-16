@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Error:", error)
           this.disabled = false
           this.checked = !isActive
           showErrorToast("An error occurred while updating coupon status")

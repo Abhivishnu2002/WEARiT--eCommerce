@@ -14,7 +14,6 @@ async function processRefundToWallet(userId, amount, orderId, orderID, descripti
     const result = await walletController.processRefund(userId, amount, orderId, orderID, description)
     return result
   } catch (error) {
-    console.error("Error processing refund to wallet:", error)
     throw error
   }
 }

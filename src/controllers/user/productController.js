@@ -172,7 +172,6 @@ const getAllProducts = async (req, res, next) => {
       getPaginationUrl,
     })
   } catch (error) {
-    console.error("Product listing error:", error)
     req.flash("error_msg", "Failed to load products")
     res.redirect("/")
   }
@@ -311,7 +310,6 @@ const getProductDetails = async (req, res, next) => {
       user: req.user || null,
     })
   } catch (error) {
-    console.error("Product details error:", error)
     req.flash("error_msg", "Failed to load product details")
     res.redirect("/products")
   }

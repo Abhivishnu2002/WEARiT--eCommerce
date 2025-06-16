@@ -2,29 +2,21 @@ document.addEventListener("DOMContentLoaded", () => {
   function showSuccessToast(message) {
     if (typeof toastr !== "undefined") {
       toastr.success(message)
-    } else {
-      console.warn("toastr is not defined. Ensure it is properly loaded.")
     }
   }
   function showErrorToast(message) {
     if (typeof toastr !== "undefined") {
       toastr.error(message)
-    } else {
-      console.warn("toastr is not defined. Ensure it is properly loaded.")
     }
   }
   function showWarningToast(message) {
     if (typeof toastr !== "undefined") {
       toastr.warning(message)
-    } else {
-      console.warn("toastr is not defined. Ensure it is properly loaded.")
     }
   }
   function showInfoToast(message) {
     if (typeof toastr !== "undefined") {
       toastr.info(message)
-    } else {
-      console.warn("toastr is not defined. Ensure it is properly loaded.")
     }
   }
   function createToastContainer() {
@@ -66,14 +58,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof createToastContainer === "function") {
     createToastContainer()
     processFlashMessages()
-  } else {
-    console.error("Toast notification system not loaded")
   }
   if (typeof $ !== "undefined") {
     $(document).ajaxError((event, jqXHR, settings, thrownError) => {
       showErrorToast(`Request failed: ${thrownError || jqXHR.statusText}`)
     })
-  } else {
-    console.warn("jQuery is not defined. Ensure it is properly loaded.")
   }
 })

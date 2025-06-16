@@ -120,7 +120,7 @@ const orderFailure = async (req, res) => {
     const order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
-    }).populate("address")
+    })
 
     if (!order) {
       req.flash("error_msg", "Order not found")
@@ -250,7 +250,7 @@ const orderFailure = async (req, res) => {
       messages: req.flash(),
     })
   } catch (error) {
-    console.error("Error loading order failure page:", error)
+    console.error("User loadOrderFailure error:", error)
     req.flash("error_msg", "Error loading order failure page: " + error.message)
     res.redirect("/orders")
   }
@@ -269,7 +269,6 @@ const cancelProduct = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       await session.abortTransaction()
-      console.error(`[CANCEL_PRODUCT] Invalid order ID format: ${orderId}`)
       return res.status(400).json({
         success: false,
         message: "Invalid order ID format",
@@ -278,7 +277,6 @@ const cancelProduct = async (req, res) => {
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       await session.abortTransaction()
-      console.error(`[CANCEL_PRODUCT] Invalid product ID format: ${productId}`)
       return res.status(400).json({
         success: false,
         message: "Invalid product ID format",
@@ -297,7 +295,6 @@ const cancelProduct = async (req, res) => {
 
     if (!order) {
       await session.abortTransaction()
-      console.error(`[CANCEL_PRODUCT] Order not found: ${orderId} for user: ${req.user._id}`)
       return res.status(404).json({
         success: false,
         message: "Order not found or you don't have permission to access it",
@@ -306,7 +303,6 @@ const cancelProduct = async (req, res) => {
 
     if (order.paymentStatus === "failed") {
       await session.abortTransaction()
-      console.error(`[CANCEL_PRODUCT] Cannot cancel product from failed payment order: ${orderId}`)
       return res.status(400).json({
         success: false,
         message: "Cannot cancel products from an order with failed payment. Please retry payment first.",
@@ -321,7 +317,6 @@ const cancelProduct = async (req, res) => {
     const productItem = order.products.id(productId)
     if (!productItem) {
       await session.abortTransaction()
-      console.error(`[CANCEL_PRODUCT] Product not found in order: ${productId}`)
       return res.status(404).json({
         success: false,
         message: "Product not found in this order",
@@ -331,7 +326,6 @@ const cancelProduct = async (req, res) => {
     const nonCancellableStatuses = ["delivered", "returned", "cancelled", "return pending"]
     if (nonCancellableStatuses.includes(productItem.status)) {
       await session.abortTransaction()
-      console.error(`[CANCEL_PRODUCT] Product cannot be cancelled - current status: ${productItem.status}`)
       return res.status(400).json({
         success: false,
         message: `Product cannot be cancelled. Current status: ${productItem.status}`,
@@ -360,9 +354,6 @@ const cancelProduct = async (req, res) => {
         variant.varientquatity += productItem.quantity
         if (variant.varientquatity < 0) {
           await session.abortTransaction()
-          console.error(
-            `[CANCEL_PRODUCT] Stock would go negative for product ${productItem.product._id}, variant ${productItem.variant.size}`,
-          )
           return res.status(500).json({
             success: false,
             message: "Error updating stock levels. Please contact support.",
@@ -371,13 +362,9 @@ const cancelProduct = async (req, res) => {
 
         await product.save({ session })
       } else {
-        console.warn(
-          `[CANCEL_PRODUCT] Variant ${productItem.variant.size} not found for product ${productItem.product._id}`,
-        )
-      }
+        }
     } else {
-      console.warn(`[CANCEL_PRODUCT] Product ${productItem.product._id} not found for stock restoration`)
-    }
+      }
 
     const statusCounts = {
       pending: 0,
@@ -421,21 +408,21 @@ const cancelProduct = async (req, res) => {
     order.finalAmount = updatedTotals.finalAmount
 
     if (isNaN(order.totalAmount)) {
-      console.error(`[CANCEL_PRODUCT] totalAmount is NaN, setting to 0`)
       order.totalAmount = 0
     }
 
     if (isNaN(order.finalAmount)) {
-      console.error(`[CANCEL_PRODUCT] finalAmount is NaN, setting to 0`)
       order.finalAmount = 0
     }
 
     if (isNaN(order.discount)) {
-      console.error(`[CANCEL_PRODUCT] discount is NaN, setting to 0`)
       order.discount = 0
     }
     if (
-      (order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet") &&
+      (order.paymentMethod === "online" ||
+        order.paymentMethod === "paypal" ||
+        order.paymentMethod === "wallet" ||
+        order.paymentMethod === "razorpay") &&
       refundAmount > 0
     ) {
       try {
@@ -455,8 +442,8 @@ const cancelProduct = async (req, res) => {
           `Refund for product cancellation - Order #${order.orderID}`,
           productDetails,
         )
-      } catch (refundError) {
-        console.error(`[CANCEL_PRODUCT] Error processing refund:`, refundError)
+      } catch (e) {
+        console.error("User cancelProduct refund error:", e)
       }
     }
 
@@ -485,20 +472,17 @@ const cancelProduct = async (req, res) => {
         orderStatus: order.orderStatus,
         productStatus: "cancelled",
         refundMethod:
-          order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet"
+          order.paymentMethod === "online" ||
+          order.paymentMethod === "paypal" ||
+          order.paymentMethod === "wallet" ||
+          order.paymentMethod === "razorpay"
             ? "wallet"
             : "none",
       },
     })
   } catch (error) {
+    console.error("User cancelProduct error:", error)
     await session.abortTransaction()
-    console.error(`[CANCEL_PRODUCT] Error cancelling product:`, {
-      error: error.message,
-      stack: error.stack,
-      orderId: req.params.orderId,
-      productId: req.params.productId,
-      userId: req.user._id,
-    })
     let errorMessage = "Error cancelling product. Please try again."
 
     if (error.name === "ValidationError") {
@@ -556,7 +540,6 @@ const getOrdersPage = async (req, res) => {
         path: "products.product",
         select: "name images price",
       })
-      .populate("address")
       .sort({ orderDate: -1 })
       .skip(skip)
       .limit(limit)
@@ -581,7 +564,7 @@ const getOrdersPage = async (req, res) => {
       search: req.query.search || "",
     })
   } catch (error) {
-    console.error("Error fetching orders:", error)
+    console.error("User getOrdersPage error:", error)
     req.flash("error_msg", "Error fetching orders")
     res.status(500).render("error", {
       message: "Error fetching orders",
@@ -602,7 +585,6 @@ const getOrderDetails = async (req, res) => {
         path: "products.product",
         select: "name images price variants brand",
       })
-      .populate("address")
 
     if (!order) {
       req.flash("error_msg", "Order not found")
@@ -709,7 +691,7 @@ const getOrderDetails = async (req, res) => {
       activePage: "orders",
     })
   } catch (error) {
-    console.error("Error fetching order details:", error)
+    console.error("User getOrderDetails error:", error)
     req.flash("error_msg", "Error fetching order details")
     res.status(500).render("error", {
       message: "Error fetching order details",
@@ -730,15 +712,37 @@ const getOrderInvoice = async (req, res) => {
         path: "products.product",
         select: "name images price variants",
       })
-      .populate("address")
 
     if (!order) {
       req.flash("error_msg", "Order not found")
       return res.redirect("/orders")
     }
 
-    if (order.paymentStatus === "pending" || order.paymentStatus === "failed") {
-      req.flash("error_msg", "Invoice is only available after payment is completed")
+    // Enhanced invoice availability conditions
+    const currentPaymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase()
+    let canDownloadInvoice = false
+    let errorMessage = "Invoice is not available for this order"
+
+    if (order.paymentStatus === "failed") {
+      errorMessage = "Invoice is not available for failed payments"
+    } else if (currentPaymentMethod === 'cod') {
+      // For COD orders, invoice available after delivery (when payment status becomes completed)
+      if (order.orderStatus === 'delivered' || order.paymentStatus === 'completed') {
+        canDownloadInvoice = true
+      } else {
+        errorMessage = "Invoice for COD orders is only available after delivery"
+      }
+    } else {
+      // For other payment methods, invoice available after payment completion
+      if (order.paymentStatus === 'completed') {
+        canDownloadInvoice = true
+      } else {
+        errorMessage = "Invoice is only available after payment is completed"
+      }
+    }
+
+    if (!canDownloadInvoice) {
+      req.flash("error_msg", errorMessage)
       return res.redirect(`/orders/details/${orderId}`)
     }
 
@@ -755,7 +759,7 @@ const getOrderInvoice = async (req, res) => {
       isAdmin: false,
     })
   } catch (error) {
-    console.error("Error generating invoice:", error)
+    console.error("User getOrderInvoice error:", error)
     req.flash("error_msg", "Error generating invoice")
     res.status(500).render("error", {
       message: "Error generating invoice",
@@ -832,7 +836,12 @@ const cancelOrder = async (req, res) => {
         }
       }
     }
-    if (order.paymentMethod === "online" || order.paymentMethod === "paypal" || order.paymentMethod === "wallet") {
+    if (
+      order.paymentMethod === "online" ||
+      order.paymentMethod === "paypal" ||
+      order.paymentMethod === "wallet" ||
+      order.paymentMethod === "razorpay"
+    ) {
       const refundAmount = order.finalAmount
 
       try {
@@ -850,8 +859,8 @@ const cancelOrder = async (req, res) => {
           `Refund for order cancellation - Order #${order.orderID}`,
           productDetails,
         )
-      } catch (refundError) {
-        console.error(`Error processing order cancellation refund:`, refundError)
+      } catch (e) {
+        console.error("User cancelOrder refund error:", e)
       }
     }
 
@@ -862,7 +871,7 @@ const cancelOrder = async (req, res) => {
       message: "Order cancelled successfully",
     })
   } catch (error) {
-    console.error("Error cancelling order:", error)
+    console.error("User cancelOrder error:", error)
     res.status(500).json({
       success: false,
       message: "Error cancelling order",
@@ -968,9 +977,9 @@ const returnOrder = async (req, res) => {
             returnedItems,
             `Refund for product return - Order #${order.orderID}`,
           )
-        } catch (refundError) {
-          console.error(`Error processing COD return refund:`, refundError)
-        }
+        } catch (e) {
+    
+  }
       }
     }
 
@@ -979,7 +988,6 @@ const returnOrder = async (req, res) => {
       message: "Return request submitted successfully",
     })
   } catch (error) {
-    console.error("Error returning order:", error)
     res.status(500).json({
       success: false,
       message: "Error submitting return request",
@@ -1100,9 +1108,9 @@ const returnProduct = async (req, res) => {
           returnedItems,
           `Refund for product return - Order #${order.orderID}`,
         )
-      } catch (refundError) {
-        console.error(`Error processing COD product return refund:`, refundError)
-      }
+      } catch (e) {
+    
+  }
     }
 
     res.json({
@@ -1110,7 +1118,6 @@ const returnProduct = async (req, res) => {
       message: "Return request submitted successfully",
     })
   } catch (error) {
-    console.error("Error returning product:", error)
     res.status(500).json({
       success: false,
       message: "Error returning product",
@@ -1184,7 +1191,6 @@ const reorderItems = async (req, res) => {
       cartCount: cartCount,
     })
   } catch (error) {
-    console.error("Error reordering items:", error)
     res.status(500).json({
       success: false,
       message: "Error adding products to cart",
@@ -1202,7 +1208,6 @@ const searchOrders = async (req, res) => {
 
     res.redirect(`/orders?search=${encodeURIComponent(query)}`)
   } catch (error) {
-    console.error("Error searching orders:", error)
     res.status(500).json({
       success: false,
       message: "Error searching orders",
@@ -1227,7 +1232,6 @@ const trackOrder = async (req, res) => {
         path: "products.product",
         select: "name images price variants brand",
       })
-      .populate("address")
 
     if (!order) {
       req.flash("error_msg", "Order not found")
@@ -1444,9 +1448,9 @@ const trackOrder = async (req, res) => {
       order.trackingDetails = defaultTracking
       try {
         await order.save()
-      } catch (saveError) {
-        console.error("Warning: Could not save tracking details:", saveError.message)
-      }
+      } catch (e) {
+    
+  }
     }
 
     order.couponInfo = couponInfo
@@ -1465,7 +1469,6 @@ const trackOrder = async (req, res) => {
       canCancelOrder,
     })
   } catch (error) {
-    console.error("Error tracking order:", error)
     req.flash("error_msg", "Error tracking order")
     return res.redirect("/orders")
   }
@@ -1484,7 +1487,7 @@ const orderSuccess = async (req, res) => {
       _id: orderId,
       user: req.user._id,
       paymentStatus: { $ne: "failed" },
-    }).populate("address")
+    })
 
     if (!order) {
       req.flash("error_msg", "Order not found or payment failed")
@@ -1534,7 +1537,6 @@ const orderSuccess = async (req, res) => {
       canDownloadInvoice: order.paymentStatus !== "pending" && order.paymentStatus !== "failed",
     })
   } catch (error) {
-    console.error("Error loading order success page:", error)
     req.flash("error_msg", "Error loading order success page: " + error.message)
     res.redirect("/orders")
   }

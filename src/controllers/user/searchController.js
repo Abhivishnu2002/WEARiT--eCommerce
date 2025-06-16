@@ -35,7 +35,6 @@ const searchProducts = async (req, res) => {
 
         res.json({ products: formattedProducts });
     } catch (error) {
-        console.error('Search API error:', error);
         res.status(500).json({ error: 'An error occurred while searching' });
     }
 };

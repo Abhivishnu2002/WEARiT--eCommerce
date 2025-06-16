@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
             continueBtn.textContent = originalText
           }
         } catch (error) {
-          console.error("Stock validation error:", error)
           Swal.fire({
             title: "Error",
             text: "Failed to validate stock. Please try again.",

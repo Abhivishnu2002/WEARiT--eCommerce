@@ -99,7 +99,6 @@ function setupReturnOrderButton() {
     const orderId = this.getAttribute("data-order-id")
 
     if (typeof Swal === "undefined") {
-      console.error("SweetAlert2 is not loaded")
       return
     }
 
@@ -177,7 +176,6 @@ function setupCancelOrderButton() {
     const orderId = this.getAttribute("data-order-id")
 
     if (typeof Swal === "undefined") {
-      console.error("SweetAlert2 is not loaded")
       return
     }
 
@@ -225,7 +223,6 @@ function setupCancelOrderButton() {
             }
           })
           .catch((error) => {
-            console.error("Error:", error)
             Swal.fire({
               icon: "error",
               title: "Error",

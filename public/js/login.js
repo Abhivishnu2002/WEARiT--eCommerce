@@ -254,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Login error:", error)
           hideLoadingState()
 
           if (window.Swal) {

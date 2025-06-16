@@ -106,29 +106,43 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <label for="discountValue" class="form-label">Discount Value <span class="text-danger">*</span></label>
+                                        <label for="discountValue" class="form-label">
+                                            Discount Value <span class="text-danger">*</span>
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip"
+                                               title="For fixed discounts: Must be less than minimum purchase amount. For percentage: 1-100%"></i>
+                                        </label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" id="discountValue" name="discountValue" min="1" step="0.01" value="<%= coupon.discountValue %>" required>
                                             <span class="input-group-text discount-symbol"><%= coupon.discountType === 'percentage' ? '%' : '₹' %></span>
                                         </div>
-                                        <div class="invalid-feedback">Please enter a valid discount value.</div>
+                                        <div class="invalid-feedback" id="discountValue-error">Please enter a valid discount value.</div>
                                     </div>
                                     
                                     <div class="mb-3 max-discount-container <%= coupon.discountType !== 'percentage' ? 'd-none' : '' %>">
-                                        <label for="maximumDiscount" class="form-label">Maximum Discount (₹)</label>
+                                        <label for="maximumDiscount" class="form-label">
+                                            Maximum Discount (₹)
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip"
+                                               title="Must be less than minimum purchase amount if set"></i>
+                                        </label>
                                         <div class="input-group">
                                             <span class="input-group-text">₹</span>
                                             <input type="number" class="form-control" id="maximumDiscount" name="maximumDiscount" min="0" step="0.01" value="<%= coupon.maximumDiscount || '' %>">
                                         </div>
+                                        <div class="invalid-feedback" id="maximumDiscount-error"></div>
                                         <div class="form-text">Leave empty for no maximum limit.</div>
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <label for="minimumPurchase" class="form-label">Minimum Purchase Amount (₹)</label>
+                                        <label for="minimumPurchase" class="form-label">
+                                            Minimum Purchase Amount (₹)
+                                            <i class="fas fa-info-circle text-muted ms-1" data-bs-toggle="tooltip"
+                                               title="Must be greater than discount value (for fixed) or maximum discount (for percentage)"></i>
+                                        </label>
                                         <div class="input-group">
                                             <span class="input-group-text">₹</span>
                                             <input type="number" class="form-control" id="minimumPurchase" name="minimumPurchase" min="0" step="0.01" value="<%= coupon.minimumPurchase %>">
                                         </div>
+                                        <div class="invalid-feedback" id="minimumPurchase-error"></div>
                                     </div>
                                 </div>
                             </div>

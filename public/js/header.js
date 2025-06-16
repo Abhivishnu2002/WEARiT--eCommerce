@@ -91,9 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
             searchResults.appendChild(noResults)
             searchResults.classList.add("show")
           }
-        } catch (error) {
-          console.error("Error fetching search results:", error)
-        }
+        } catch (e) {
+    
+  }
       }
   
       searchInput.addEventListener("input", function () {
@@ -124,6 +124,71 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       })
+    }
+
+    // Function to update cart and wishlist counts in header
+    window.updateHeaderCounts = function() {
+      fetch('/api/cart-wishlist-counts')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updateCartCount(data.cartCount)
+            updateWishlistCount(data.wishlistCount)
+          }
+        })
+        .catch(error => {
+          })
+    }
+
+    function updateCartCount(count) {
+      const cartCountElement = document.getElementById('headerCartCount')
+      const cartContainer = cartCountElement ? cartCountElement.parentElement : null
+
+      if (count > 0) {
+        if (cartCountElement) {
+          cartCountElement.textContent = count
+          cartCountElement.style.display = 'flex'
+        } else if (cartContainer) {
+          // Create count badge if it doesn't exist
+          const badge = document.createElement('span')
+          badge.className = 'count-badge cart-count'
+          badge.id = 'headerCartCount'
+          badge.textContent = count
+          cartContainer.appendChild(badge)
+        }
+      } else {
+        if (cartCountElement) {
+          cartCountElement.style.display = 'none'
+        }
+      }
+    }
+
+    function updateWishlistCount(count) {
+      const wishlistCountElement = document.getElementById('headerWishlistCount')
+      const wishlistContainer = wishlistCountElement ? wishlistCountElement.parentElement : null
+
+      if (count > 0) {
+        if (wishlistCountElement) {
+          wishlistCountElement.textContent = count
+          wishlistCountElement.style.display = 'flex'
+        } else if (wishlistContainer) {
+          // Create count badge if it doesn't exist
+          const badge = document.createElement('span')
+          badge.className = 'count-badge wishlist-count'
+          badge.id = 'headerWishlistCount'
+          badge.textContent = count
+          wishlistContainer.appendChild(badge)
+        }
+      } else {
+        if (wishlistCountElement) {
+          wishlistCountElement.style.display = 'none'
+        }
+      }
+    }
+
+    // Update counts on page load if user is logged in
+    if (document.querySelector('.user-dropdown')) {
+      updateHeaderCounts()
     }
   })
   

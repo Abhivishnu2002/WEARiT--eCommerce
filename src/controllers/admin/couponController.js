@@ -81,7 +81,7 @@ const getAllCoupons = async (req, res) => {
       limit,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin getAllCoupons error:", error)
     req.flash("error_msg", "Failed to fetch coupons")
     res.render("admin/pages/coupons", {
       coupons: [],
@@ -105,7 +105,7 @@ const loadAddCoupon = async (req, res) => {
       error_msg: req.flash("error_msg"),
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadAddCoupon error:", error)
     req.flash("error_msg", "Failed to load add coupon page")
     res.redirect("/admin/coupons")
   }
@@ -155,6 +155,35 @@ const createCoupon = async (req, res) => {
       req.flash("error_msg", "Fixed discount must be greater than 0")
       return res.redirect("/admin/coupons/add")
     }
+
+    // Validate maximum discount vs minimum purchase amount
+    const minPurchase = Number.parseFloat(minimumPurchase || 0)
+    const discountVal = Number.parseFloat(discountValue)
+    const maxDiscount = maximumDiscount ? Number.parseFloat(maximumDiscount) : null
+
+    if (minPurchase > 0) {
+      if (discountType === "fixed") {
+        if (discountVal >= minPurchase) {
+          req.flash("error_msg", "Fixed discount value must be less than minimum purchase amount")
+          return res.redirect("/admin/coupons/add")
+        }
+      } else if (discountType === "percentage") {
+        // For percentage discounts, check if maximum discount (if set) is less than minimum purchase
+        if (maxDiscount && maxDiscount >= minPurchase) {
+          req.flash("error_msg", "Maximum discount amount must be less than minimum purchase amount")
+          return res.redirect("/admin/coupons/add")
+        }
+
+        // Also check if the percentage could result in a discount >= minimum purchase
+        // This is a theoretical maximum (percentage of minimum purchase amount)
+        const theoreticalMaxDiscount = (minPurchase * discountVal) / 100
+        if (theoreticalMaxDiscount >= minPurchase) {
+          req.flash("error_msg", "Percentage discount is too high relative to minimum purchase amount")
+          return res.redirect("/admin/coupons/add")
+        }
+      }
+    }
+
     const newCoupon = new Coupon({
       code: code.toUpperCase(),
       description,
@@ -192,7 +221,7 @@ const createCoupon = async (req, res) => {
     req.flash("success_msg", "Coupon created successfully")
     res.redirect("/admin/coupons")
   } catch (error) {
-    console.error(error)
+    console.error("Admin createCoupon error:", error)
     req.flash("error_msg", `Failed to create coupon: ${error.message}`)
     res.redirect("/admin/coupons/add")
   }
@@ -239,7 +268,7 @@ const loadEditCoupon = async (req, res) => {
       error_msg: req.flash("error_msg"),
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadEditCoupon error:", error)
     req.flash("error_msg", "Failed to load edit coupon page")
     res.redirect("/admin/coupons")
   }
@@ -288,6 +317,35 @@ const updateCoupon = async (req, res) => {
       req.flash("error_msg", "Usage limit cannot be less than current usage count")
       return res.redirect(`/admin/coupons/edit/${couponId}`)
     }
+
+    // Validate maximum discount vs minimum purchase amount
+    const minPurchase = Number.parseFloat(minimumPurchase || 0)
+    const discountVal = Number.parseFloat(discountValue)
+    const maxDiscount = maximumDiscount ? Number.parseFloat(maximumDiscount) : null
+
+    if (minPurchase > 0) {
+      if (discountType === "fixed") {
+        if (discountVal >= minPurchase) {
+          req.flash("error_msg", "Fixed discount value must be less than minimum purchase amount")
+          return res.redirect(`/admin/coupons/edit/${couponId}`)
+        }
+      } else if (discountType === "percentage") {
+        // For percentage discounts, check if maximum discount (if set) is less than minimum purchase
+        if (maxDiscount && maxDiscount >= minPurchase) {
+          req.flash("error_msg", "Maximum discount amount must be less than minimum purchase amount")
+          return res.redirect(`/admin/coupons/edit/${couponId}`)
+        }
+
+        // Also check if the percentage could result in a discount >= minimum purchase
+        // This is a theoretical maximum (percentage of minimum purchase amount)
+        const theoreticalMaxDiscount = (minPurchase * discountVal) / 100
+        if (theoreticalMaxDiscount >= minPurchase) {
+          req.flash("error_msg", "Percentage discount is too high relative to minimum purchase amount")
+          return res.redirect(`/admin/coupons/edit/${couponId}`)
+        }
+      }
+    }
+
     coupon.description = description
     coupon.discountType = discountType
     coupon.discountValue = Number.parseFloat(discountValue)
@@ -328,7 +386,7 @@ const updateCoupon = async (req, res) => {
     req.flash("success_msg", "Coupon updated successfully")
     res.redirect("/admin/coupons")
   } catch (error) {
-    console.error(error)
+    console.error("Admin updateCoupon error:", error)
     req.flash("error_msg", `Failed to update coupon: ${error.message}`)
     res.redirect(`/admin/coupons/edit/${req.params.id}`)
   }
@@ -372,7 +430,7 @@ const toggleCouponStatus = async (req, res) => {
       message: `Coupon "${coupon.code}" has been ${statusText}`,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin toggleCouponStatus error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -406,7 +464,7 @@ const deleteCoupon = async (req, res) => {
       message: `Coupon "${coupon.code}" deleted successfully`,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin deleteCoupon error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -426,7 +484,7 @@ const getUsers = async (req, res) => {
       users: users,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin searchUsers error:", error)
     res.status(500).json({
       success: false,
       message: "Failed to fetch users",
@@ -478,7 +536,7 @@ const checkCouponStatus = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin checkCouponStatus error:", error)
     res.status(500).json({
       success: false,
       message: "Failed to check coupon status",

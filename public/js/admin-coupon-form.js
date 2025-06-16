@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
   if (typeof flatpickr !== "undefined") {
-    const today = new Date()
     flatpickr("#startDate", {
       enableTime: false,
       dateFormat: "Y-m-d",
@@ -34,7 +33,99 @@ document.addEventListener("DOMContentLoaded", () => {
         discountSymbol.textContent = "₹"
         maxDiscountContainer.classList.add("d-none")
       }
+      // Validate discount vs minimum purchase when discount type changes
+      validateDiscountVsMinimumPurchase()
     })
+  }
+
+  // Real-time validation for discount vs minimum purchase
+  function validateDiscountVsMinimumPurchase() {
+    const discountType = document.getElementById("discountType").value
+    const discountValue = Number.parseFloat(document.getElementById("discountValue").value || 0)
+    const minimumPurchase = Number.parseFloat(document.getElementById("minimumPurchase").value || 0)
+    const maximumDiscount = document.getElementById("maximumDiscount").value ?
+      Number.parseFloat(document.getElementById("maximumDiscount").value) : null
+
+    // Clear any existing validation messages
+    clearFieldValidation("maximumDiscount")
+    clearFieldValidation("minimumPurchase")
+    clearFieldValidation("discountValue")
+
+    if (minimumPurchase > 0 && discountValue > 0) {
+      if (discountType === "fixed") {
+        if (discountValue >= minimumPurchase) {
+          showFieldValidation("discountValue", "Fixed discount value must be less than minimum purchase amount")
+          return false
+        }
+      } else if (discountType === "percentage") {
+        // For percentage discounts, check if maximum discount (if set) is less than minimum purchase
+        if (maximumDiscount && maximumDiscount >= minimumPurchase) {
+          showFieldValidation("maximumDiscount", "Maximum discount amount must be less than minimum purchase amount")
+          return false
+        }
+
+        // Also check if the percentage could result in a discount >= minimum purchase
+        const theoreticalMaxDiscount = (minimumPurchase * discountValue) / 100
+        if (theoreticalMaxDiscount >= minimumPurchase) {
+          showFieldValidation("discountValue", "Percentage discount is too high relative to minimum purchase amount")
+          return false
+        }
+      }
+    }
+    return true
+  }
+
+  // Show field-specific validation error
+  function showFieldValidation(fieldId, message) {
+    const field = document.getElementById(fieldId)
+    const errorElement = document.getElementById(`${fieldId}-error`)
+
+    if (field && errorElement) {
+      // Remove any existing validation classes
+      field.classList.remove("is-valid")
+      field.classList.add("is-invalid")
+
+      // Set error message and make it visible
+      errorElement.textContent = message
+      errorElement.style.display = "block"
+      errorElement.classList.add("d-block")
+    }
+  }
+
+  // Clear field-specific validation error
+  function clearFieldValidation(fieldId) {
+    const field = document.getElementById(fieldId)
+    const errorElement = document.getElementById(`${fieldId}-error`)
+
+    if (field) {
+      field.classList.remove("is-invalid")
+      field.classList.remove("is-valid")
+    }
+    if (errorElement) {
+      errorElement.textContent = ""
+      errorElement.style.display = "none"
+      errorElement.classList.remove("d-block")
+    }
+  }
+
+  // Add event listeners for real-time validation
+  const discountValueInput = document.getElementById("discountValue")
+  const minimumPurchaseInput = document.getElementById("minimumPurchase")
+  const maximumDiscountInput = document.getElementById("maximumDiscount")
+
+  if (discountValueInput) {
+    discountValueInput.addEventListener("input", validateDiscountVsMinimumPurchase)
+    discountValueInput.addEventListener("blur", validateDiscountVsMinimumPurchase)
+  }
+
+  if (minimumPurchaseInput) {
+    minimumPurchaseInput.addEventListener("input", validateDiscountVsMinimumPurchase)
+    minimumPurchaseInput.addEventListener("blur", validateDiscountVsMinimumPurchase)
+  }
+
+  if (maximumDiscountInput) {
+    maximumDiscountInput.addEventListener("input", validateDiscountVsMinimumPurchase)
+    maximumDiscountInput.addEventListener("blur", validateDiscountVsMinimumPurchase)
   }
   const userSpecificCheckbox = document.getElementById("userSpecific")
   const userSelectContainer = document.querySelector(".user-select-container")
@@ -73,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             })
             .catch((error) => {
-              console.error("Error fetching users:", error)
               showErrorToast(`Failed to load users: ${error.message}`)
             })
         }
@@ -147,6 +237,13 @@ document.addEventListener("DOMContentLoaded", () => {
         isValid = false
         showErrorToast("Usage limit must be at least 1 when auto-expire is enabled")
       }
+      // Validate discount value vs minimum purchase amount
+      if (!validateDiscountVsMinimumPurchase()) {
+        event.preventDefault()
+        isValid = false
+        showErrorToast("Please fix the validation errors before submitting")
+      }
+
       const userSpecificChecked = document.getElementById("userSpecific").checked
       if (userSpecificChecked) {
         const applicableUsers = document.getElementById("applicableUsers")
@@ -244,40 +341,30 @@ document.addEventListener("DOMContentLoaded", () => {
   function showInfoToast(message, title = "Info", duration = 3000) {
     if (typeof window.showInfoToast === "function") {
       window.showInfoToast(message, title, duration)
-    } else {
-      console.info(`${title}: ${message}`)
     }
   }
 
   function showSuccessToast(message, title = "Success", duration = 3000) {
     if (typeof window.showSuccessToast === "function") {
       window.showSuccessToast(message, title, duration)
-    } else {
-      console.log(`${title}: ${message}`)
     }
   }
 
   function showWarningToast(message, title = "Warning", duration = 3000) {
     if (typeof window.showWarningToast === "function") {
       window.showWarningToast(message, title, duration)
-    } else {
-      console.warn(`${title}: ${message}`)
     }
   }
 
   function showErrorToast(message, title = "Error", duration = 3000) {
     if (typeof window.showErrorToast === "function") {
       window.showErrorToast(message, title, duration)
-    } else {
-      console.error(`${title}: ${message}`)
     }
   }
 
   function clearAllToasts() {
     if (typeof window.clearAllToasts === "function") {
       window.clearAllToasts()
-    } else {
-      console.log("Clearing all toasts")
     }
   }
 })

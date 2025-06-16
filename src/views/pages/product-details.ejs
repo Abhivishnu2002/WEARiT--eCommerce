@@ -138,17 +138,17 @@
                                 </div>
                             </div>
                         </div>
-                        <% } %> <% if(sizeOptions && sizeOptions.length > 0) {
-                        %>
+                        <% } %> <% if(product.variants && product.variants.length > 0) { %>
                         <div class="size-selection">
                             <p>Choose Size:</p>
                             <div class="size-options">
-                                <% sizeOptions.forEach(size => { %>
+                                <% product.variants.forEach(variant => { %>
                                 <button
-                                    class="size-btn"
-                                    data-size="<%= size %>"
+                                    class="size-btn <%= variant.varientquatity === 0 ? 'out-of-stock' : '' %>"
+                                    data-size="<%= variant.size %>"
+                                    data-stock="<%= variant.varientquatity %>"
                                 >
-                                    <%= size %>
+                                    <%= variant.size %>
                                 </button>
                                 <% }); %>
                             </div>
@@ -199,6 +199,16 @@
                             >
                                 <i class="far fa-heart"></i>
                             </button>
+                        </div>
+
+                        <div class="stock-status">
+                            <%
+                            const selectedVariant = product.variants.find(v => v.size === 'S') || product.variants[0];
+                            if(selectedVariant && selectedVariant.varientquatity > 0) { %>
+                                <span class="in-stock">In Stock</span>
+                            <% } else { %>
+                                <span class="out-of-stock">Out of Stock</span>
+                            <% } %>
                         </div>
                     </div>
                 </div>

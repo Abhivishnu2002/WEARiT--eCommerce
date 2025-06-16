@@ -18,8 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       }
     } catch (e) {
-      console.log("Flash message check error:", e)
-    }
+    
+  }
     const addVariantBtn = document.getElementById("addVariantBtn")
     const variantsContainer = document.getElementById("variantsContainer")
     let variantCount = 1
@@ -111,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const btnElement = document.getElementById(btnId)
   
       if (!inputElement || !containerElement || !removeBtnElement || !btnElement) {
-        console.error(`Missing elements for image uploader: ${inputId}`)
         return
       }
       btnElement.addEventListener("click", (e) => {

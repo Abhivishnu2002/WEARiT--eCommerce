@@ -51,8 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Error checking stock status:", error)
-      })
+        })
   }
 
   // Update stock display based on current status
@@ -338,7 +337,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           })
           .catch((error) => {
-            console.error("Error:", error)
             emptyWishlistBtn.disabled = false
             showToast("An error occurred. Please try again.", "danger")
           })
@@ -415,9 +413,9 @@ document.addEventListener("DOMContentLoaded", () => {
           for (const product of inStockProducts) {
             try {
               await addToCart(product.id, product.size, false)
-            } catch (error) {
-              console.error("Error adding product to cart:", error)
-            }
+            } catch (e) {
+    
+  }
           }
 
           window.location.href = "/cart"
@@ -464,6 +462,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             showToast("Item removed from wishlist", "success")
+
+            // Update header counts
+            if (typeof window.updateHeaderCounts === 'function') {
+              window.updateHeaderCounts()
+            }
           }
         } else {
           showToast(data.message || "Failed to remove from wishlist", "danger")
@@ -471,7 +474,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return data
       })
       .catch((error) => {
-        console.error("Error:", error)
         showToast("An error occurred. Please try again.", "danger")
       })
   }
@@ -488,6 +490,12 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         if (data.success) {
           showToast("Product added to cart", "success")
+
+          // Update header counts
+          if (typeof window.updateHeaderCounts === 'function') {
+            window.updateHeaderCounts()
+          }
+
           return removeFromWishlist(productId, false).then(() => {
             if (redirect) {
               window.location.href = "/cart"
@@ -500,7 +508,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Error:", error)
         showToast("An error occurred. Please try again.", "danger")
         return Promise.reject(error)
       })

@@ -1,214 +1,1 @@
-body {
-    font-family: "Inter", sans-serif;
-    background-color: #f5f5f5;
-    color: #1a1a1a;
-  }
-  
-  .address-container {
-    padding: 30px 15px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  
-  /* Address Content Styles */
-  .address-content {
-    background-color: #ffffff;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  }
-  
-  .address-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  
-  .address-title {
-    font-size: 22px;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .address-actions {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .add-address-btn {
-    font-weight: 500;
-  }
-  
-  /* Address Card Styles */
-  .address-card {
-    border: 1px solid #e5e5e5;
-    border-radius: 10px;
-    padding: 20px;
-    height: 100%;
-    position: relative;
-    transition: box-shadow 0.3s ease;
-  }
-  
-  .address-card:hover {
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .default-address {
-    border: 2px solid #1a1a1a;
-  }
-  
-  .default-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #1a1a1a;
-    color: white;
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 4px;
-  }
-  
-  .address-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 15px;
-  }
-  
-  .address-name {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .edit-btn {
-    color: #1a1a1a;
-    font-size: 16px;
-  }
-  
-  .address-details {
-    margin-bottom: 20px;
-  }
-  
-  .address-line,
-  .address-city-state,
-  .address-country,
-  .address-mobile {
-    margin-bottom: 5px;
-    font-size: 14px;
-  }
-  
-  .address-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
-  }
-  
-  .make-default-btn {
-    font-size: 14px;
-    padding: 5px 10px;
-  }
-  
-  .delete-address-btn {
-    font-size: 14px;
-    padding: 5px 10px;
-  }
-  
-  /* No Address Styles */
-  .no-address-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 300px;
-  }
-  
-  .no-address-message {
-    text-align: center;
-    max-width: 400px;
-    padding: 30px;
-  }
-  
-  .no-address-message i {
-    color: #ccc;
-  }
-  
-  .no-address-message h3 {
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  
-  .no-address-message p {
-    color: #666;
-    margin-bottom: 20px;
-  }
-  
-  /* Alert Float Styles */
-  .alert-float {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 5px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    max-width: 90%;
-  }
-  
-  .alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-  
-  .alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-  
-  /* Responsive Styles */
-  @media (max-width: 991px) {
-    .address-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  
-    .address-actions {
-      width: 100%;
-    }
-  
-    .add-address-btn {
-      width: 100%;
-    }
-  }
-  
-  @media (max-width: 767px) {
-    .address-container {
-      padding: 15px 10px;
-    }
-  
-    .address-content {
-      padding: 15px;
-    }
-  
-    .address-title {
-      font-size: 20px;
-    }
-  }
-  
-  @media (max-width: 575px) {
-    .address-card-footer {
-      flex-direction: column;
-      gap: 10px;
-    }
-  
-    .make-default-btn,
-    .delete-address-btn {
-      width: 100%;
-    }
-  }
-  
+body {    font-family: "Inter", sans-serif;    background-color: #f5f5f5;    color: #1a1a1a;  }  .address-container {    padding: 30px 15px;    max-width: 1400px;    margin: 0 auto;  }  .address-content {    background-color: #ffffff;    border-radius: 15px;    padding: 25px;    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);  }  .address-header {    display: flex;    justify-content: space-between;    align-items: center;    margin-bottom: 25px;    flex-wrap: wrap;    gap: 15px;  }  .address-title {    font-size: 22px;    font-weight: 600;    margin: 0;  }  .address-actions {    display: flex;    gap: 10px;  }  .add-address-btn {    font-weight: 500;  }  .address-card {    border: 1px solid #e5e5e5;    border-radius: 10px;    padding: 20px;    height: 100%;    position: relative;    transition: box-shadow 0.3s ease;  }  .address-card:hover {    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);  }  .default-address {    border: 2px solid #1a1a1a;  }  .default-badge {    position: absolute;    top: 10px;    right: 10px;    background-color: #1a1a1a;    color: white;    font-size: 12px;    padding: 3px 8px;    border-radius: 4px;  }  .address-card-header {    display: flex;    justify-content: space-between;    align-items: flex-start;    margin-bottom: 15px;  }  .address-name {    font-size: 18px;    font-weight: 600;    margin: 0;  }  .edit-btn {    color: #1a1a1a;    font-size: 16px;  }  .address-details {    margin-bottom: 20px;  }  .address-line,  .address-city-state,  .address-country,  .address-mobile {    margin-bottom: 5px;    font-size: 14px;  }  .address-card-footer {    display: flex;    justify-content: space-between;    align-items: center;    margin-top: 15px;  }  .make-default-btn {    font-size: 14px;    padding: 5px 10px;  }  .delete-address-btn {    font-size: 14px;    padding: 5px 10px;  }  .no-address-container {    display: flex;    justify-content: center;    align-items: center;    min-height: 300px;  }  .no-address-message {    text-align: center;    max-width: 400px;    padding: 30px;  }  .no-address-message i {    color: #ccc;  }  .no-address-message h3 {    font-weight: 600;    margin-bottom: 10px;  }  .no-address-message p {    color: #666;    margin-bottom: 20px;  }  .alert-float {    position: fixed;    bottom: 20px;    right: 20px;    padding: 15px 20px;    border-radius: 5px;    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);    z-index: 1000;    max-width: 90%;  }  .alert-success {    background-color: #d4edda;    color: #155724;    border: 1px solid #c3e6cb;  }  .alert-danger {    background-color: #f8d7da;    color: #721c24;    border: 1px solid #f5c6cb;  }  @media (max-width: 991px) {    .address-header {      flex-direction: column;      align-items: flex-start;    }    .address-actions {      width: 100%;    }    .add-address-btn {      width: 100%;    }  }  @media (max-width: 767px) {    .address-container {      padding: 15px 10px;    }    .address-content {      padding: 15px;    }    .address-title {      font-size: 20px;    }  }  @media (max-width: 575px) {    .address-card-footer {      flex-direction: column;      gap: 10px;    }    .make-default-btn,    .delete-address-btn {      width: 100%;    }  }

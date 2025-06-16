@@ -134,8 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Error checking wishlist status:", error)
-        })
+          })
     }
     checkWishlistStatus()
     const wishlistBtns = document.querySelectorAll(".wishlist-btn")
@@ -187,7 +186,6 @@ document.addEventListener("DOMContentLoaded", () => {
               wishlistToast.show()
             })
             .catch((error) => {
-              console.error("Error updating wishlist:", error)
               if (icon) {
                 if (isInWishlist) {
                   icon.classList.remove("bi-heart")
@@ -236,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
               cartToast.show()
             })
             .catch((error) => {
-              console.error("Error adding to cart:", error)
               document.querySelector("#cartToast .toast-body").textContent =
                 "Failed to add product to cart. Please try again."
               cartToast.show()

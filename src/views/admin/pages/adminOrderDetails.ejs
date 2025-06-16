@@ -155,9 +155,39 @@
                         <a href="/admin/orders" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Back
                         </a>
-                        <a href="/admin/orders/<%= order._id %>/invoice" class="btn btn-primary" download>
-                            <i class="fas fa-file-invoice me-2"></i>Download Invoice
-                        </a>
+                        <%
+                          // Invoice download conditions for admin:
+                          // 1. Payment status should not be 'failed'
+                          // 2. For COD orders, invoice is available after delivery (payment status becomes completed after delivery)
+                          // 3. For other payment methods, invoice is available after payment completion
+                          let canDownloadInvoice = false;
+                          const paymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase();
+
+                          if (order.paymentStatus !== 'failed') {
+                            if (paymentMethod === 'cod') {
+                              // For COD, invoice available after delivery (when payment status becomes completed)
+                              canDownloadInvoice = order.orderStatus === 'delivered' || order.paymentStatus === 'completed';
+                            } else {
+                              // For other payment methods, invoice available after payment completion
+                              canDownloadInvoice = order.paymentStatus === 'completed';
+                            }
+                          }
+                        %>
+
+                        <% if (canDownloadInvoice) { %>
+                          <a href="/admin/orders/<%= order._id %>/invoice" class="btn btn-primary" download>
+                              <i class="fas fa-file-invoice me-2"></i>Download Invoice
+                          </a>
+                        <% } else { %>
+                          <button class="btn btn-secondary" disabled title="Invoice not available - <%=
+                            order.paymentStatus === 'failed' ? 'Payment failed' :
+                            order.paymentStatus === 'pending' ? 'Payment pending' :
+                            paymentMethod === 'cod' ? 'COD invoice available after delivery' :
+                            'Payment not completed' %>">
+                              <i class="fas fa-file-invoice me-2"></i>Invoice Not Available
+                          </button>
+                        <% } %>
+
                         <% if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'delivered') { %>
                             <button class="btn btn-danger cancel-order-btn" data-order-id="<%= order._id %>">
                                 <i class="fas fa-times me-2"></i>Cancel Order
@@ -170,11 +200,14 @@
                 <div class="order-status-banner mb-4">
                     <div class="status-badge status-<%= order.orderStatus.toLowerCase().replace(/\s+/g, '-') %>">
                         <i class="fas fa-<%= 
-                            order.orderStatus === 'delivered' ? 'check-circle' : 
-                            order.orderStatus === 'cancelled' ? 'times-circle' : 
-                            order.orderStatus === 'shipped' ? 'shipping-fast' : 
-                            order.orderStatus === 'out for delivery' ? 'truck' : 'clock' 
-                        %> me-2"></i>
+        order.orderStatus === 'delivered' ? 'check-circle' : 
+        order.orderStatus === 'cancelled' ? 'times-circle' : 
+        order.orderStatus === 'shipped' ? 'shipping-fast' : 
+        order.orderStatus === 'out for delivery' ? 'truck' : 
+        order.orderStatus === 'returned' ? 'undo-alt' :
+        order.orderStatus === 'return pending' ? 'exchange-alt' :
+        'clock' 
+    %> me-2"></i>
                         <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
                     </div>
                     <div class="order-date">
@@ -239,10 +272,17 @@
                                             <i class="fas fa-map-marker-alt"></i>
                                         </div>
                                         <div class="info-content">
-                                            <div class="address-name"><%= order.address.name %></div>
-                                            <div class="address-line"><%= order.address.address %></div>
-                                            <div class="address-line"><%= order.address.city %>, <%= order.address.state %> <%= order.address.pincode %></div>
-                                            <div class="address-phone"><%= order.address.mobile %></div>
+                                            <% if (order.address && (order.address.name || order.address.address)) { %>
+                                                <div class="address-name"><%= order.address.name || 'Unknown' %></div>
+                                                <div class="address-line"><%= order.address.address || 'Unknown address' %></div>
+                                                <div class="address-line"><%= order.address.city || 'Unknown' %>, <%= order.address.state || 'Unknown' %> <%= order.address.pincode || 'Unknown' %></div>
+                                                <div class="address-phone"><%= order.address.mobile || 'Not provided' %></div>
+                                            <% } else { %>
+                                                <div class="text-muted">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                                    Unknown address - Address information is no longer available
+                                                </div>
+                                            <% } %>
                                         </div>
                                     </div>
                                 </div>

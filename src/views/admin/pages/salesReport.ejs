@@ -37,12 +37,12 @@
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
                                 <li>
-                                    <a class="dropdown-item" href="/admin/sales-report/download-pdf?timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>" target="_blank">
+                                    <a class="dropdown-item" href="/admin/sales-report/download-pdf?timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %><%= reportData.filters.search ? '&search=' + encodeURIComponent(reportData.filters.search) : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>" target="_blank">
                                         <i class="fas fa-file-pdf me-2 text-danger"></i> Download PDF
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="/admin/sales-report/download-excel?timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %>">
+                                    <a class="dropdown-item" href="/admin/sales-report/download-excel?timeFilter=<%= reportData.timeFilter %><%= reportData.startDate ? '&startDate=' + reportData.startDate.toISOString().split('T')[0] : '' %><%= reportData.endDate ? '&endDate=' + reportData.endDate.toISOString().split('T')[0] : '' %><%= reportData.filters.paymentMethod ? '&paymentMethod=' + reportData.filters.paymentMethod : '' %><%= reportData.filters.search ? '&search=' + encodeURIComponent(reportData.filters.search) : '' %>&sortBy=<%= reportData.filters.sortBy %>&sortOrder=<%= reportData.filters.sortOrder %>">
                                         <i class="fas fa-file-excel me-2 text-success"></i> Download Excel
                                     </a>
                                 </li>
@@ -894,13 +894,7 @@
     
     <% if (reportData) { %>
         <script>
-            // Make report data available to the external script
             window.reportData = <%- JSON.stringify(reportData) %>;
-            console.log("Report data loaded:", window.reportData);
-        </script>
-    <% } else { %>
-        <script>
-            console.warn("No report data available");
         </script>
     <% } %>
     
@@ -954,7 +948,7 @@
                 $('#transactionSearchInput').on('keyup', function() {
                     const searchTerm = this.value.toLowerCase();
                     const tableRows = document.querySelectorAll('#transactionDetailsTable tbody tr');
-                    
+
                     tableRows.forEach(row => {
                         const text = row.textContent.toLowerCase();
                         if (text.includes(searchTerm)) {
@@ -963,6 +957,71 @@
                             row.style.display = 'none';
                         }
                     });
+                });
+
+                // Handle custom date range toggle
+                $('input[name="timeFilter"]').on('change', function() {
+                    const customDateRange = $('.custom-date-range');
+                    const startDateInput = $('#startDate');
+                    const endDateInput = $('#endDate');
+
+                    if (this.value === 'custom') {
+                        customDateRange.removeClass('d-none');
+                        startDateInput.prop('required', true);
+                        endDateInput.prop('required', true);
+
+                        // Set default dates if empty
+                        if (!startDateInput.val()) {
+                            const thirtyDaysAgo = new Date();
+                            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                            startDateInput.val(thirtyDaysAgo.toISOString().split('T')[0]);
+                        }
+                        if (!endDateInput.val()) {
+                            const today = new Date();
+                            endDateInput.val(today.toISOString().split('T')[0]);
+                        }
+                    } else {
+                        customDateRange.addClass('d-none');
+                        startDateInput.prop('required', false);
+                        endDateInput.prop('required', false);
+                    }
+                });
+
+                // Validate custom date range
+                $('#startDate, #endDate').on('change', function() {
+                    const startDate = new Date($('#startDate').val());
+                    const endDate = new Date($('#endDate').val());
+
+                    if (startDate && endDate && startDate > endDate) {
+                        alert('Start date cannot be later than end date');
+                        if (this.id === 'startDate') {
+                            this.value = $('#endDate').val();
+                        } else {
+                            this.value = $('#startDate').val();
+                        }
+                    }
+                });
+
+                // Form validation before submission
+                $('#reportFilterForm').on('submit', function(e) {
+                    const timeFilter = $('input[name="timeFilter"]:checked').val();
+
+                    if (timeFilter === 'custom') {
+                        const startDate = $('#startDate').val();
+                        const endDate = $('#endDate').val();
+
+                        if (!startDate || !endDate) {
+                            e.preventDefault();
+                            alert('Please select both start and end dates for custom range');
+                            return false;
+                        }
+
+                        if (new Date(startDate) > new Date(endDate)) {
+                            e.preventDefault();
+                            alert('Start date cannot be later than end date');
+                            return false;
+                        }
+                    }
                 });
             }
         });

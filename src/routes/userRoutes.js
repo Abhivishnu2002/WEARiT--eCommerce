@@ -52,6 +52,7 @@ router.post("/cart/add", ensureAuthenticated, cartController.addToCart)
 router.post("/cart/update", ensureAuthenticated, cartController.updateCartQuantity)
 router.post("/cart/remove", ensureAuthenticated, cartController.removeFromCart)
 router.post("/cart/empty", ensureAuthenticated, cartController.emptyCart)
+router.get("/cart/check-stock", ensureAuthenticated, cartController.checkStock)
 
 router.get("/wishlist", ensureAuthenticated, wishlistController.loadWishlist)
 router.post("/wishlist/add", ensureAuthenticated, wishlistController.addToWishlist)

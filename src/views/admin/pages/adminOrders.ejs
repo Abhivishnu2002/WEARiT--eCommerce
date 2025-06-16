@@ -230,7 +230,7 @@
                         </thead>
                         <tbody>
                             <% orders.forEach(order => { %>
-                                <tr class="order-row">
+                                <tr class="order-row" data-order-id="<%= order._id %>" data-current-status="<%= order.orderStatus || 'pending' %>">
                                     <td>
                                         <span class="order-id fw-bold text-primary">#<%= order.orderID %></span>
                                     </td>
@@ -290,10 +290,16 @@
                                                 <i class="fas fa-cog me-1"></i>
                                             <% } else if (order.orderStatus === 'shipped') { %>
                                                 <i class="fas fa-shipping-fast me-1"></i>
+                                            <% } else if (order.orderStatus === 'out for delivery') { %>
+                                                <i class="fas fa-truck me-1"></i>
                                             <% } else if (order.orderStatus === 'delivered') { %>
                                                 <i class="fas fa-check-circle me-1"></i>
                                             <% } else if (order.orderStatus === 'cancelled') { %>
                                                 <i class="fas fa-times-circle me-1"></i>
+                                            <% } else if (order.orderStatus === 'returned') { %>
+                                                <i class="fas fa-undo me-1"></i>
+                                            <% } else if (order.orderStatus === 'return pending') { %>
+                                                <i class="fas fa-hourglass-half me-1"></i>
                                             <% } %>
                                             <%= order.orderStatus ? order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) : 'Unknown' %>
                                         </span>

@@ -1,98 +1,1 @@
-/* Stock Alert Styles */
-.stock-alert-popup {
-  font-family: "Inter", sans-serif !important;
-}
-
-.stock-alert-content {
-  text-align: left !important;
-}
-
-.stock-issues-container {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.stock-issue-item {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6 !important;
-  border-radius: 8px !important;
-  transition: all 0.2s ease;
-}
-
-.stock-issue-item:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd !important;
-}
-
-.stock-warning-container {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-/* SweetAlert2 Custom Styles */
-.swal2-popup {
-  border-radius: 12px !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
-}
-
-.swal2-title {
-  font-size: 1.5rem !important;
-  font-weight: 600 !important;
-  color: #212529 !important;
-}
-
-.swal2-content {
-  font-size: 0.95rem !important;
-  line-height: 1.5 !important;
-}
-
-.swal2-confirm {
-  border-radius: 6px !important;
-  font-weight: 500 !important;
-  padding: 10px 24px !important;
-}
-
-.swal2-cancel {
-  border-radius: 6px !important;
-  font-weight: 500 !important;
-  padding: 10px 24px !important;
-}
-
-/* Loading spinner for buttons */
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Stock status indicators */
-.text-danger {
-  color: #dc3545 !important;
-}
-
-.text-warning {
-  color: #ffc107 !important;
-}
-
-.text-success {
-  color: #198754 !important;
-}
-
-.fw-bold {
-  font-weight: 600 !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .stock-alert-popup {
-    margin: 1rem !important;
-  }
-
-  .stock-issues-container {
-    max-height: 300px;
-  }
-
-  .stock-issue-item {
-    padding: 0.75rem !important;
-    margin-bottom: 0.75rem !important;
-  }
-}
+.stock-alert-popup {  font-family: "Inter", sans-serif !important;}.stock-alert-content {  text-align: left !important;}.stock-issues-container {  max-height: 400px;  overflow-y: auto;}.stock-issue-item {  background-color: #f8f9fa;  border: 1px solid #dee2e6 !important;  border-radius: 8px !important;  transition: all 0.2s ease;}.stock-issue-item:hover {  background-color: #e9ecef;  border-color: #adb5bd !important;}.stock-warning-container {  max-height: 300px;  overflow-y: auto;}.swal2-popup {  border-radius: 12px !important;  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;}.swal2-title {  font-size: 1.5rem !important;  font-weight: 600 !important;  color: #212529 !important;}.swal2-content {  font-size: 0.95rem !important;  line-height: 1.5 !important;}.swal2-confirm {  border-radius: 6px !important;  font-weight: 500 !important;  padding: 10px 24px !important;}.swal2-cancel {  border-radius: 6px !important;  font-weight: 500 !important;  padding: 10px 24px !important;}.spinner-border-sm {  width: 1rem;  height: 1rem;}.text-danger {  color: #dc3545 !important;}.text-warning {  color: #ffc107 !important;}.text-success {  color: #198754 !important;}.fw-bold {  font-weight: 600 !important;}@media (max-width: 768px) {  .stock-alert-popup {    margin: 1rem !important;  }  .stock-issues-container {    max-height: 300px;  }  .stock-issue-item {    padding: 0.75rem !important;    margin-bottom: 0.75rem !important;  }}

@@ -11,7 +11,6 @@ function getPayPalClient() {
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
-    console.error("PayPal credentials missing. Check environment variables.")
     throw new Error("PayPal credentials are missing")
   }
 
@@ -129,7 +128,6 @@ const walletController = {
         messages: req.flash(),
       })
     } catch (error) {
-      console.error("Error loading wallet page:", error)
       req.flash("error_msg", "Error loading wallet page")
       res.redirect("/profile")
     }
@@ -188,7 +186,6 @@ const walletController = {
         transactionId: transactionId,
       }
     } catch (error) {
-      console.error("Error processing refund:", error)
       throw error
     }
   },
@@ -252,7 +249,6 @@ const walletController = {
         transactionId: transactionId,
       }
     } catch (error) {
-      console.error("Error processing product return refund:", error)
       throw error
     }
   },
@@ -312,7 +308,6 @@ const walletController = {
         approvalUrl: approvalUrl,
       })
     } catch (error) {
-      console.error("Error creating PayPal order for wallet top-up:", error)
       res.status(500).json({
         success: false,
         message: "Failed to create PayPal payment: " + (error.message || "Unknown error"),
@@ -385,8 +380,6 @@ const walletController = {
         return res.redirect("/wallet")
       }
     } catch (error) {
-      console.error("Error executing PayPal payment for wallet top-up:", error)
-
       delete req.session.paypalWalletTopup
 
       req.flash("error_msg", "Failed to process payment: " + error.message)
@@ -401,7 +394,6 @@ const walletController = {
       req.flash("error_msg", "Payment was cancelled")
       return res.redirect("/wallet")
     } catch (error) {
-      console.error("Error handling PayPal cancellation for wallet top-up:", error)
       req.flash("error_msg", "An error occurred during payment cancellation: " + error.message)
       return res.redirect("/wallet")
     }
@@ -464,7 +456,6 @@ const walletController = {
         })
       }
     } catch (error) {
-      console.error("Error adding money to wallet:", error)
       res.status(500).json({
         success: false,
         message: "Error adding money to wallet",
@@ -525,7 +516,6 @@ const walletController = {
         remainingBalance: user.wallet.balance,
       })
     } catch (error) {
-      console.error("Error using wallet balance:", error)
       res.status(500).json({
         success: false,
         message: "Error processing payment",

@@ -24,9 +24,7 @@ class DashboardCharts {
   }
 
   initCharts(chartData, paymentMethods) {
-
     if (!chartData || !paymentMethods) {
-      console.warn("No chart data provided")
       return
     }
 
@@ -40,7 +38,6 @@ class DashboardCharts {
     const periodInputs = document.querySelectorAll('input[name="dashboardPeriod"]')
 
     if (periodInputs.length === 0) {
-      console.error("No period filter inputs found")
       return
     }
 
@@ -55,7 +52,6 @@ class DashboardCharts {
 
   initDateRangePicker() {
     if (typeof this.$ === "undefined" || typeof this.moment === "undefined") {
-      console.warn("jQuery or Moment.js not available for date range picker")
       return
     }
 
@@ -64,7 +60,6 @@ class DashboardCharts {
     const applyButton = document.getElementById("applyDateRange")
 
     if (dateRangeInput.length === 0) {
-      console.warn("Date range picker input not found")
       return
     }
 
@@ -153,11 +148,9 @@ class DashboardCharts {
           updateTime.textContent = new Date().toLocaleTimeString()
         }
       } else {
-        console.error("Failed to fetch dashboard data:", result.error)
         this.showError("Failed to update dashboard data: " + (result.error || "Unknown error"))
       }
     } catch (error) {
-      console.error("Error updating dashboard:", error)
       this.showError("Network error while updating dashboard: " + error.message)
     } finally {
       if (loader) loader.classList.add("d-none")
@@ -185,7 +178,6 @@ class DashboardCharts {
   }
 
   showError(message) {
-    console.error("Showing error:", message)
     if (typeof window.Swal !== "undefined") {
       window.Swal.fire({
         icon: "error",
@@ -201,7 +193,6 @@ class DashboardCharts {
   initSalesTrendChart(chartData) {
     const salesTrendCtx = document.getElementById("salesTrendChart")
     if (!salesTrendCtx) {
-      console.error("Sales trend chart canvas not found")
       return
     }
 
@@ -211,7 +202,6 @@ class DashboardCharts {
     const orderCountData = chartData.orderCount || []
 
     if (labels.length === 0) {
-      console.warn("No labels available for sales trend chart")
       this.displayNoDataMessage(salesTrendCtx, "No sales data available")
       return
     }
@@ -223,7 +213,6 @@ class DashboardCharts {
       const Chart = window.Chart
 
       if (!Chart) {
-        console.error("Chart.js not available")
         this.displayNoDataMessage(salesTrendCtx, "Chart.js library not loaded")
         return
       }
@@ -375,7 +364,6 @@ class DashboardCharts {
         },
       })
     } catch (error) {
-      console.error("Error initializing sales trend chart:", error)
       this.displayNoDataMessage(salesTrendCtx, "Error initializing chart: " + error.message)
     }
   }
@@ -383,14 +371,12 @@ class DashboardCharts {
   initPaymentMethodChart(paymentMethods) {
     const paymentMethodCtx = document.getElementById("paymentMethodChart")
     if (!paymentMethodCtx) {
-      console.error("Payment method chart canvas not found")
       return
     }
 
     const paymentMethodsArray = Object.keys(paymentMethods || {})
 
     if (paymentMethodsArray.length === 0) {
-      console.warn("No payment methods data available")
       this.displayNoDataMessage(paymentMethodCtx, "No payment methods data available")
       return
     }
@@ -412,7 +398,6 @@ class DashboardCharts {
       const Chart = window.Chart
 
       if (!Chart) {
-        console.error("Chart.js not available")
         this.displayNoDataMessage(paymentMethodCtx, "Chart.js library not loaded")
         return
       }
@@ -477,7 +462,6 @@ class DashboardCharts {
       })
 
     } catch (error) {
-      console.error("Error initializing payment method chart:", error)
       this.displayNoDataMessage(paymentMethodCtx, "Error initializing chart: " + error.message)
     }
   }
@@ -491,9 +475,9 @@ class DashboardCharts {
       ctx.textBaseline = "middle"
       ctx.fillStyle = "#6c757d"
       ctx.fillText(message, canvas.width / 2, canvas.height / 2)
-    } catch (error) {
-      console.error("Error displaying no data message:", error)
-    }
+    } catch (e) {
+    
+  }
   }
 
   calculateNiceScale(value, factor = 1) {
@@ -532,8 +516,6 @@ document.addEventListener("DOMContentLoaded", () => {
       window.addEventListener("resize", () => {
         dashboardCharts.handleResize()
       })
-    } else {
-      console.warn("No dashboard chart data available")
     }
   }, 100)
 })

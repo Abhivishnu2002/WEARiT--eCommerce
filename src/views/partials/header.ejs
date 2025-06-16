@@ -44,7 +44,7 @@
 
             <div class="search-results" id="searchResults"></div>
         </div>
-        <a href="/wishlist">
+        <a href="/wishlist" class="icon-container">
             <svg
                 class="icon wishlist-icon"
                 width="22"
@@ -60,8 +60,11 @@
                     d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
                 ></path>
             </svg>
+            <% if (typeof wishlistCount !== 'undefined' && wishlistCount > 0) { %>
+                <span class="count-badge wishlist-count" id="headerWishlistCount"><%= wishlistCount %></span>
+            <% } %>
         </a>
-        <a href="/cart">
+        <a href="/cart" class="icon-container">
             <svg
                 class="icon cart-icon"
                 width="22"
@@ -79,6 +82,9 @@
                     d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
                 ></path>
             </svg>
+            <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+                <span class="count-badge cart-count" id="headerCartCount"><%= cartCount %></span>
+            <% } %>
         </a>
 
         <div class="user-account-container">

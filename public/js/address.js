@@ -48,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Error:", error)
           deleteModal.hide()
   
           Swal.fire({

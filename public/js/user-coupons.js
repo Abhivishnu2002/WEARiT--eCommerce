@@ -49,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }, 2000)
         })
         .catch((err) => {
-          console.error("Could not copy text: ", err)
           showToast("Failed to copy coupon code", "danger")
         })
     })

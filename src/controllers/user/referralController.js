@@ -23,7 +23,6 @@ const loadReferralPage = async (req, res) => {
       activePage: "referral",
     })
   } catch (error) {
-    console.error("Error loading referral page:", error)
     req.flash("error_msg", "Failed to load referral page")
     res.redirect("/profile")
   }
@@ -41,7 +40,6 @@ const loadReferralCodeEntry = async (req, res) => {
       user: null,
     })
   } catch (error) {
-    console.error("Error loading referral entry page:", error)
     res.redirect("/signup")
   }
 }
@@ -67,7 +65,6 @@ const validateReferralCode = async (req, res) => {
       redirectUrl: `/signup?ref=${code}`,
     })
   } catch (error) {
-    console.error("Error validating referral code:", error)
     return res.status(500).json({ valid: false, message: "Server error" })
   }
 }

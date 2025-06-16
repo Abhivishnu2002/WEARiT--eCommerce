@@ -3,8 +3,6 @@ const Transaction = require("../../models/transactionModel")
 const User = require("../../models/userModel")
 const Cart = require("../../models/cartModel")
 const Product = require("../../models/productModel")
-const UserCoupon = require("../../models/userCouponModel")
-const Coupon = require("../../models/couponModel")
 const paypal = require("@paypal/checkout-server-sdk")
 const Razorpay = require("razorpay")
 const crypto = require("crypto")
@@ -20,7 +18,6 @@ function getPayPalClient() {
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET
 
   if (!clientId || !clientSecret) {
-    console.error("PayPal credentials missing. Check environment variables.")
     throw new Error("PayPal credentials are missing")
   }
 
@@ -38,7 +35,6 @@ function getRazorpayClient() {
   const keySecret = process.env.RAZORPAY_KEY_SECRET
 
   if (!keyId || !keySecret) {
-    console.error("Razorpay credentials missing. Check environment variables.")
     throw new Error("Razorpay credentials are missing")
   }
 
@@ -211,7 +207,15 @@ async function createOrderFromCart(userId, addressId, paymentMethod, req) {
     user: userId,
     orderID: orderID,
     products: validProducts,
-    address: addressId,
+    address: {
+      addressId: addressId,
+      name: address.name,
+      mobile: address.mobile,
+      pincode: address.pincode,
+      address: address.address,
+      city: address.city,
+      state: address.state,
+    },
     totalAmount: subtotal,
     discount: totalDiscount,
     finalAmount: Math.round(finalAmount * 100) / 100,
@@ -335,7 +339,6 @@ const createPaypalPayment = async (req, res) => {
       paypalOrderId: response.result.id,
     })
   } catch (error) {
-    console.error("Error creating PayPal payment:", error)
     res.status(500).json({
       success: false,
       message: "Failed to create PayPal payment: " + (error.message || "Unknown error"),
@@ -472,18 +475,17 @@ const executePaypalPayment = async (req, res) => {
       return res.redirect(`/order-failure/${orderId}`)
     }
   } catch (error) {
-    console.error("Error executing PayPal payment:", error)
     if (transaction) {
       transaction.status = "failed"
       transaction.paymentDetails = transaction.paymentDetails || {}
       transaction.paymentDetails.errorMessage = error.message
       transaction.failureReason = `PayPal execution error: ${error.message}`
-      await transaction.save().catch((err) => console.error("Error saving transaction:", err))
+      await transaction.save().catch(() => {})
     }
     if (order) {
       order.paymentStatus = "failed"
       order.failureReason = `PayPal execution error: ${error.message}`
-      await order.save().catch((err) => console.error("Error saving order:", err))
+      await order.save().catch(() => {})
     }
 
     req.flash("error_msg", "Failed to process payment: " + error.message)
@@ -524,7 +526,6 @@ const cancelPaypalPayment = async (req, res) => {
     req.flash("error_msg", "Payment was cancelled")
     return res.redirect(`/order-failure/${orderId}`)
   } catch (error) {
-    console.error("Error handling PayPal cancellation:", error)
     req.flash("error_msg", "An error occurred during payment cancellation: " + error.message)
     return res.redirect(`/order-failure/${req.query.orderId || ""}`)
   }
@@ -625,8 +626,6 @@ const createRazorpayOrder = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error("Error creating Razorpay order:", error)
-
     const parsedError = parseRazorpayError(error)
 
     res.status(500).json({
@@ -758,18 +757,27 @@ const verifyRazorpayPayment = async (req, res) => {
 
       await transaction.save()
 
-      // Process coupon usage and clear cart
-      if (order.coupon && order.coupon.couponId) {
+      // Process coupon usage only if not already processed
+      if (order.coupon && order.coupon.couponId && !order.couponProcessed) {
         await couponController.processCouponUsage(req.user._id, order.coupon.couponId, order._id)
+        order.couponProcessed = true
+        await order.save()
       }
 
-      await Cart.findOneAndUpdate({ user: req.user._id }, { $set: { products: [] } })
+      // Only clear cart for new orders, not retry payments
+      // Check if this is a retry payment by looking at order creation time vs current time
+      const orderAge = Date.now() - new Date(order.orderDate).getTime()
+      const isRetryPayment = orderAge > 60000 // If order is older than 1 minute, it's likely a retry
 
-      if (req.session.couponDiscount) {
-        req.session.couponDiscount = 0
-      }
-      if (req.session.coupon) {
-        delete req.session.coupon
+      if (!isRetryPayment) {
+        await Cart.findOneAndUpdate({ user: req.user._id }, { $set: { products: [] } })
+
+        if (req.session.couponDiscount) {
+          req.session.couponDiscount = 0
+        }
+        if (req.session.coupon) {
+          delete req.session.coupon
+        }
       }
 
       return res.json({
@@ -808,8 +816,6 @@ const verifyRazorpayPayment = async (req, res) => {
       })
     }
   } catch (error) {
-    console.error("Error verifying Razorpay payment:", error)
-
     const parsedError = parseRazorpayError(error)
 
     if (transaction) {
@@ -819,13 +825,13 @@ const verifyRazorpayPayment = async (req, res) => {
         errorMessage: error.message,
       }
       transaction.failureReason = parsedError.message
-      await transaction.save().catch((err) => console.error("Error saving transaction:", err))
+      await transaction.save().catch(() => {})
     }
 
     if (order) {
       order.paymentStatus = "failed"
       order.failureReason = parsedError.message
-      await order.save().catch((err) => console.error("Error saving order:", err))
+      await order.save().catch(() => {})
     }
 
     return res.status(500).json({
@@ -900,7 +906,6 @@ const handleRazorpayFailure = async (req, res) => {
       errorCode: "ORDER_NOT_FOUND",
     })
   } catch (error) {
-    console.error("Error handling Razorpay failure:", error)
     return res.status(500).json({
       success: false,
       message: "Error processing payment failure",
@@ -931,7 +936,6 @@ const razorpaySuccess = async (req, res) => {
 
     return res.redirect(`/order-success/${orderId}`)
   } catch (error) {
-    console.error("Error handling Razorpay success:", error)
     req.flash("error_msg", "An error occurred: " + error.message)
     return res.redirect(`/order-failure/${req.query.orderId || ""}`)
   }
@@ -956,7 +960,6 @@ const razorpayFailure = async (req, res) => {
     req.flash("error_msg", "Payment failed or was cancelled")
     return res.redirect(`/order-failure/${orderId}`)
   } catch (error) {
-    console.error("Error handling Razorpay failure:", error)
     req.flash("error_msg", "An error occurred during payment failure handling: " + error.message)
     return res.redirect(`/order-failure/${req.query.orderId || ""}`)
   }
@@ -1220,8 +1223,6 @@ const retryPayment = async (req, res) => {
       })
     }
   } catch (error) {
-    console.error("Error retrying payment:", error)
-
     const parsedError = parseRazorpayError(error)
 
     res.status(500).json({

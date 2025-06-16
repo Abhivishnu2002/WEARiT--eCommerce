@@ -4,7 +4,8 @@ const moment = require("moment")
 const PDFDocument = require("pdfkit")
 const { getDateRange, groupDataByTimePeriod, formatCurrency } = require("../../utils/reportUtils")
 
-const getSalesReport = async (req, res) => {
+const 
+getSalesReport = async (req, res) => {
   try {
     const timeFilter = req.query.timeFilter || "monthly"
     const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null
@@ -20,10 +21,23 @@ const getSalesReport = async (req, res) => {
     const transactionPage = Number.parseInt(req.query.transactionPage) || 1
     const transactionLimit = Number.parseInt(req.query.transactionLimit) || 10
 
+    // Enhanced date range handling
     let dateRange
-    if (customStartDate && customEndDate) {
-      customEndDate.setHours(23, 59, 59, 999)
-      dateRange = { startDate: customStartDate, endDate: customEndDate }
+    if (timeFilter === "custom" && customStartDate && customEndDate) {
+      // Validate custom date range
+      if (customStartDate > customEndDate) {
+        return res.render("admin/pages/salesReport", {
+          admin: req.session.admin,
+          error_msg: "Start date cannot be later than end date",
+          reportData: null,
+        })
+      }
+
+      const startDate = new Date(customStartDate)
+      const endDate = new Date(customEndDate)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(23, 59, 59, 999)
+      dateRange = { startDate, endDate }
     } else {
       dateRange = getDateRange(timeFilter)
     }
@@ -63,7 +77,6 @@ const getSalesReport = async (req, res) => {
           select: "name",
         },
       })
-      .populate("address")
       .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
       .skip((page - 1) * limit)
       .limit(limit)
@@ -185,11 +198,15 @@ const getSalesReport = async (req, res) => {
       formatCurrency,
     })
   } catch (error) {
-    console.error("Error generating sales report:", error)
+    console.error("Sales report error:", error)
+    console.error("Error stack:", error.stack)
+
     res.render("admin/pages/salesReport", {
       admin: req.session.admin,
       error_msg: "Failed to generate sales report: " + error.message,
       reportData: null,
+      moment,
+      formatCurrency,
     })
   }
 }
@@ -201,11 +218,22 @@ const downloadPDF = async (req, res) => {
     const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null
     const paymentMethod = req.query.paymentMethod || ""
     const search = req.query.search || ""
+    const sortBy = req.query.sortBy || "orderDate"
+    const sortOrder = req.query.sortOrder || "desc"
 
+    // Enhanced date range handling for PDF
     let dateRange
-    if (customStartDate && customEndDate) {
-      customEndDate.setHours(23, 59, 59, 999)
-      dateRange = { startDate: customStartDate, endDate: customEndDate }
+    if (timeFilter === "custom" && customStartDate && customEndDate) {
+      // Validate custom date range
+      if (customStartDate > customEndDate) {
+        return res.status(400).send("Invalid date range: Start date cannot be later than end date")
+      }
+
+      const startDate = new Date(customStartDate)
+      const endDate = new Date(customEndDate)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(23, 59, 59, 999)
+      dateRange = { startDate, endDate }
     } else {
       dateRange = getDateRange(timeFilter)
     }
@@ -222,6 +250,16 @@ const downloadPDF = async (req, res) => {
         { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
       ]
     }
+    if (search) {
+      query.$or = [
+        { orderID: { $regex: search, $options: "i" } },
+        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
+      ]
+    }
+    // Build sort object
+    const sortObj = {}
+    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1
+
     const orders = await Order.find(query)
       .populate("user", "name email mobile")
       .populate({
@@ -232,8 +270,7 @@ const downloadPDF = async (req, res) => {
           select: "name",
         },
       })
-      .populate("address")
-      .sort({ orderDate: -1 })
+      .sort(sortObj)
       .lean()
 
     const transactions = await Transaction.find({
@@ -709,7 +746,7 @@ const downloadPDF = async (req, res) => {
 
     doc.end()
   } catch (error) {
-    console.error("Error generating enhanced PDF report:", error)
+    console.error("Admin downloadPDF error:", error)
     res.status(500).send("Failed to generate PDF report: " + error.message)
   }
 }
@@ -721,11 +758,23 @@ const downloadExcel = async (req, res) => {
     const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null
     const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null
     const paymentMethod = req.query.paymentMethod || ""
+    const search = req.query.search || ""
+    const sortBy = req.query.sortBy || "orderDate"
+    const sortOrder = req.query.sortOrder || "desc"
 
+    // Enhanced date range handling for Excel
     let dateRange
-    if (customStartDate && customEndDate) {
-      customEndDate.setHours(23, 59, 59, 999)
-      dateRange = { startDate: customStartDate, endDate: customEndDate }
+    if (timeFilter === "custom" && customStartDate && customEndDate) {
+      // Validate custom date range
+      if (customStartDate > customEndDate) {
+        return res.status(400).send("Invalid date range: Start date cannot be later than end date")
+      }
+
+      const startDate = new Date(customStartDate)
+      const endDate = new Date(customEndDate)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(23, 59, 59, 999)
+      dateRange = { startDate, endDate }
     } else {
       dateRange = getDateRange(timeFilter)
     }
@@ -736,6 +785,16 @@ const downloadExcel = async (req, res) => {
     if (paymentMethod) {
       query.paymentMethod = paymentMethod
     }
+    if (search) {
+      query.$or = [
+        { orderID: { $regex: search, $options: "i" } },
+        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
+      ]
+    }
+
+    // Build sort object for Excel
+    const sortObj = {}
+    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1
 
     const orders = await Order.find(query)
       .populate("user", "name email mobile")
@@ -747,8 +806,7 @@ const downloadExcel = async (req, res) => {
           select: "name",
         },
       })
-      .populate("address")
-      .sort({ orderDate: -1 })
+      .sort(sortObj)
       .lean()
 
     const transactions = await Transaction.find({
@@ -1034,7 +1092,7 @@ const downloadExcel = async (req, res) => {
     await workbook.xlsx.write(res)
     res.end()
   } catch (error) {
-    console.error("Error generating Excel report:", error)
+    console.error("Admin downloadExcel error:", error)
     res.status(500).send("Failed to generate Excel report: " + error.message)
   }
 }

@@ -5,7 +5,6 @@ const Order = require("../../models/orderModel")
 const User = require("../../models/userModel")
 const Transaction = require("../../models/transactionModel")
 const Coupon = require("../../models/couponModel")
-const UserCoupon = require("../../models/userCouponModel")
 const getWishlistCount = require("../../utils/wishlistCount")
 const couponController = require("./couponController")
 const PriceCalculator = require("../../utils/priceCalculator")
@@ -47,12 +46,93 @@ const loadCheckout = async (req, res) => {
     }
 
     const validProducts = []
+    const stockIssues = []
+    const unavailableProducts = []
+
     for (const item of cart.products) {
       const freshProduct = await Product.findById(item.product._id).populate("categoryId")
-      if (freshProduct && freshProduct.isActive && freshProduct.categoryId && freshProduct.categoryId.isListed) {
-        item.product = freshProduct
-        validProducts.push(item)
+
+      // Check if product is unlisted or inactive
+      if (!freshProduct || !freshProduct.isActive) {
+        unavailableProducts.push({
+          productName: item.product.name,
+          size: item.size,
+          reason: "Product is no longer available",
+        })
+        continue
       }
+
+      // Check if category is unlisted
+      if (!freshProduct.categoryId || !freshProduct.categoryId.isListed) {
+        unavailableProducts.push({
+          productName: freshProduct.name,
+          size: item.size,
+          reason: "Product category is no longer available",
+        })
+        continue
+      }
+
+      // Check stock availability
+      const variant = freshProduct.variants.find((v) => v.size === item.size)
+      if (!variant) {
+        stockIssues.push({
+          productName: freshProduct.name,
+          size: item.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+        })
+        continue
+      }
+
+      if (variant.varientquatity === 0) {
+        stockIssues.push({
+          productName: freshProduct.name,
+          size: item.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+        })
+        continue
+      } else if (variant.varientquatity < item.quantity) {
+        stockIssues.push({
+          productName: freshProduct.name,
+          size: item.size,
+          requestedQuantity: item.quantity,
+          availableStock: variant.varientquatity,
+        })
+        continue
+      }
+
+      // Product is valid and has sufficient stock
+      item.product = freshProduct
+      validProducts.push(item)
+    }
+
+    // If there are unavailable products or stock issues, redirect to cart with error messages
+    if (unavailableProducts.length > 0) {
+      let errorMessage = "Some products in your cart are no longer available: "
+      errorMessage += unavailableProducts.map(item => `${item.productName} (${item.size})`).join(", ")
+      req.flash("error_msg", errorMessage)
+      return res.redirect("/cart")
+    }
+
+    if (stockIssues.length > 0) {
+      let errorMessage = "Stock issues detected: "
+      const outOfStockItems = stockIssues.filter(issue => issue.availableStock === 0)
+      const partialStockItems = stockIssues.filter(issue => issue.availableStock > 0)
+
+      if (outOfStockItems.length > 0) {
+        errorMessage += outOfStockItems.map(item => `${item.productName} (${item.size}) is out of stock`).join(", ")
+      }
+
+      if (partialStockItems.length > 0) {
+        if (outOfStockItems.length > 0) errorMessage += "; "
+        errorMessage += partialStockItems.map(item =>
+          `${item.productName} (${item.size}) - only ${item.availableStock} available`
+        ).join(", ")
+      }
+
+      req.flash("error_msg", errorMessage)
+      return res.redirect("/cart")
     }
 
     if (validProducts.length === 0) {
@@ -96,7 +176,7 @@ const loadCheckout = async (req, res) => {
       activePage: "checkout",
     })
   } catch (error) {
-    console.error("Checkout error:", error)
+    console.error("User loadCheckout error:", error)
     req.flash("error_msg", "Failed to load checkout page")
     res.redirect("/cart")
   }
@@ -191,7 +271,7 @@ const loadPayment = async (req, res) => {
       razorpayKeyId: process.env.RAZORPAY_KEY_ID,
     })
   } catch (error) {
-    console.error("Payment page error:", error)
+    console.error("User loadPayment error:", error)
     req.flash("error_msg", "Failed to load payment page")
     res.redirect("/checkout")
   }
@@ -277,7 +357,15 @@ const placeOrder = async (req, res) => {
       user: req.user._id,
       orderID: orderID,
       products: validProducts,
-      address: addressId,
+      address: {
+        addressId: addressId,
+        name: address.name,
+        mobile: address.mobile,
+        pincode: address.pincode,
+        address: address.address,
+        city: address.city,
+        state: address.state,
+      },
       totalAmount: subtotal,
       discount: totalDiscount,
       finalAmount: Math.round(finalAmount * 100) / 100,
@@ -417,7 +505,7 @@ const placeOrder = async (req, res) => {
       return res.redirect(`/payment?orderId=${order._id}`)
     }
   } catch (error) {
-    console.error("Place order error:", error)
+    console.error("User placeOrder error:", error)
     req.flash("error_msg", "Failed to place order: " + error.message)
     res.redirect("/checkout")
   }
@@ -469,7 +557,7 @@ const orderSuccess = async (req, res) => {
       messages: req.flash(),
     })
   } catch (error) {
-    console.error("Error loading order success page:", error)
+    console.error("User loadOrderSuccess error:", error)
     req.flash("error_msg", "Error loading order success page: " + error.message)
     res.redirect("/orders")
   }

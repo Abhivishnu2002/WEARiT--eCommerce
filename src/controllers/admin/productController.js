@@ -137,7 +137,7 @@ const loadProducts = async (req, res) => {
       })
     }
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadProducts error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminProducts", {
       admin: req.session.admin || {},
@@ -169,7 +169,7 @@ const loadAddProducts = async (req, res) => {
 
     res.render("admin/pages/adminAddProducts", { admin, categories })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadAddProducts error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminAddProducts", {
       admin: req.session.admin || {},
@@ -283,7 +283,7 @@ const addProduct = async (req, res) => {
     req.flash("success_msg", "Product added successfully")
     res.redirect("/admin/products")
   } catch (error) {
-    console.error(error)
+    console.error("Admin addProduct error:", error)
     req.flash("error_msg", "Failed to add product: " + error.message)
     res.status(500).render("admin/pages/adminAddProducts", {
       admin: req.session.admin,
@@ -315,7 +315,7 @@ const loadEditProducts = async (req, res) => {
       categories,
     })
   } catch (error) {
-    console.error("Load edit products error:", error)
+    console.error("Admin loadEditProducts error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminUpdateProduct", {
       error_msg: "Server error",
@@ -366,8 +366,38 @@ const updateProduct = async (req, res) => {
 
     const totalStock = variants.reduce((sum, v) => sum + v.varientquatity, 0)
 
-    let images = []
+    // Get existing product to work with current images
+    const existingProduct = await Product.findById(productId)
+    let images = [...existingProduct.images] // Start with existing images
 
+    // Handle image deletions first
+    const imagesToDelete = []
+
+    // Check which images are marked for deletion
+    const deletedImages = req.body.deletedImages ? JSON.parse(req.body.deletedImages) : []
+
+    // Remove deleted images from the images array and mark them for deletion from Cloudinary
+    if (deletedImages.length > 0) {
+      for (const deletedImageUrl of deletedImages) {
+        const imageIndex = images.findIndex(img => img.url === deletedImageUrl)
+        if (imageIndex !== -1) {
+          imagesToDelete.push(images[imageIndex].url)
+          images.splice(imageIndex, 1)
+        }
+      }
+    }
+
+    // Delete images from Cloudinary
+    for (const imageUrl of imagesToDelete) {
+      try {
+        const publicId = imageUrl.split("/").pop().split(".")[0]
+        await cloudinary.uploader.destroy(publicId)
+        } catch (e) {
+          console.error("Admin updateProduct cloudinary delete error:", e)
+        }
+    }
+
+    // Handle new image uploads
     if (req.files && Object.keys(req.files).length > 0) {
       for (const fieldName in req.files) {
         const file = req.files[fieldName][0]
@@ -376,11 +406,17 @@ const updateProduct = async (req, res) => {
           thumbnail: file.path.replace("/upload/", "/upload/w_200,h_200,c_thumb/"),
           isMain: fieldName === "mainImage",
         }
+
+        // If this is a main image replacement, remove the old main image first
+        if (fieldName === "mainImage") {
+          const existingMainIndex = images.findIndex(img => img.isMain)
+          if (existingMainIndex !== -1) {
+            images.splice(existingMainIndex, 1)
+          }
+        }
+
         images.push(imageObj)
       }
-    } else {
-      const existingProduct = await Product.findById(productId)
-      images = existingProduct.images
     }
 
     await Product.findByIdAndUpdate(productId, {
@@ -407,7 +443,7 @@ const updateProduct = async (req, res) => {
     req.flash("success_msg", "Product updated successfully")
     res.redirect("/admin/products")
   } catch (error) {
-    console.error("Update product error:", error)
+    console.error("Admin updateProduct error:", error)
     req.flash("error_msg", "Failed to update product")
     res.redirect("/admin/products")
   }
@@ -442,7 +478,7 @@ const updateProductOffer = async (req, res) => {
     req.flash("success_msg", `Product offer updated to ${productOffer}% successfully`)
     res.redirect("/admin/products")
   } catch (error) {
-    console.error("Update product offer error:", error)
+    console.error("Admin updateProductOffer error:", error)
     req.flash("error_msg", "Failed to update product offer")
     res.redirect("/admin/products")
   }
@@ -462,8 +498,8 @@ const deleteProduct = async (req, res) => {
       try {
         const publicId = image.url.split("/").pop().split(".")[0]
         await cloudinary.uploader.destroy(publicId)
-      } catch (error) {
-        console.error("Error deleting image from Cloudinary:", error)
+      } catch (e) {
+        console.error("Admin deleteProduct cloudinary delete error:", e)
       }
     }
     await Product.findByIdAndDelete(productId)
@@ -472,7 +508,7 @@ const deleteProduct = async (req, res) => {
       message: "Product deleted successfully",
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin deleteProduct error:", error)
     res.status(500).json({ success: false, message: "Server error" })
   }
 }
@@ -493,7 +529,7 @@ const toggleProductListing = async (req, res) => {
       isListed: product.isActive,
     })
   } catch (error) {
-    console.error(`Error toggling product listing: ${error.message}`)
+    console.error("Admin toggleProductListing error:", error)
     res.status(500).json({ success: false, message: "Server error" })
   }
 }

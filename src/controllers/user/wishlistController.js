@@ -58,7 +58,6 @@ const loadWishlist = async (req, res) => {
       user: req.user,
     })
   } catch (error) {
-    console.error("Load wishlist error:", error)
     req.flash("error_msg", "Failed to load wishlist")
     res.redirect("/")
   }
@@ -105,7 +104,6 @@ const addToWishlist = async (req, res) => {
       wishlistCount: wishlist.products.length,
     })
   } catch (error) {
-    console.error("Add to wishlist error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -142,7 +140,6 @@ const removeFromWishlist = async (req, res) => {
       wishlistCount: wishlist.products.length,
     })
   } catch (error) {
-    console.error("Remove from wishlist error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -173,7 +170,6 @@ const checkWishlistStatus = async (req, res) => {
       wishlistItems: wishlist.products.map((id) => id.toString()),
     })
   } catch (error) {
-    console.error("Check wishlist status error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -205,7 +201,6 @@ const emptyWishlist = async (req, res) => {
       message: "Wishlist emptied successfully",
     })
   } catch (error) {
-    console.error("Empty wishlist error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -262,7 +257,6 @@ const checkStockStatus = async (req, res) => {
       stockStatus,
     })
   } catch (error) {
-    console.error("Check stock status error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",

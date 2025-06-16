@@ -99,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch((error) => {
           this.disabled = false
           
-          console.error("Error updating quantity:", error)
           showToast("Failed to update quantity", "danger")
         })
     })
@@ -169,6 +168,12 @@ document.addEventListener("DOMContentLoaded", () => {
               }
               
               showToast("Item removed from cart", "success")
+
+              // Update header counts
+              if (typeof window.updateHeaderCounts === 'function') {
+                window.updateHeaderCounts()
+              }
+
               confirmModal.element.querySelector(".modal").classList.remove("show")
               confirmModal.element.querySelector(".modal").style.display = "none"
               setTimeout(() => {
@@ -179,7 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           })
           .catch((error) => {
-            console.error("Error removing item:", error)
             showToast("Failed to remove item", "danger")
           })
       })
@@ -251,6 +255,12 @@ document.addEventListener("DOMContentLoaded", () => {
               emptyCartBtn.remove()
               
               showToast("Cart emptied successfully", "success")
+
+              // Update header counts
+              if (typeof window.updateHeaderCounts === 'function') {
+                window.updateHeaderCounts()
+              }
+
               confirmModal.element.querySelector(".modal").classList.remove("show")
               confirmModal.element.querySelector(".modal").style.display = "none"
               setTimeout(() => {
@@ -263,7 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
           })
           .catch((error) => {
             emptyCartBtn.disabled = false
-            console.error("Error emptying cart:", error)
             showToast("Failed to empty cart", "danger")
           })
       })
@@ -277,5 +286,115 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     })
   }
-  
+
+  // Add checkout validation
+  const checkoutBtn = document.querySelector('.checkout-btn')
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', async function(e) {
+      e.preventDefault()
+
+      const originalText = this.textContent
+      this.textContent = 'Validating...'
+      this.disabled = true
+
+      try {
+        const response = await fetch('/cart/check-stock', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'same-origin'
+        })
+
+        const data = await response.json()
+
+        if (!data.success) {
+          await Swal.fire({
+            title: 'Error',
+            text: data.message || 'Failed to validate cart',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#1a1a1a'
+          })
+          this.textContent = originalText
+          this.disabled = false
+          return
+        }
+
+        // Check for unavailable products (unlisted/inactive)
+        if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
+          let unavailableMessage = '<div class="unavailable-products">'
+          unavailableMessage += '<p><strong>The following products are no longer available:</strong></p>'
+          unavailableMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+          data.unavailableProducts.forEach(item => {
+            unavailableMessage += `<li><strong>${item.productName}</strong> (Size: ${item.size}) - ${item.reason}</li>`
+          })
+
+          unavailableMessage += '</ul>'
+          unavailableMessage += '<p>Please remove these items from your cart to continue.</p>'
+          unavailableMessage += '</div>'
+
+          await Swal.fire({
+            title: 'Products Unavailable',
+            html: unavailableMessage,
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#1a1a1a'
+          })
+
+          this.textContent = originalText
+          this.disabled = false
+          return
+        }
+
+        // Check for stock issues
+        if (data.hasStockIssues && data.stockIssues.length > 0) {
+          let stockMessage = '<div class="stock-issues">'
+          stockMessage += '<p><strong>Stock issues detected:</strong></p>'
+          stockMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+          data.stockIssues.forEach(issue => {
+            if (issue.availableStock === 0) {
+              stockMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) is <span style="color: #dc3545;">out of stock</span></li>`
+            } else if (issue.isPartialStock) {
+              stockMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) - Only ${issue.availableStock} available (you requested ${issue.requestedQuantity})</li>`
+            }
+          })
+
+          stockMessage += '</ul>'
+          stockMessage += '<p>Please update quantities or remove out-of-stock items to continue.</p>'
+          stockMessage += '</div>'
+
+          await Swal.fire({
+            title: 'Stock Issues Detected',
+            html: stockMessage,
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#1a1a1a'
+          })
+
+          this.textContent = originalText
+          this.disabled = false
+          return
+        }
+
+        // If all validations pass, proceed to checkout
+        window.location.href = '/checkout'
+
+      } catch (error) {
+        await Swal.fire({
+          title: 'Error',
+          text: 'Failed to validate cart. Please try again.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#1a1a1a'
+        })
+
+        this.textContent = originalText
+        this.disabled = false
+      }
+    })
+  }
+
 })

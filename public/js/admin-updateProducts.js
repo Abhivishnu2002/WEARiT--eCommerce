@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
           confirmButtonColor: "#0d6efd",
         })
       }
-  
+
       if (typeof locals !== "undefined" && locals.error_msg && locals.error_msg.length > 0) {
         Swal.fire({
           icon: "error",
@@ -18,8 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       }
     } catch (e) {
-      console.log("Flash message check error:", e)
-    }
+    
+  }
+
+    // Track deleted images
+    let deletedImages = []
     const cropperModalEl = document.getElementById("imageCropperModal")
     const cropperModal = new bootstrap.Modal(cropperModalEl)
 
@@ -77,7 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const oldImageInput = oldImageInputName ? document.querySelector(`input[name="${oldImageInputName}"]`) : null
   
       if (!inputElement || !containerElement || !removeBtnElement) {
-        console.error(`Missing elements for image uploader: ${inputId}`)
         return
       }
   
@@ -144,15 +146,20 @@ document.addEventListener("DOMContentLoaded", () => {
       removeBtnElement.addEventListener("click", (e) => {
         e.preventDefault()
         e.stopPropagation()
-  
+
+        // Track the deleted image URL
+        if (oldImageInput && oldImageInput.value) {
+          deletedImages.push(oldImageInput.value)
+          }
+
         inputElement.value = ""
-  
+
         containerElement.innerHTML = `
           <i class="fas fa-image upload-icon"></i>
           <p class="upload-text">Drag and drop image here, or click to add image</p>
           <button type="button" class="btn-upload" id="${btnId}">Add Image</button>
         `
-  
+
         const newBtn = document.getElementById(btnId)
         if (newBtn) {
           newBtn.addEventListener("click", (e) => {
@@ -161,13 +168,13 @@ document.addEventListener("DOMContentLoaded", () => {
             inputElement.click()
           })
         }
-  
+
         removeBtnElement.classList.add("d-none")
-  
+
         if (oldImageInput) {
           oldImageInput.setAttribute("data-removed", "true")
         }
-  
+
         clearError(inputElement)
       })
   
@@ -372,6 +379,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (isValid) {
+          // Add deleted images data to form before submission
+          const deletedImagesInput = document.createElement("input")
+          deletedImagesInput.type = "hidden"
+          deletedImagesInput.name = "deletedImages"
+          deletedImagesInput.value = JSON.stringify(deletedImages)
+          productForm.appendChild(deletedImagesInput)
+
           productForm.submit()
         } else {
           const firstError = document.querySelector(".invalid-feedback.show")

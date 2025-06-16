@@ -253,20 +253,90 @@ function goToPage(page) {
 }
 
 function showUpdateStatusModal(orderId) {
+  // Get current status from the order row
+  const orderRow = document.querySelector(`[data-order-id="${orderId}"]`)
+  const currentStatus = orderRow ? orderRow.getAttribute('data-current-status') : 'pending'
+
+  // Define order status constants (matching backend enums)
+  const ORDER_STATUS = {
+    PENDING: 'pending',
+    SHIPPED: 'shipped',
+    OUT_FOR_DELIVERY: 'out for delivery',
+    DELIVERED: 'delivered',
+    CANCELLED: 'cancelled',
+    RETURNED: 'returned',
+    RETURN_PENDING: 'return pending'
+  }
+
+  // Define status hierarchy for validation
+  const statusHierarchy = {
+    [ORDER_STATUS.PENDING]: 0,
+    [ORDER_STATUS.SHIPPED]: 1,
+    [ORDER_STATUS.OUT_FOR_DELIVERY]: 2,
+    [ORDER_STATUS.DELIVERED]: 3,
+    [ORDER_STATUS.CANCELLED]: 4,
+    [ORDER_STATUS.RETURNED]: 5,
+    [ORDER_STATUS.RETURN_PENDING]: 6
+  }
+
+  // If current status is delivered, cancelled, or returned, show info message
+  if (currentStatus === ORDER_STATUS.DELIVERED || currentStatus === ORDER_STATUS.CANCELLED || currentStatus === ORDER_STATUS.RETURNED) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Status Cannot Be Changed',
+      text: `Orders with status "${currentStatus}" cannot be changed to other statuses.`,
+      confirmButtonColor: '#667eea'
+    })
+    return
+  }
+
+  const currentLevel = statusHierarchy[currentStatus] || 0
+
+  // Generate all status options with validation
+  const allStatuses = [
+    { value: ORDER_STATUS.PENDING, label: 'Pending', icon: '📋' },
+    { value: ORDER_STATUS.SHIPPED, label: 'Shipped', icon: '🚚' },
+    { value: ORDER_STATUS.OUT_FOR_DELIVERY, label: 'Out for Delivery', icon: '🚛' },
+    { value: ORDER_STATUS.DELIVERED, label: 'Delivered', icon: '✅' },
+    { value: ORDER_STATUS.CANCELLED, label: 'Cancelled', icon: '❌' },
+    { value: ORDER_STATUS.RETURNED, label: 'Returned', icon: '↩️' },
+    { value: ORDER_STATUS.RETURN_PENDING, label: 'Return Pending', icon: '⏳' }
+  ]
+
+  const statusOptions = allStatuses.map(status => {
+    const statusLevel = statusHierarchy[status.value]
+    let disabled = false
+    let disabledReason = ''
+
+    // Current status should be selected but not disabled
+    if (status.value === currentStatus) {
+      return `<option value="${status.value}" selected>${status.icon} ${status.label} (Current)</option>`
+    }
+
+    // Check if status change is valid
+    if (status.value === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED) {
+      // Can cancel from any status except delivered
+      disabled = false
+    } else if (statusLevel <= currentLevel && status.value !== ORDER_STATUS.CANCELLED) {
+      // Cannot go backwards
+      disabled = true
+      disabledReason = ' (Cannot go backwards)'
+    }
+
+    return `<option value="${status.value}" ${disabled ? 'disabled' : ''}>${status.icon} ${status.label}${disabledReason}</option>`
+  }).join('')
+
   Swal.fire({
     title: "Update Order Status",
     html: `
             <div class="text-start">
                 <div class="mb-3">
+                    <p class="text-muted mb-2">Current Status: <strong>${currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}</strong></p>
                     <label for="orderStatus" class="form-label fw-semibold">Select New Status:</label>
                     <select id="orderStatus" class="form-select">
-                        <option value="pending">📋 Pending</option>
-                        <option value="processing">⚙️ Processing</option>
-                        <option value="shipped">🚚 Shipped</option>
-                        <option value="out for delivery">🚛 Out for Delivery</option>
-                        <option value="delivered">✅ Delivered</option>
-                        <option value="cancelled">❌ Cancelled</option>
+                        ${statusOptions}
                     </select>
+                    <small class="text-muted mt-1">Note: You can only move forward in the order process or cancel the order.</small>
                 </div>
                 <div class="mb-3">
                     <label for="statusNote" class="form-label fw-semibold">Note (Optional):</label>
@@ -340,7 +410,6 @@ function updateOrderStatus(orderId, status, note) {
       }
     })
     .catch((error) => {
-      console.error("Error updating order status:", error)
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -396,23 +465,7 @@ function handleResponsiveTable() {
     window.addEventListener("resize", handleResize)
   }
 }
-function formatCurrency(amount) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
 
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
-}
 window.addEventListener("resize", handleResponsiveTable)
 window.addEventListener("load", handleResponsiveTable)
 window.applyTimeFilter = applyTimeFilter

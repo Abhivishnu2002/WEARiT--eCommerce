@@ -8,7 +8,7 @@ const loadLogin = (req, res) => {
   try {
     res.render("admin/pages/adminLogin")
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadLogin error:", error)
     res.status(500).render("admin/pages/adminLogin", { error_msg: "Server error" })
   }
 }
@@ -43,14 +43,13 @@ const verifyLogin = async (req, res) => {
 
     req.session.save((err) => {
       if (err) {
-        console.error("Session save error:", err)
         req.flash("error_msg", "Server error")
         return res.status(500).render("admin/pages/adminLogin", { error_msg: "Server error" })
       }
       return res.redirect("/admin/dashboard")
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin verifyLogin error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminLogin", { error_msg: "Server error" })
   }
@@ -87,7 +86,7 @@ const updatePassword = async (req, res) => {
     req.flash("success_msg", "Password updated successfully")
     res.render("admin/pages/adminChangePassword", { success_msg: "Password updated successfully" })
   } catch (error) {
-    console.error(error)
+    console.error("Admin updatePassword error:", error)
     req.flash("error_msg", "Failed to update password")
     res.status(500).render("admin/pages/adminChangePassword", { error_msg: "Failed to update password" })
   }
@@ -102,7 +101,7 @@ const loadAccount = async (req, res) => {
     }
     res.render("admin/pages/adminAccount", { admin })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadAccount error:", error)
     req.flash("error_msg", "Server error")
     res.redirect("/admin/dashboard")
   }
@@ -117,7 +116,7 @@ const loadEditAccount = async (req, res) => {
     }
     res.render("admin/pages/adminEditAccount", { admin })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadEditAccount error:", error)
     req.flash("error_msg", "Server error")
     res.redirect("/admin/account")
   }
@@ -147,7 +146,7 @@ const updateAccount = async (req, res) => {
     req.flash("success_msg", "Account updated successfully")
     res.redirect("/admin/account")
   } catch (error) {
-    console.error(error)
+    console.error("Admin updateAccount error:", error)
     req.flash("error_msg", "Failed to update account")
     res.status(500).render("admin/pages/adminEditAccount", { error_msg: "Failed to update account" })
   }
@@ -524,7 +523,7 @@ const getDashboardData = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error("Error fetching dashboard data:", error)
+    console.error("Admin getDashboardData error:", error)
     res.status(500).json({
       success: false,
       error: "Failed to fetch dashboard data: " + error.message,
@@ -945,7 +944,7 @@ const loadDashboard = async (req, res) => {
       ...dashboardData,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadDashboard error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminDashboard", {
       error_msg: "Server error",
@@ -958,8 +957,7 @@ const logout = (req, res) => {
   delete req.session.admin
   req.session.save((err) => {
     if (err) {
-      console.error("Session save error during logout:", err)
-    }
+      }
     res.redirect("/admin/login")
   })
 }

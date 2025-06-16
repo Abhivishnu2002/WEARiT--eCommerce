@@ -8,11 +8,100 @@ const mongoose = require("mongoose")
 const fs = require("fs")
 const path = require("path")
 
+// Import enums and constants
+const {
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+  PAYMENT_METHOD,
+  ORDER_STATUS_HIERARCHY,
+  VALID_STATUS_TRANSITIONS,
+  ORDER_STATUS_DISPLAY
+} = require("../../utils/enums")
+const {
+  ORDER_STATUS_MESSAGES,
+  PAYMENT_MESSAGES,
+  INVOICE_MESSAGES
+} = require("../../utils/messages")
+
 const priceCalculator = new PriceCalculator()
 function generateTransactionId() {
   return `REFUND-${Date.now()}-${Math.floor(Math.random() * 10000)
     .toString()
     .padStart(4, "0")}`
+}
+
+// Use imported status hierarchy from enums
+const STATUS_HIERARCHY = ORDER_STATUS_HIERARCHY
+
+// Function to validate status transitions
+function isValidStatusTransition(currentStatus, newStatus) {
+  // Allow same status (no change)
+  if (currentStatus === newStatus) {
+    return { valid: true }
+  }
+
+  // Get status hierarchy levels
+  const currentLevel = STATUS_HIERARCHY[currentStatus]
+  const newLevel = STATUS_HIERARCHY[newStatus]
+
+  // If either status is not recognized, allow the change (for backward compatibility)
+  if (currentLevel === undefined || newLevel === undefined) {
+    return { valid: true }
+  }
+
+  // Allow cancellation from any status except delivered
+  if (newStatus === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED) {
+    return { valid: true }
+  }
+
+  // Prevent changing from cancelled status
+  if (currentStatus === ORDER_STATUS.CANCELLED) {
+    return {
+      valid: false,
+      message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.FINAL_STATE(currentStatus),
+      allowedTransitions: []
+    }
+  }
+
+  // Prevent changing from returned status
+  if (currentStatus === ORDER_STATUS.RETURNED) {
+    return {
+      valid: false,
+      message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.FINAL_STATE(currentStatus),
+      allowedTransitions: []
+    }
+  }
+
+  // Prevent changing from delivered status (except through return process)
+  if (currentStatus === ORDER_STATUS.DELIVERED) {
+    return {
+      valid: false,
+      message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.USE_RETURN_PROCESS,
+      allowedTransitions: []
+    }
+  }
+
+  // Allow forward progression (higher level numbers)
+  if (newLevel > currentLevel && newStatus !== ORDER_STATUS.CANCELLED) {
+    return { valid: true }
+  }
+
+  // Prevent backwards progression
+  if (newLevel < currentLevel) {
+    const allowedStatuses = Object.keys(STATUS_HIERARCHY).filter(status => {
+      const level = STATUS_HIERARCHY[status]
+      return (level > currentLevel && status !== ORDER_STATUS.CANCELLED) || (status === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED)
+    })
+
+    return {
+      valid: false,
+      message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.INVALID(currentStatus, newStatus),
+      allowedTransitions: allowedStatuses
+    }
+  }
+
+  // Default allow (shouldn't reach here with current logic)
+  return { valid: true }
 }
 
 const adminOrderController = {
@@ -75,11 +164,10 @@ const adminOrderController = {
           path: "products.product",
           select: "name images",
         })
-        .populate("address")
         .sort(sort)
         .skip(skip)
         .limit(limit)
-        .lean() 
+        .lean()
       const processedOrders = orders.map((order) => ({
         ...order,
         user: order.user || {
@@ -102,7 +190,7 @@ const adminOrderController = {
         admin: req.session.admin,
       })
     } catch (error) {
-      console.error("Error fetching orders:", error)
+      console.error("Admin getAllOrders error:", error)
       res.render("admin/pages/adminOrders", {
         error_msg: "Failed to fetch orders",
         orders: [],
@@ -122,7 +210,6 @@ const adminOrderController = {
             path: "products.product",
             select: "name images color variants",
           })
-          .populate("address")
       }
       if (!order) {
         order = await Order.findOne({ orderID: orderId })
@@ -131,7 +218,6 @@ const adminOrderController = {
             path: "products.product",
             select: "name images color variants",
           })
-          .populate("address")
       }
 
       if (!order) {
@@ -206,7 +292,7 @@ const adminOrderController = {
         admin: req.session.admin,
       })
     } catch (error) {
-      console.error("Error fetching order details:", error)
+      console.error("Admin getOrderDetails error:", error)
       res.render("errors/404", {
         error_msg: "Failed to fetch order details",
         admin: req.session.admin,
@@ -218,7 +304,7 @@ const adminOrderController = {
     try {
       const orderId = req.params.id
       const { status, note, productId, variantSize, variantIndex, trackingNumber, courier } = req.body
-      const validStatuses = ["pending", "shipped", "out for delivery", "delivered", "cancelled"]
+      const validStatuses = Object.values(ORDER_STATUS)
 
       if (!validStatuses.includes(status)) {
         return res.status(400).json({
@@ -277,11 +363,23 @@ const adminOrderController = {
         }
 
         const previousStatus = productItem.status
+
+        // Validate status transition for individual product
+        const transitionValidation = isValidStatusTransition(previousStatus, status)
+        if (!transitionValidation.valid) {
+          return res.status(400).json({
+            success: false,
+            message: `Product status transition error: ${transitionValidation.message}`,
+            currentStatus: previousStatus,
+            requestedStatus: status,
+            allowedTransitions: transitionValidation.allowedTransitions
+          })
+        }
         productItem.status = status
-        if (status === "delivered" && previousStatus !== "delivered") {
+        if (status === ORDER_STATUS.DELIVERED && previousStatus !== ORDER_STATUS.DELIVERED) {
           productItem.deliveredAt = new Date()
         }
-        if (status === "cancelled" && ["pending", "shipped", "out for delivery"].includes(previousStatus)) {
+        if (status === ORDER_STATUS.CANCELLED && [ORDER_STATUS.PENDING, ORDER_STATUS.SHIPPED, ORDER_STATUS.OUT_FOR_DELIVERY].includes(previousStatus)) {
           try {
             const product = await Product.findById(productId)
             if (product && productItem.variant?.size) {
@@ -291,26 +389,65 @@ const adminOrderController = {
                 await product.save()
               }
             }
-          } catch (err) {
-            console.error(`Error restoring stock for product ${productId}, variant ${productItem.variant?.size}:`, err)
+          } catch (e) {
+            console.error("Admin updateOrderStatus stock update error:", e)
           }
         }
         const productStatuses = order.products.map((p) => p.status)
         const uniqueStatuses = [...new Set(productStatuses)]
-        if (uniqueStatuses.every((s) => s === "delivered")) {
-          order.orderStatus = "delivered"
-        } else if (uniqueStatuses.every((s) => s === "cancelled")) {
-          order.orderStatus = "cancelled"
-        } else if (uniqueStatuses.every((s) => s === "pending")) {
-          order.orderStatus = "pending"
-        } else if (uniqueStatuses.includes("delivered")) {
-          order.orderStatus = "delivered"
-        } else if (uniqueStatuses.includes("out for delivery")) {
-          order.orderStatus = "out for delivery"
-        } else if (uniqueStatuses.includes("shipped")) {
-          order.orderStatus = "shipped"
+
+        // Count different status types
+        const statusCounts = {
+          [ORDER_STATUS.DELIVERED]: productStatuses.filter(s => s === ORDER_STATUS.DELIVERED).length,
+          [ORDER_STATUS.RETURNED]: productStatuses.filter(s => s === ORDER_STATUS.RETURNED).length,
+          [ORDER_STATUS.CANCELLED]: productStatuses.filter(s => s === ORDER_STATUS.CANCELLED).length,
+          [ORDER_STATUS.RETURN_PENDING]: productStatuses.filter(s => s === ORDER_STATUS.RETURN_PENDING).length,
+          [ORDER_STATUS.PENDING]: productStatuses.filter(s => s === ORDER_STATUS.PENDING).length,
+          [ORDER_STATUS.SHIPPED]: productStatuses.filter(s => s === ORDER_STATUS.SHIPPED).length,
+          [ORDER_STATUS.OUT_FOR_DELIVERY]: productStatuses.filter(s => s === ORDER_STATUS.OUT_FOR_DELIVERY).length
+        }
+
+        const totalProducts = order.products.length
+
+        // Determine order status based on product statuses
+        if (statusCounts[ORDER_STATUS.RETURNED] === totalProducts) {
+          // All products returned
+          order.orderStatus = ORDER_STATUS.RETURNED
+        } else if (statusCounts[ORDER_STATUS.CANCELLED] === totalProducts) {
+          // All products cancelled
+          order.orderStatus = ORDER_STATUS.CANCELLED
+        } else if (statusCounts[ORDER_STATUS.DELIVERED] === totalProducts) {
+          // All products delivered
+          order.orderStatus = ORDER_STATUS.DELIVERED
+          // Update payment status for COD orders when all products are delivered
+          if ((order.paymentMethod === PAYMENT_METHOD.COD || order.paymentMentod === PAYMENT_METHOD.COD) && order.paymentStatus === PAYMENT_STATUS.PENDING) {
+            order.paymentStatus = PAYMENT_STATUS.COMPLETED
+            order.deliveryDate = new Date()
+
+            // Update the transaction status as well
+            await Transaction.updateOne(
+              { order: order._id, paymentMethod: PAYMENT_METHOD.COD, status: PAYMENT_STATUS.PENDING },
+              { status: PAYMENT_STATUS.COMPLETED }
+            )
+          }
+        } else if (statusCounts[ORDER_STATUS.RETURN_PENDING] > 0) {
+          // Some products have pending returns
+          order.orderStatus = ORDER_STATUS.RETURN_PENDING
+        } else if (statusCounts[ORDER_STATUS.PENDING] === totalProducts) {
+          // All products pending
+          order.orderStatus = ORDER_STATUS.PENDING
+        } else if (statusCounts[ORDER_STATUS.DELIVERED] > 0) {
+          // Some products delivered (mixed status)
+          order.orderStatus = ORDER_STATUS.DELIVERED
+        } else if (statusCounts[ORDER_STATUS.OUT_FOR_DELIVERY] > 0) {
+          // Some products out for delivery
+          order.orderStatus = ORDER_STATUS.OUT_FOR_DELIVERY
+        } else if (statusCounts[ORDER_STATUS.SHIPPED] > 0) {
+          // Some products shipped
+          order.orderStatus = ORDER_STATUS.SHIPPED
         } else {
-          order.orderStatus = "pending"
+          // Default fallback
+          order.orderStatus = ORDER_STATUS.PENDING
         }
         if (!order.trackingDetails) {
           order.trackingDetails = { updates: [] }
@@ -325,6 +462,19 @@ const adminOrderController = {
         })
       } else {
         const previousStatus = order.orderStatus
+
+        // Validate status transition for entire order
+        const transitionValidation = isValidStatusTransition(previousStatus, status)
+        if (!transitionValidation.valid) {
+          return res.status(400).json({
+            success: false,
+            message: `Order status transition error: ${transitionValidation.message}`,
+            currentStatus: previousStatus,
+            requestedStatus: status,
+            allowedTransitions: transitionValidation.allowedTransitions
+          })
+        }
+
         order.orderStatus = status
         order.products.forEach((product) => {
           const previousProductStatus = product.status
@@ -335,6 +485,16 @@ const adminOrderController = {
         })
         if (status === "delivered") {
           order.deliveryDate = new Date()
+          // Update payment status for COD orders when delivered
+          if ((order.paymentMethod === "COD" || order.paymentMentod === "COD") && order.paymentStatus === "pending") {
+            order.paymentStatus = "completed"
+
+            // Update the transaction status as well
+            await Transaction.updateOne(
+              { order: order._id, paymentMethod: "COD", status: "pending" },
+              { status: "completed" }
+            )
+          }
         }
         if (status === "cancelled" && ["pending", "shipped", "out for delivery"].includes(previousStatus)) {
           for (const item of order.products) {
@@ -347,11 +507,8 @@ const adminOrderController = {
                   await product.save()
                 }
               }
-            } catch (err) {
-              console.error(
-                `Error restoring stock for product ${item.product._id}, variant ${item.variant?.size}:`,
-                err,
-              )
+            } catch (e) {
+              console.error("Admin updateOrderStatus stock update error 2:", e)
             }
           }
         }
@@ -407,7 +564,7 @@ const adminOrderController = {
         },
       })
     } catch (error) {
-      console.error("Error updating order status:", error)
+      console.error("Admin updateOrderStatus error:", error)
       res.status(500).json({
         success: false,
         message: "Failed to update order status",
@@ -537,11 +694,8 @@ const adminOrderController = {
               await product.save()
             }
           }
-        } catch (err) {
-          console.error(
-            `Error restoring stock for returned product ${productId}, variant ${productItem.variant?.size}:`,
-            err,
-          )
+        } catch (e) {
+          console.error("Admin processReturnRequest stock update error:", e)
         }
         if (!order.trackingDetails) {
           order.trackingDetails = { updates: [] }
@@ -575,10 +729,27 @@ const adminOrderController = {
       if (!pendingReturns) {
         const returnedProducts = order.products.filter((p) => p.status === "returned")
         const deliveredProducts = order.products.filter((p) => p.status === "delivered")
+        const cancelledProducts = order.products.filter((p) => p.status === "cancelled")
 
         if (returnedProducts.length === order.products.length) {
+          // All products returned - set order status to "returned"
+          order.orderStatus = "returned"
+
+          if (!order.trackingDetails) {
+            order.trackingDetails = { updates: [] }
+          }
+
+          order.trackingDetails.updates.push({
+            status: "Order Returned",
+            location: "System",
+            timestamp: new Date(),
+            description: `All items in this order have been returned.`,
+          })
+        } else if (cancelledProducts.length === order.products.length) {
+          // All products cancelled - set order status to "cancelled"
           order.orderStatus = "cancelled"
-        } else if (deliveredProducts.length > 0) {
+        } else if (returnedProducts.length > 0 && deliveredProducts.length > 0) {
+          // Mixed status - some returned, some delivered - keep as "delivered" with partial return note
           order.orderStatus = "delivered"
 
           if (!order.trackingDetails) {
@@ -591,7 +762,11 @@ const adminOrderController = {
             timestamp: new Date(),
             description: `Some items in this order have been returned.`,
           })
+        } else if (deliveredProducts.length > 0) {
+          // Some products delivered, others might be cancelled/returned
+          order.orderStatus = "delivered"
         } else {
+          // Fallback - if no clear status, keep as delivered
           order.orderStatus = "delivered"
         }
       }
@@ -617,7 +792,7 @@ const adminOrderController = {
         },
       })
     } catch (error) {
-      console.error("Error processing return request:", error)
+      console.error("Admin processReturnRequest error:", error)
       res.status(500).json({
         success: false,
         message: "Failed to process return request",
@@ -636,7 +811,6 @@ const adminOrderController = {
             path: "products.product",
             select: "name images color variants",
           })
-          .populate("address")
       }
 
       if (!order) {
@@ -646,7 +820,6 @@ const adminOrderController = {
             path: "products.product",
             select: "name images color variants",
           })
-          .populate("address")
       }
 
       if (!order) {
@@ -655,6 +828,37 @@ const adminOrderController = {
           admin: req.session.admin,
         })
       }
+
+      // Enhanced invoice availability conditions for admin
+      const paymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase()
+      let canDownloadInvoice = false
+      let errorMessage = "Invoice is not available for this order"
+
+      if (order.paymentStatus === "failed") {
+        errorMessage = "Invoice is not available for failed payments"
+      } else if (paymentMethod === 'cod') {
+        // For COD orders, invoice available after delivery (when payment status becomes completed)
+        if (order.orderStatus === 'delivered' || order.paymentStatus === 'completed') {
+          canDownloadInvoice = true
+        } else {
+          errorMessage = "Invoice for COD orders is only available after delivery"
+        }
+      } else {
+        // For other payment methods, invoice available after payment completion
+        if (order.paymentStatus === 'completed') {
+          canDownloadInvoice = true
+        } else {
+          errorMessage = "Invoice is only available after payment is completed"
+        }
+      }
+
+      if (!canDownloadInvoice) {
+        return res.status(400).render("errors/404", {
+          error_msg: errorMessage,
+          admin: req.session.admin,
+        })
+      }
+
       await generateInvoice({
         order,
         user: order.user,
@@ -662,7 +866,7 @@ const adminOrderController = {
         isAdmin: true,
       })
     } catch (error) {
-      console.error("Error generating invoice:", error)
+      console.error("Admin generateInvoice error:", error)
       res.status(500).render("errors/404", {
         error_msg: "Failed to generate invoice",
         admin: req.session.admin,
@@ -714,7 +918,7 @@ const adminOrderController = {
         admin: req.session.admin,
       })
     } catch (error) {
-      console.error("Error fetching inventory status:", error)
+      console.error("Admin getInventoryStatus error:", error)
       res.render("admin/pages/adminInventory", {
         error_msg: "Failed to fetch inventory status",
         products: [],
@@ -752,7 +956,7 @@ const adminOrderController = {
         message: "Stock updated successfully",
       })
     } catch (error) {
-      console.error("Error updating product stock:", error)
+      console.error("Admin updateProductStock error:", error)
       res.status(500).json({
         success: false,
         message: "Failed to update product stock",

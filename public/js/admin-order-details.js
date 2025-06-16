@@ -87,19 +87,87 @@ document.addEventListener("DOMContentLoaded", () => {
         const variantIndex = this.dataset.variantIndex || ""
         const currentStatus = this.dataset.currentStatus
 
+        // Define order status constants (matching backend enums)
+        const ORDER_STATUS = {
+          PENDING: 'pending',
+          SHIPPED: 'shipped',
+          OUT_FOR_DELIVERY: 'out for delivery',
+          DELIVERED: 'delivered',
+          CANCELLED: 'cancelled',
+          RETURNED: 'returned',
+          RETURN_PENDING: 'return pending'
+        }
+
+        // Define status hierarchy for validation
+        const statusHierarchy = {
+          [ORDER_STATUS.PENDING]: 0,
+          [ORDER_STATUS.SHIPPED]: 1,
+          [ORDER_STATUS.OUT_FOR_DELIVERY]: 2,
+          [ORDER_STATUS.DELIVERED]: 3,
+          [ORDER_STATUS.CANCELLED]: 4,
+          [ORDER_STATUS.RETURNED]: 5,
+          [ORDER_STATUS.RETURN_PENDING]: 6
+        }
+
+        // If current status is delivered, cancelled, or returned, show info message
+        if (currentStatus === ORDER_STATUS.DELIVERED || currentStatus === ORDER_STATUS.CANCELLED || currentStatus === ORDER_STATUS.RETURNED) {
+          const Swal = window.Swal
+          Swal.fire({
+            icon: 'info',
+            title: 'Status Cannot Be Changed',
+            text: `Products with status "${currentStatus}" cannot be changed to other statuses.`,
+            confirmButtonColor: '#0d6efd'
+          })
+          return
+        }
+
+        const currentLevel = statusHierarchy[currentStatus] || 0
+
+        // Generate all status options with validation
+        const allStatuses = [
+          { value: ORDER_STATUS.PENDING, label: 'Pending' },
+          { value: ORDER_STATUS.SHIPPED, label: 'Shipped' },
+          { value: ORDER_STATUS.OUT_FOR_DELIVERY, label: 'Out for Delivery' },
+          { value: ORDER_STATUS.DELIVERED, label: 'Delivered' },
+          { value: ORDER_STATUS.CANCELLED, label: 'Cancelled' },
+          { value: ORDER_STATUS.RETURNED, label: 'Returned' },
+          { value: ORDER_STATUS.RETURN_PENDING, label: 'Return Pending' }
+        ]
+
+        const statusOptions = allStatuses.map(status => {
+          const statusLevel = statusHierarchy[status.value]
+          let disabled = false
+          let disabledReason = ''
+
+          // Current status should be selected but not disabled
+          if (status.value === currentStatus) {
+            return `<option value="${status.value}" selected>${status.label} (Current)</option>`
+          }
+
+          // Check if status change is valid
+          if (status.value === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED) {
+            // Can cancel from any status except delivered
+            disabled = false
+          } else if (statusLevel <= currentLevel && status.value !== ORDER_STATUS.CANCELLED) {
+            // Cannot go backwards
+            disabled = true
+            disabledReason = ' (Cannot go backwards)'
+          }
+
+          return `<option value="${status.value}" ${disabled ? 'disabled' : ''}>${status.label}${disabledReason}</option>`
+        }).join('')
+
         const Swal = window.Swal
         Swal.fire({
           title: "Update Status",
           html: `
                         <div class="mb-3">
                             <p class="text-muted">Updating status for variant: <strong>${variantSize || "N/A"}</strong></p>
+                            <p class="text-muted mb-2">Current Status: <strong>${currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}</strong></p>
                             <select id="statusSelect" class="form-select">
-                                <option value="pending" ${currentStatus === "pending" ? "selected" : ""}>Pending</option>
-                                <option value="shipped" ${currentStatus === "shipped" ? "selected" : ""}>Shipped</option>
-                                <option value="out for delivery" ${currentStatus === "out for delivery" ? "selected" : ""}>Out for Delivery</option>
-                                <option value="delivered" ${currentStatus === "delivered" ? "selected" : ""}>Delivered</option>
-                                <option value="cancelled" ${currentStatus === "cancelled" ? "selected" : ""}>Cancelled</option>
+                                ${statusOptions}
                             </select>
+                            <small class="text-muted mt-1">Note: You can only move forward in the order process or cancel the order.</small>
                         </div>
                         <div class="mb-3">
                             <textarea id="statusNote" class="form-control" placeholder="Add a note (optional)" rows="3"></textarea>
@@ -166,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
               })
               .catch((error) => {
-                console.error("Error:", error)
                 Swal.fire({
                   icon: "error",
                   title: "Error",
@@ -267,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
               })
               .catch((error) => {
-                console.error("Error:", error)
                 Swal.fire({
                   icon: "error",
                   title: "Error",
@@ -342,7 +408,6 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             })
             .catch((error) => {
-              console.error("Error:", error)
               Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -362,7 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === "attributes" && mutation.attributeName === "class") {
-            console.log("Product status change detected")
+
           }
         })
       })

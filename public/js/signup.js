@@ -498,8 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formDataObject.referralCode = referralCodeInput.value.trim().toUpperCase()
     }
     Object.entries(formDataObject).forEach(([key, value]) => {
-      console.log(`${key}: ${key === "password" || key === "confirmPassword" ? "[HIDDEN]" : value}`)
-    })
+      })
     fetch("/signup", {
       method: "POST",
       headers: {
@@ -661,7 +660,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Signup error:", error)
         hideLoadingState()
 
         const Swal = window.swal ||

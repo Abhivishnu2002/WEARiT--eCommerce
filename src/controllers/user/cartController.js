@@ -77,7 +77,7 @@ const loadCart = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error("Load cart error:", error)
+    console.error("User loadCart error:", error)
     req.flash("error_msg", "Failed to load cart")
     res.redirect("/")
   }
@@ -181,8 +181,8 @@ const addToCart = async (req, res) => {
         wishlist.products = wishlist.products.filter((id) => id.toString() !== productId)
         await wishlist.save()
       }
-    } catch (wishlistError) {
-      console.error("Error updating wishlist:", wishlistError)
+    } catch (e) {
+      console.error("User addToCart wishlist removal error:", e)
     }
 
     return res.status(200).json({
@@ -191,7 +191,7 @@ const addToCart = async (req, res) => {
       cartCount: cart.products.length,
     })
   } catch (error) {
-    console.error("Add to cart error:", error)
+    console.error("User addToCart error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -284,7 +284,7 @@ const updateCartQuantity = async (req, res) => {
       availableStock: variant.varientquatity,
     })
   } catch (error) {
-    console.error("Update cart quantity error:", error)
+    console.error("User updateCartQuantity error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -321,7 +321,7 @@ const removeFromCart = async (req, res) => {
       cartCount: cart.products.length,
     })
   } catch (error) {
-    console.error("Remove from cart error:", error)
+    console.error("User removeFromCart error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -354,10 +354,106 @@ const emptyCart = async (req, res) => {
       message: "Cart emptied successfully",
     })
   } catch (error) {
-    console.error("Empty cart error:", error)
+    console.error("User emptyCart error:", error)
     return res.status(500).json({
       success: false,
       message: "Server error",
+    })
+  }
+}
+
+const checkStock = async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ user: req.user._id }).populate({
+      path: "products.product",
+      populate: {
+        path: "categoryId",
+      },
+    })
+
+    if (!cart || cart.products.length === 0) {
+      return res.json({
+        success: false,
+        message: "Your cart is empty",
+      })
+    }
+
+    const stockIssues = []
+    const unavailableProducts = []
+
+    for (const item of cart.products) {
+      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
+
+      // Check if product is unlisted or inactive
+      if (!freshProduct || !freshProduct.isActive) {
+        unavailableProducts.push({
+          productName: item.product.name,
+          size: item.size,
+          reason: "Product is no longer available",
+        })
+        continue
+      }
+
+      // Check if category is unlisted
+      if (!freshProduct.categoryId || !freshProduct.categoryId.isListed) {
+        unavailableProducts.push({
+          productName: freshProduct.name,
+          size: item.size,
+          reason: "Product category is no longer available",
+        })
+        continue
+      }
+
+      // Check stock availability
+      const variant = freshProduct.variants.find((v) => v.size === item.size)
+      if (!variant) {
+        stockIssues.push({
+          productName: freshProduct.name,
+          size: item.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          isPartialStock: false,
+        })
+        continue
+      }
+
+      if (variant.varientquatity === 0) {
+        stockIssues.push({
+          productName: freshProduct.name,
+          size: item.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          isPartialStock: false,
+        })
+      } else if (variant.varientquatity < item.quantity) {
+        stockIssues.push({
+          productName: freshProduct.name,
+          size: item.size,
+          requestedQuantity: item.quantity,
+          availableStock: variant.varientquatity,
+          isPartialStock: true,
+        })
+      }
+    }
+
+    const hasStockIssues = stockIssues.length > 0
+    const hasUnavailableProducts = unavailableProducts.length > 0
+
+    return res.json({
+      success: true,
+      hasStockIssues,
+      hasUnavailableProducts,
+      stockIssues,
+      unavailableProducts,
+      message: hasStockIssues || hasUnavailableProducts
+        ? "Some items in your cart have issues"
+        : "All items are available",
+    })
+  } catch (error) {
+    console.error("User checkStock error:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Failed to validate stock",
     })
   }
 }
@@ -367,5 +463,6 @@ module.exports = {
   addToCart,
   updateCartQuantity,
   removeFromCart,
-  emptyCart
+  emptyCart,
+  checkStock,
 }

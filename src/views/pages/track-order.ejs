@@ -375,9 +375,30 @@
               </button>
             <% } %>
             
-            <a href="/orders/invoice/<%= order._id %>" class="btn btn-outline-dark">
-              <i class="fas fa-file-invoice"></i> Download Invoice
-            </a>
+            <%
+              // Invoice download conditions:
+              // 1. Payment status should not be 'failed'
+              // 2. For COD orders, invoice is available after delivery (payment status becomes completed after delivery)
+              // 3. For other payment methods, invoice is available after payment completion
+              let canDownloadInvoice = false;
+              const paymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase();
+
+              if (order.paymentStatus !== 'failed') {
+                if (paymentMethod === 'cod') {
+                  // For COD, invoice available after delivery (when payment status becomes completed)
+                  canDownloadInvoice = order.orderStatus === 'delivered' || order.paymentStatus === 'completed';
+                } else {
+                  // For other payment methods, invoice available after payment completion
+                  canDownloadInvoice = order.paymentStatus === 'completed';
+                }
+              }
+            %>
+
+            <% if (canDownloadInvoice) { %>
+              <a href="/orders/invoice/<%= order._id %>" class="btn btn-outline-dark">
+                <i class="fas fa-file-invoice"></i> Download Invoice
+              </a>
+            <% } %>
             
             <a href="/orders/details/<%= order._id %>" class="btn btn-outline-primary">
               <i class="fas fa-info-circle"></i> View Order Details

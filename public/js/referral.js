@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const shareButtons = document.querySelectorAll(".referral-share a")
   shareButtons.forEach((button) => {
     button.addEventListener("click", function () {
-      console.log("Shared via:", this.textContent.trim())
+
     })
   })
 })

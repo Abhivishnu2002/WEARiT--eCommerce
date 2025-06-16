@@ -16,10 +16,11 @@
         <link rel="stylesheet" href="/css/address.css" />
         <link rel="stylesheet" href="/css/address-form.css" />
     </head>
-    <body>
+    <body class="address-page">
         <%- include('../partials/header') %>
-        <div class="container-fluid address-container">
-            <div class="row">
+        <main class="main-content">
+            <div class="container-fluid address-container">
+                <div class="row">
                 <div class="col-lg-3 col-md-4">
                     <%- include('../partials/navbar', { activePage: 'address',
                     user: user }) %>
@@ -218,7 +219,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
         <% if(typeof messages !== 'undefined') { %> <% if(messages.success_msg)
         { %>
         <div class="alert-float alert-success"><%= messages.success_msg %></div>

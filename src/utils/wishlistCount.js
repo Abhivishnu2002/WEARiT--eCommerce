@@ -4,7 +4,6 @@ async function getWishlistCount(userId) {
     const wishlist = await Wishlist.findOne({ user: userId })
     return wishlist ? wishlist.products.length : 0
   } catch (error) {
-    console.error("Error getting wishlist count:", error)
     return 0
   }
 }

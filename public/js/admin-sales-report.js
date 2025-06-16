@@ -17,7 +17,6 @@ class SalesReportManager {
     const customDateRange = document.querySelector(".custom-date-range")
 
     if (!timeFilterInputs.length || !customDateRange) {
-      console.warn("Filter elements not found")
       return
     }
 
@@ -53,8 +52,7 @@ class SalesReportManager {
         },
       })
     } else {
-      console.warn("flatpickr not available")
-    }
+      }
   }
 
   initSearchFunctionality() {
@@ -119,7 +117,6 @@ class SalesReportManager {
 
   initDataTables() {
     if (typeof this.$ === "undefined" || !this.$.fn || !this.$.fn.DataTable) {
-      console.warn("jQuery or DataTables not available, using basic functionality")
       return
     }
 
@@ -134,9 +131,9 @@ class SalesReportManager {
           columnDefs: [{ targets: [1, 2, 3, 4, 5, 6], className: "text-end" }],
         })
       }
-    } catch (error) {
-      console.error("Error initializing DataTables:", error)
-    }
+    } catch (e) {
+    
+  }
   }
 
   initExportButtons() {
@@ -192,8 +189,7 @@ class SalesReportManager {
   updatePaginationInfo() {
     const paginationInfos = document.querySelectorAll(".pagination-info")
     paginationInfos.forEach((info) => {
-      console.log("Pagination info updated")
-    })
+      })
   }
   validateDateRange() {
     const startDate = document.getElementById("startDate")

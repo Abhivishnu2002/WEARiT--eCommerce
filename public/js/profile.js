@@ -99,8 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Error updating profile:", error)
-
           saveBasicInfoBtn.disabled = false
           saveBasicInfoBtn.textContent = "Save Basic Info"
 
@@ -178,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         })
         .catch((error) => {
-          console.error("Error updating email:", error)
           updateEmailBtn.disabled = false
           updateEmailBtn.textContent = "Update Email"
 

@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     }
   } catch (e) {
-    console.error("Flash message check error:", e)
+    
   }
 
   const toggleForms = document.querySelectorAll(".toggle-form")

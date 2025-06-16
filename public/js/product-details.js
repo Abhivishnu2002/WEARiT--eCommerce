@@ -10,8 +10,15 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedSize = null
 
   if (sizeButtons.length > 0) {
-    const smallSizeBtn = Array.from(sizeButtons).find((btn) => btn.getAttribute("data-size").toLowerCase() === "s")
-    const defaultSizeBtn = smallSizeBtn || sizeButtons[0]
+    // Find the first available (in-stock) size button, or default to 'S' or first button
+    const availableSizeBtn = Array.from(sizeButtons).find((btn) =>
+      !btn.disabled && !btn.classList.contains("out-of-stock")
+    )
+    const smallSizeBtn = Array.from(sizeButtons).find((btn) =>
+      btn.getAttribute("data-size").toLowerCase() === "s" && !btn.disabled
+    )
+    const defaultSizeBtn = availableSizeBtn || smallSizeBtn || sizeButtons[0]
+
     defaultSizeBtn.classList.add("active")
     selectedSize = defaultSizeBtn.getAttribute("data-size")
     updateVariantAvailability(selectedSize)
@@ -58,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  if (addToCartBtn && !addToCartBtn.classList.contains("disabled")) {
+  if (addToCartBtn) {
     addToCartBtn.addEventListener("click", () => {
       if (!selectedSize) {
         showAlert("warning", "Please select a size")
@@ -66,7 +73,26 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
+      // Check if selected variant is in stock
+      const variant = window.productVariants.find((v) => v.size === selectedSize)
+      if (!variant || variant.varientquatity === 0) {
+        const availableVariants = getAvailableVariants()
+        if (availableVariants.length > 0) {
+          const availableSizes = availableVariants.map(v => v.size).join(', ')
+          showAlert("warning", `Size ${selectedSize} is out of stock. Available sizes: ${availableSizes}`)
+        } else {
+          showAlert("warning", "This product is currently out of stock.")
+        }
+        highlightSizeSelection()
+        return
+      }
+
       const quantity = parseInt(quantityInput.value, 10)
+      if (quantity > variant.varientquatity) {
+        showAlert("warning", `Only ${variant.varientquatity} items available for this size.`)
+        return
+      }
+
       addToCart(productId, selectedSize, quantity)
     })
   }
@@ -153,6 +179,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showAlert("success", "Product added to cart successfully!")
         updateCartCount(data.cartCount)
 
+        // Update header counts
+        if (typeof window.updateHeaderCounts === 'function') {
+          window.updateHeaderCounts()
+        }
+
         if (wishlistIcon && wishlistIcon.classList.contains("fas")) {
           wishlistIcon.classList.remove("fas")
           wishlistIcon.classList.add("far")
@@ -161,7 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((error) => {
         if (error === "Unauthorized") return
 
-        console.error("Error adding product to cart:", error)
         showAlert("error", error.message || "Failed to add product to cart")
       })
   }
@@ -199,11 +229,15 @@ document.addEventListener("DOMContentLoaded", () => {
           wishlistIcon.classList.add("fas")
           showAlert("success", "Product added to wishlist")
         }
+
+        // Update header counts
+        if (typeof window.updateHeaderCounts === 'function') {
+          window.updateHeaderCounts()
+        }
       })
       .catch((error) => {
         if (error === "Unauthorized") return
 
-        console.error("Error updating wishlist:", error)
         showAlert("error", error.message || "Failed to update wishlist")
       })
   }
@@ -231,8 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .catch((error) => {
         if (error === "Unauthorized") return
-        console.error("Error checking wishlist status:", error)
-      })
+        })
   }
 
   function updateCartCount(count) {
@@ -254,6 +287,14 @@ document.addEventListener("DOMContentLoaded", () => {
         sizeSelection.classList.remove("highlight-selection")
       }, 2000)
     }
+  }
+
+  function hasAnyVariantInStock() {
+    return window.productVariants && window.productVariants.some(variant => variant.varientquatity > 0)
+  }
+
+  function getAvailableVariants() {
+    return window.productVariants ? window.productVariants.filter(variant => variant.varientquatity > 0) : []
   }
 
   function showAlert(type, message) {

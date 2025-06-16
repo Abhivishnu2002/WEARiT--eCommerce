@@ -12,222 +12,715 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
             rel="stylesheet"
         />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
         <style>
-            body {
-                font-family: "Inter", sans-serif;
-                color: #212529;
+            :root {
+                --primary-color: #000;
+                --secondary-color: #f8f9fa;
+                --accent-color: #6c757d;
+                --text-dark: #212529;
+                --text-light: #6c757d;
+                --border-color: #e9ecef;
+                --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.05);
+                --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.1);
+                --shadow-heavy: 0 8px 30px rgba(0, 0, 0, 0.15);
+                --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             }
 
-            .promo-banner {
-                background-color: #000;
-                color: #fff;
-                padding: 8px 0;
-                font-size: 14px;
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Inter", sans-serif;
+                color: var(--text-dark);
+                line-height: 1.6;
+                overflow-x: hidden;
+            }
+
+            /* Smooth scrolling */
+            html {
+                scroll-behavior: smooth;
+            }
+
+            /* Animations */
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            @keyframes fadeInLeft {
+                from {
+                    opacity: 0;
+                    transform: translateX(-30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+
+            @keyframes fadeInRight {
+                from {
+                    opacity: 0;
+                    transform: translateX(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+
+            /* Hero Section */
+            .hero-section {
+                background: var(--gradient-primary);
+                color: white;
+                padding: 120px 0 80px;
+                position: relative;
+                overflow: hidden;
                 text-align: center;
             }
 
-            .navbar {
-                padding: 15px 0;
+            .hero-section::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,0 1000,0 1000,100 0,80"/></svg>');
+                background-size: cover;
+                background-position: bottom;
             }
 
-            .navbar-brand {
+            .hero-content {
+                position: relative;
+                z-index: 2;
+            }
+
+            .hero-title {
+                font-size: clamp(2.5rem, 5vw, 4rem);
+                font-weight: 800;
+                margin-bottom: 1.5rem;
+                letter-spacing: -0.02em;
+                animation: fadeInUp 1s ease-out;
+            }
+
+            .hero-subtitle {
+                font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+                margin-bottom: 2rem;
+                opacity: 0.9;
+                max-width: 600px;
+                margin-left: auto;
+                margin-right: auto;
+                animation: fadeInUp 1s ease-out 0.2s both;
+            }
+
+            .hero-stats {
+                display: flex;
+                justify-content: center;
+                gap: 3rem;
+                margin-top: 3rem;
+                animation: fadeInUp 1s ease-out 0.4s both;
+            }
+
+            .stat-item {
+                text-align: center;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
                 font-weight: 700;
-                font-size: 24px;
-                color: #000;
+                display: block;
+                margin-bottom: 0.5rem;
             }
 
-            .nav-link {
-                color: #000;
-                font-weight: 500;
-                margin: 0 15px;
+            .stat-label {
+                font-size: 0.9rem;
+                opacity: 0.8;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
             }
 
-            .search-input {
+            /* Story Section */
+            .story-section {
+                padding: 100px 0;
+                background: white;
+            }
+
+            .story-content {
+                animation: fadeInLeft 1s ease-out;
+            }
+
+            .story-image {
+                animation: fadeInRight 1s ease-out;
+            }
+
+            .section-title {
+                font-size: clamp(2rem, 4vw, 3rem);
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+                color: var(--text-dark);
+                line-height: 1.2;
+            }
+
+            .section-subtitle {
+                font-size: 1.2rem;
+                color: var(--text-light);
+                margin-bottom: 3rem;
+                max-width: 600px;
+            }
+
+            .story-text {
+                font-size: 1.1rem;
+                line-height: 1.8;
+                color: var(--text-light);
+                margin-bottom: 2rem;
+            }
+
+            .story-image {
                 border-radius: 20px;
-                border: 1px solid #e0e0e0;
-                padding: 8px 15px;
-            }
-
-            .icon-button {
-                background: none;
-                border: none;
-                color: #000;
-                margin-left: 15px;
-                font-size: 18px;
-            }
-
-            .breadcrumb {
-                font-size: 14px;
-                color: #6c757d;
-                margin-top: 30px;
-            }
-
-            .breadcrumb-item a {
-                color: #6c757d;
-                text-decoration: none;
-            }
-
-            .breadcrumb-item.active {
-                color: #212529;
-            }
-
-            .about-section {
-                padding: 60px 0;
-            }
-
-            .about-section h1 {
-                font-weight: 700;
-                font-size: 48px;
-                margin-bottom: 20px;
-            }
-
-            .about-section p {
-                font-size: 18px;
-                line-height: 1.7;
-                color: #6c757d;
-                margin-bottom: 30px;
-            }
-
-            .about-image {
-                border-radius: 10px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                box-shadow: var(--shadow-heavy);
                 width: 100%;
                 height: auto;
                 object-fit: cover;
+                transition: transform 0.3s ease;
             }
 
-            .subscription-section {
-                background-color: #f8f9fa;
-                padding: 50px 0;
+            .story-image:hover {
+                transform: scale(1.02);
             }
 
-            .subscription-form {
-                border-radius: 25px;
-                overflow: hidden;
-                display: flex;
-                max-width: 500px;
-                margin: 0 auto;
+            /* Values Section */
+            .values-section {
+                padding: 100px 0;
+                background: var(--secondary-color);
             }
 
-            .subscription-input {
-                flex: 1;
-                border: 1px solid #e0e0e0;
-                border-radius: 25px 0 0 25px;
-                padding: 15px 20px;
-                font-size: 16px;
-            }
-
-            .subscription-button {
-                background-color: #000;
-                color: #fff;
-                border: none;
-                border-radius: 0 25px 25px 0;
-                padding: 15px 30px;
-                font-weight: 600;
-            }
-
-            .feature-card {
+            .value-card {
+                background: white;
+                border-radius: 20px;
+                padding: 2.5rem;
                 text-align: center;
-                padding: 30px 15px;
+                box-shadow: var(--shadow-light);
+                transition: all 0.3s ease;
+                height: 100%;
+                border: 1px solid var(--border-color);
+            }
+
+            .value-card:hover {
+                transform: translateY(-10px);
+                box-shadow: var(--shadow-heavy);
+            }
+
+            .value-icon {
+                width: 80px;
+                height: 80px;
+                background: var(--gradient-primary);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1.5rem;
+                font-size: 2rem;
+                color: white;
+            }
+            .value-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                color: var(--text-dark);
+            }
+
+            .value-description {
+                color: var(--text-light);
+                line-height: 1.6;
+            }
+
+            /* Team Section */
+            .team-section {
+                padding: 100px 0;
+                background: white;
+            }
+
+            .team-card {
+                text-align: center;
                 transition: all 0.3s ease;
             }
 
-            .feature-card:hover {
-                transform: translateY(-5px);
+            .team-image {
+                width: 200px;
+                height: 200px;
+                border-radius: 50%;
+                object-fit: cover;
+                margin: 0 auto 1.5rem;
+                box-shadow: var(--shadow-medium);
+                transition: all 0.3s ease;
             }
 
-            .feature-icon {
-                font-size: 32px;
-                margin-bottom: 15px;
+            .team-card:hover .team-image {
+                transform: scale(1.05);
+                box-shadow: var(--shadow-heavy);
             }
 
-            .feature-title {
+            .team-name {
+                font-size: 1.5rem;
                 font-weight: 600;
-                margin-bottom: 10px;
+                margin-bottom: 0.5rem;
+                color: var(--text-dark);
             }
 
-            .feature-description {
-                font-size: 14px;
-                color: #6c757d;
+            .team-role {
+                color: var(--text-light);
+                font-size: 1rem;
+                margin-bottom: 1rem;
             }
 
-            .footer {
-                background-color: #000;
-                color: #fff;
-                padding: 60px 0 20px;
+            .team-bio {
+                color: var(--text-light);
+                line-height: 1.6;
+                font-size: 0.95rem;
             }
 
-            .footer h5 {
+            /* CTA Section */
+            .cta-section {
+                padding: 100px 0;
+                background: var(--gradient-secondary);
+                color: white;
+                text-align: center;
+            }
+
+            .cta-title {
+                font-size: clamp(2rem, 4vw, 3rem);
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+            }
+
+            .cta-subtitle {
+                font-size: 1.2rem;
+                margin-bottom: 2.5rem;
+                opacity: 0.9;
+                max-width: 600px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .cta-button {
+                background: white;
+                color: var(--text-dark);
+                padding: 1rem 2.5rem;
+                border: none;
+                border-radius: 50px;
                 font-weight: 600;
-                margin-bottom: 20px;
-            }
-
-            .footer-link {
-                color: #e0e0e0;
+                font-size: 1.1rem;
                 text-decoration: none;
-                display: block;
-                margin-bottom: 10px;
+                display: inline-block;
+                transition: all 0.3s ease;
+                box-shadow: var(--shadow-medium);
             }
 
-            .footer-link:hover {
-                color: #fff;
+            .cta-button:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-heavy);
+                color: var(--text-dark);
             }
 
-            .social-icon {
-                color: #fff;
-                font-size: 20px;
-                margin-right: 15px;
+            /* Responsive Styles */
+            @media (max-width: 768px) {
+                .hero-stats {
+                    flex-direction: column;
+                    gap: 2rem;
+                }
+
+                .hero-section {
+                    padding: 80px 0 60px;
+                }
+
+                .story-section,
+                .values-section,
+                .team-section,
+                .cta-section {
+                    padding: 60px 0;
+                }
+
+                .value-card {
+                    margin-bottom: 2rem;
+                }
+
+                .team-image {
+                    width: 150px;
+                    height: 150px;
+                }
+
+                .section-subtitle {
+                    margin-bottom: 2rem;
+                }
             }
 
-            .copyright {
-                margin-top: 40px;
-                font-size: 14px;
-                color: #6c757d;
+            @media (max-width: 576px) {
+                .hero-section {
+                    padding: 60px 0 40px;
+                }
+
+                .story-section,
+                .values-section,
+                .team-section,
+                .cta-section {
+                    padding: 40px 0;
+                }
+
+                .value-card {
+                    padding: 2rem;
+                }
+
+                .value-icon {
+                    width: 60px;
+                    height: 60px;
+                    font-size: 1.5rem;
+                }
+
+                .team-image {
+                    width: 120px;
+                    height: 120px;
+                }
+
+                .cta-button {
+                    padding: 0.8rem 2rem;
+                    font-size: 1rem;
+                }
+            }
+
+            /* Utility Classes */
+            .text-gradient {
+                background: var(--gradient-primary);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .mb-section {
+                margin-bottom: 5rem;
+            }
+
+            .fade-in {
+                opacity: 0;
+                transform: translateY(30px);
+                transition: all 0.6s ease;
+            }
+
+            .fade-in.visible {
+                opacity: 1;
+                transform: translateY(0);
             }
         </style>
     </head>
     <body>
         <%- include('../partials/header') %>
-            <div class="about-section px-3">
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">About <span class="text-gradient">WEARiT</span></h1>
+                    <p class="hero-subtitle">
+                        Crafting timeless fashion with passion, sustainability, and innovation at the heart of everything we do.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">2015</span>
+                            <span class="stat-label">Founded</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">50K+</span>
+                            <span class="stat-label">Happy Customers</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">100+</span>
+                            <span class="stat-label">Products</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">25+</span>
+                            <span class="stat-label">Countries</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Story Section -->
+        <section class="story-section">
+            <div class="container">
                 <div class="row align-items-center">
-                    <div class="col-lg-6">
-                        <h1>Our Story</h1>
-                        <p>
-                            Founded in 2015, WEARiT began with a simple vision -
-                            to create clothing that combines comfort, style, and
-                            sustainability. Our journey started in a small
-                            studio in Brooklyn, where our founder, Emma Clarke,
-                            designed the first collection featuring minimalist
-                            pieces that could be worn for years.
+                    <div class="col-lg-6 story-content">
+                        <h2 class="section-title">Our Story</h2>
+                        <p class="section-subtitle">From a small studio to a global brand</p>
+                        <p class="story-text">
+                            Founded in 2015, WEARiT began with a simple vision - to create clothing that combines comfort, style, and sustainability. Our journey started in a small studio in Brooklyn, where our founder, Emma Clarke, designed the first collection featuring minimalist pieces that could be worn for years.
                         </p>
-                        <p>
-                            Today, WEARiT has grown into a global brand, but our
-                            core values remain unchanged. We believe in creating
-                            timeless garments that transcend seasons and trends.
-                            Each piece is thoughtfully designed and crafted from
-                            premium materials sourced from ethical suppliers
-                            around the world.
+                        <p class="story-text">
+                            Today, WEARiT has grown into a global brand, but our core values remain unchanged. We believe in creating timeless garments that transcend seasons and trends. Each piece is thoughtfully designed and crafted from premium materials sourced from ethical suppliers around the world.
                         </p>
-                        <p>
-                            Our commitment to sustainability drives every
-                            decision we make - from the fabrics we choose to the
-                            packaging we use. We're not perfect, but we're
-                            constantly evolving and finding new ways to reduce
-                            our environmental footprint while creating beautiful
-                            clothing that you'll love to wear.
+                        <p class="story-text">
+                            Our commitment to sustainability drives every decision we make - from the fabrics we choose to the packaging we use. We're not perfect, but we're constantly evolving and finding new ways to reduce our environmental footprint while creating beautiful clothing that you'll love to wear.
                         </p>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 story-image">
                         <img
                             src="/images/shirt.jpg"
-                            alt="Man wearing pastel purple formal shirt"
-                            class="about-image"
+                            alt="WEARiT clothing showcase"
+                            class="story-image"
                         />
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Values Section -->
+        <section class="values-section">
+            <div class="container">
+                <div class="text-center mb-section">
+                    <h2 class="section-title">Our Values</h2>
+                    <p class="section-subtitle mx-auto">
+                        The principles that guide everything we do
+                    </p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="value-card fade-in">
+                            <div class="value-icon">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <h3 class="value-title">Sustainability</h3>
+                            <p class="value-description">
+                                We're committed to reducing our environmental impact through eco-friendly materials, ethical manufacturing, and sustainable packaging solutions.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="value-card fade-in">
+                            <div class="value-icon">
+                                <i class="fas fa-gem"></i>
+                            </div>
+                            <h3 class="value-title">Quality</h3>
+                            <p class="value-description">
+                                Every piece is crafted with meticulous attention to detail using premium materials that ensure durability and comfort for years to come.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="value-card fade-in">
+                            <div class="value-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <h3 class="value-title">Ethics</h3>
+                            <p class="value-description">
+                                We believe in fair trade, ethical labor practices, and supporting communities throughout our supply chain.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="value-card fade-in">
+                            <div class="value-icon">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <h3 class="value-title">Design</h3>
+                            <p class="value-description">
+                                Our designs blend timeless elegance with contemporary style, creating pieces that are both fashionable and versatile.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="value-card fade-in">
+                            <div class="value-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="value-title">Community</h3>
+                            <p class="value-description">
+                                We're building a community of conscious consumers who value quality, sustainability, and ethical fashion choices.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="value-card fade-in">
+                            <div class="value-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <h3 class="value-title">Innovation</h3>
+                            <p class="value-description">
+                                We continuously explore new technologies and methods to improve our products and reduce our environmental footprint.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section class="team-section">
+            <div class="container">
+                <div class="text-center mb-section">
+                    <h2 class="section-title">Meet Our Team</h2>
+                    <p class="section-subtitle mx-auto">
+                        The passionate people behind WEARiT
+                    </p>
+                </div>
+                <div class="row g-5">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="team-card fade-in">
+                            <img
+                                src="/images/team-1.jpg"
+                                alt="Emma Clarke - Founder & CEO"
+                                class="team-image"
+                                onerror="this.src='https://via.placeholder.com/200x200/667eea/ffffff?text=EC'"
+                            />
+                            <h3 class="team-name">Emma Clarke</h3>
+                            <p class="team-role">Founder & CEO</p>
+                            <p class="team-bio">
+                                Emma founded WEARiT with a vision to create sustainable fashion that doesn't compromise on style. With over 15 years in the fashion industry, she leads our design and sustainability initiatives.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="team-card fade-in">
+                            <img
+                                src="/images/team-2.jpg"
+                                alt="Michael Chen - Head of Design"
+                                class="team-image"
+                                onerror="this.src='https://via.placeholder.com/200x200/f093fb/ffffff?text=MC'"
+                            />
+                            <h3 class="team-name">Michael Chen</h3>
+                            <p class="team-role">Head of Design</p>
+                            <p class="team-bio">
+                                Michael brings creativity and innovation to every collection. His background in sustainable textiles and modern design helps shape WEARiT's distinctive aesthetic.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="team-card fade-in">
+                            <img
+                                src="/images/team-3.jpg"
+                                alt="Sarah Johnson - Sustainability Director"
+                                class="team-image"
+                                onerror="this.src='https://via.placeholder.com/200x200/764ba2/ffffff?text=SJ'"
+                            />
+                            <h3 class="team-name">Sarah Johnson</h3>
+                            <p class="team-role">Sustainability Director</p>
+                            <p class="team-bio">
+                                Sarah ensures that every aspect of our business aligns with our sustainability goals. She oversees our supply chain, materials sourcing, and environmental impact initiatives.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="text-center">
+                    <h2 class="cta-title">Ready to Join Our Journey?</h2>
+                    <p class="cta-subtitle">
+                        Discover our latest collection and become part of the sustainable fashion movement.
+                    </p>
+                    <a href="/products" class="cta-button">
+                        Shop Our Collection
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <%- include('../partials/footer') %>
+
+        <!-- Scripts -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Intersection Observer for fade-in animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all fade-in elements
+            document.querySelectorAll('.fade-in').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Counter animation for hero stats
+            function animateCounter(element, target, duration = 2000) {
+                let start = 0;
+                const increment = target / (duration / 16);
+
+                function updateCounter() {
+                    start += increment;
+                    if (start < target) {
+                        element.textContent = Math.floor(start).toLocaleString();
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        element.textContent = target.toLocaleString();
+                    }
+                }
+
+                updateCounter();
+            }
+
+            // Animate counters when hero section is visible
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const statNumbers = document.querySelectorAll('.stat-number');
+                        statNumbers.forEach(stat => {
+                            const text = stat.textContent;
+                            const number = parseInt(text.replace(/[^\d]/g, ''));
+                            if (number) {
+                                stat.textContent = '0';
+                                setTimeout(() => {
+                                    animateCounter(stat, number);
+                                }, 500);
+                            }
+                        });
+                        heroObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            const heroSection = document.querySelector('.hero-section');
+            if (heroSection) {
+                heroObserver.observe(heroSection);
+            }
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

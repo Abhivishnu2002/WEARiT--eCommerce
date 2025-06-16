@@ -15,7 +15,6 @@ const loadProfile = async (req, res) => {
 
     res.render("pages/profile", { user, addresses, orders })
   } catch (error) {
-    console.error("Load profile error:", error)
     req.flash("error_msg", "Failed to load profile")
     res.redirect("/")
   }
@@ -26,7 +25,6 @@ const loadEditProfile = async (req, res) => {
     const user = await User.findById(req.user._id)
     res.render("pages/profile", { user })
   } catch (error) {
-    console.error("Load edit profile error:", error)
     req.flash("error_msg", "Failed to load edit profile")
     res.redirect("/profile")
   }
@@ -60,8 +58,6 @@ const updateProfile = async (req, res) => {
     req.flash("success_msg", "Profile updated successfully")
     res.redirect("/profile")
   } catch (error) {
-    console.error("Update profile error:", error)
-
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
       return res.status(500).json({ success: false, message: "Failed to update profile" })
     }
@@ -109,7 +105,6 @@ const updateEmail = async (req, res) => {
     try {
       await sendOTPEmail(email, otp)
     } catch (emailError) {
-      console.error("Error sending OTP email:", emailError)
       if (req.xhr || req.headers.accept.indexOf("json") > -1) {
         return res.status(500).json({ success: false, message: "Failed to send OTP email. Please try again." })
       }
@@ -129,7 +124,6 @@ const updateEmail = async (req, res) => {
     req.flash("info_msg", "An OTP has been sent to your new email for verification")
     res.redirect("/profile/verify-email")
   } catch (error) {
-    console.error("Update email error:", error)
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
       return res.status(500).json({ success: false, message: "Failed to update email" })
     }
@@ -153,7 +147,6 @@ const loadVerifyEmail = async (req, res) => {
 
     res.render("pages/verify-email", { user })
   } catch (error) {
-    console.error("Load verify email error:", error)
     req.flash("error_msg", "Failed to load verification page")
     res.redirect("/profile")
   }
@@ -194,8 +187,6 @@ const verifyEmailOtp = async (req, res) => {
     req.flash("success_msg", "Email updated successfully")
     res.redirect("/profile")
   } catch (error) {
-    console.error("Verify email OTP error:", error)
-
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
       return res.status(500).json({
         success: false,
@@ -234,8 +225,6 @@ const resendOtp = async (req, res) => {
 
       req.flash("success_msg", "OTP has been resent to your new email")
     } catch (emailError) {
-      console.error("Error resending OTP email:", emailError)
-
       if (req.xhr || req.headers.accept.indexOf("json") > -1) {
         return res.status(500).json({ success: false, message: "Failed to resend OTP email. Please try again." })
       }
@@ -247,8 +236,6 @@ const resendOtp = async (req, res) => {
       res.redirect("/profile/verify-email")
     }
   } catch (error) {
-    console.error("Resend OTP error:", error)
-
     if (req.xhr || req.headers.accept.indexOf("json") > -1) {
       return res.status(500).json({ success: false, message: "Failed to resend OTP" })
     }
@@ -290,7 +277,6 @@ const updatePassword = async (req, res) => {
     req.flash("success_msg", "Password updated successfully")
     res.redirect("/profile")
   } catch (error) {
-    console.error("Update password error:", error)
     req.flash("error_msg", "Failed to update password")
     res.redirect("/profile/change-password")
   }

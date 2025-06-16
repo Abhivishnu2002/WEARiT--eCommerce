@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .catch((error) => {
             this.disabled = false
             this.innerHTML = originalText
-            console.error("Error:", error)
             showToast("An error occurred. Please try again.", "danger")
           })
       })
@@ -93,7 +92,13 @@ document.addEventListener("DOMContentLoaded", () => {
                   <p>Choose a payment method to complete your order:</p>
                   <div class="payment-options">
                     <div class="form-check mb-3">
-                      <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="paypal" checked>
+                      <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="razorpay" checked>
+                      <label class="form-check-label" for="razorpay">
+                        <i class="fas fa-credit-card me-2"></i> Credit/Debit Card, UPI, Net Banking
+                      </label>
+                    </div>
+                    <div class="form-check mb-3">
+                      <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="paypal">
                       <label class="form-check-label" for="paypal">
                         <i class="fab fa-paypal me-2"></i> PayPal
                       </label>
@@ -144,7 +149,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                window.location.href = data.redirect
+                if (paymentMethod === 'razorpay' && data.razorpayOrderId) {
+                  // Handle Razorpay payment
+                  modal.hide()
+                  handleRazorpayPayment(data, orderId)
+                } else {
+                  window.location.href = data.redirect
+                }
               } else {
                 this.disabled = false
                 this.innerHTML = "Proceed to Payment"
@@ -152,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             })
             .catch((error) => {
-              console.error("Error:", error)
               this.disabled = false
               this.innerHTML = "Proceed to Payment"
               showToast("An error occurred. Please try again.", "danger")
@@ -313,7 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             })
             .catch((error) => {
-              console.error("Error:", error)
               this.disabled = false
               this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Submit Return Request'
               showToast("An error occurred. Please try again.", "danger")
@@ -395,7 +404,6 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             })
             .catch((error) => {
-              console.error("Error:", error)
               this.disabled = false
               this.innerHTML = "Yes, cancel it!"
               showToast("An error occurred. Please try again.", "danger")
@@ -409,5 +417,77 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       })
     })
+  }
+
+  function handleRazorpayPayment(data, orderId) {
+    if (typeof Razorpay === 'undefined') {
+      showToast("Razorpay is not loaded. Please refresh the page and try again.", "danger")
+      return
+    }
+
+    const options = {
+      key: data.key,
+      amount: data.amount,
+      currency: data.currency,
+      name: data.name,
+      description: data.description,
+      order_id: data.razorpayOrderId,
+      prefill: data.prefill,
+      theme: data.theme,
+      handler: async (response) => {
+        try {
+          showToast("Verifying your payment...", "info")
+
+          const verifyResponse = await fetch('/payment/razorpay/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: orderId
+            })
+          })
+
+          if (!verifyResponse.ok) {
+            const errorText = await verifyResponse.text()
+            throw new Error(`HTTP ${verifyResponse.status}: ${errorText}`)
+          }
+
+          const verifyData = await verifyResponse.json()
+          if (verifyData.success) {
+            showToast("Payment successful! Redirecting...", "success")
+            setTimeout(() => {
+              window.location.href = verifyData.redirectUrl || `/order-success/${orderId}`
+            }, 1500)
+          } else {
+            throw new Error(verifyData.message || 'Payment verification failed')
+          }
+        } catch (error) {
+          showToast(error.message || "Payment verification failed. Please contact support.", "danger")
+          setTimeout(() => {
+            window.location.href = `/order-failure/${orderId}`
+          }, 3000)
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          showToast("Payment cancelled", "warning")
+        }
+      }
+    }
+
+    const rzp = new Razorpay(options)
+    rzp.on('payment.failed', (response) => {
+      showToast(`Payment failed: ${response.error.description}`, "danger")
+      setTimeout(() => {
+        window.location.href = `/order-failure/${orderId}`
+      }, 3000)
+    })
+
+    rzp.open()
   }
 })

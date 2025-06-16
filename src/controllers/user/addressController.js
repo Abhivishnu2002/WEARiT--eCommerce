@@ -5,7 +5,6 @@ const loadAddresses = async (req, res) => {
     const addresses = await Address.find({ user: req.user._id })
     res.render("pages/addresses", { addresses })
   } catch (error) {
-    console.error("Load addresses error:", error)
     req.flash("error_msg", "Failed to load addresses")
     res.redirect("/profile")
   }
@@ -104,7 +103,6 @@ const addAddress = async (req, res) => {
       res.redirect("/profile/addresses")
     }
   } catch (error) {
-    console.error("Add address error:", error)
     res.render("pages/add-address", {
       returnTo: req.query.returnTo || "addresses",
       errors: { general: "Failed to add address. Please try again." },
@@ -129,7 +127,6 @@ const loadEditAddress = async (req, res) => {
       formData: {},
     })
   } catch (error) {
-    console.error("Load edit address error:", error)
     req.flash("error_msg", "Failed to load address")
     res.redirect("/profile/addresses")
   }
@@ -178,7 +175,6 @@ const updateAddress = async (req, res) => {
       res.redirect("/profile/addresses")
     }
   } catch (error) {
-    console.error("Update address error:", error)
     const addressDoc = await Address.findOne({ _id: req.params.id, user: req.user._id })
     res.render("pages/edit-address", {
       address: addressDoc,
@@ -204,7 +200,6 @@ const deleteAddress = async (req, res) => {
       message: "Address deleted successfully",
     })
   } catch (error) {
-    console.error("Delete address error:", error)
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
@@ -218,7 +213,6 @@ const setDefaultAddress = async (req, res) => {
     req.flash("success_msg", "Default address updated")
     res.redirect("/profile/addresses")
   } catch (error) {
-    console.error("Set default address error:", error)
     req.flash("error_msg", "Failed to update default address")
     res.redirect("/profile/addresses")
   }

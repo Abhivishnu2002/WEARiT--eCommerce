@@ -42,7 +42,7 @@ const loadHome = async (req, res) => {
       user: req.user || null,
     })
   } catch (error) {
-    console.error("Home page error:", error)
+    console.error("User loadHome error:", error)
     res.render("pages/home", {
       newArrivals: [],
       premiumProducts: [],
@@ -70,8 +70,8 @@ const loadLogin = (req, res) => {
         error: req.flash("error") || [],
       }
     }
-  } catch (error) {
-    console.error("Flash message error:", error)
+  } catch (e) {
+    
   }
   const logoutSuccess = req.query.logout === "success"
 
@@ -129,7 +129,6 @@ const loginUser = async (req, res, next) => {
     }
     passport.authenticate("local", (err, user, info) => {
       if (err) {
-        console.error("Login error:", err)
         if (isAjax) {
           return res.status(500).json({
             success: false,
@@ -140,9 +139,9 @@ const loginUser = async (req, res, next) => {
           if (req.flash) {
             req.flash("error_msg", "Server error occurred. Please try again.")
           }
-        } catch (flashError) {
-          console.error("Flash error:", flashError)
-        }
+        } catch (e) {
+    
+  }
         return res.redirect("/login")
       }
 
@@ -198,14 +197,13 @@ const loginUser = async (req, res, next) => {
           if (req.flash) {
             req.flash("error_msg", errorMessage)
           }
-        } catch (flashError) {
-          console.error("Flash error:", flashError)
-        }
+        } catch (e) {
+    
+  }
         return res.redirect("/otp")
       }
       req.logIn(user, (err) => {
         if (err) {
-          console.error("Login session error:", err)
           if (isAjax) {
             return res.status(500).json({
               success: false,
@@ -217,9 +215,9 @@ const loginUser = async (req, res, next) => {
             if (req.flash) {
               req.flash("error_msg", "Login failed. Please try again.")
             }
-          } catch (flashError) {
-            console.error("Flash error:", flashError)
-          }
+          } catch (e) {
+    
+  }
           return res.redirect("/login")
         }
 
@@ -248,14 +246,14 @@ const loginUser = async (req, res, next) => {
           if (req.flash) {
             req.flash("success_msg", "Welcome back! You are now logged in.")
           }
-        } catch (flashError) {
-          console.error("Flash error:", flashError)
-        }
+        } catch (e) {
+    
+  }
         return res.redirect(returnTo)
       })
     })(req, res, next)
   } catch (error) {
-    console.error("Login controller error:", error)
+    console.error("User verifyLogin error:", error)
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
 
     if (isAjax) {
@@ -269,8 +267,8 @@ const loginUser = async (req, res, next) => {
       if (req.flash) {
         req.flash("error_msg", "An unexpected error occurred. Please try again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
+    } catch (e) {
+      console.error("User verifyLogin flash error:", e)
     }
     return res.redirect("/login")
   }
@@ -295,8 +293,8 @@ const loadSignup = (req, res) => {
         error: req.flash("error") || [],
       }
     }
-  } catch (error) {
-    console.error("Flash message error:", error)
+  } catch (e) {
+    
   }
 
   res.render("pages/signup", {
@@ -452,14 +450,11 @@ const registerUser = async (req, res) => {
         tempEmail: email.trim().toLowerCase(),
       }
     } else {
-      console.error("Session not available")
       throw new Error("Session not available")
     }
     try {
       await sendOTPEmail(email.trim(), otp)
     } catch (emailError) {
-      console.error("Failed to send OTP email:", emailError)
-
       if (isAjax) {
         return res.status(500).json({
           success: false,
@@ -496,13 +491,12 @@ const registerUser = async (req, res) => {
       if (req.flash) {
         req.flash("success_msg", "OTP sent successfully to your email")
       }
-    } catch (flashError) {
-    }
+    } catch (e) {
+    
+  }
     res.redirect("/otp")
   } catch (error) {
-    console.error("Registration Error: ", error)
-    console.error("Error stack:", error.stack)
-
+    console.error("User registerUser error:", error)
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
 
     if (isAjax) {
@@ -532,9 +526,9 @@ const loadOtp = (req, res) => {
       if (req.flash) {
         req.flash("error_msg", "Registration session expired. Please sign up again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     return res.redirect("/signup")
   }
 
@@ -552,8 +546,8 @@ const loadOtp = (req, res) => {
         error: req.flash("error") || [],
       }
     }
-  } catch (error) {
-    console.error("Flash message error:", error)
+  } catch (e) {
+    
   }
 
   res.render("pages/otp", {
@@ -582,7 +576,7 @@ const validateOtpInput = (email, otp) => {
   }
 }
 
-const verifyOtp = async (req, res, next) => {
+const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body || {}
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
@@ -617,9 +611,9 @@ const verifyOtp = async (req, res, next) => {
         if (req.flash) {
           req.flash("error_msg", errorMessage)
         }
-      } catch (flashError) {
-        console.error("Flash error:", flashError)
-      }
+      } catch (e) {
+    
+  }
       return res.redirect("/signup")
     }
 
@@ -706,12 +700,12 @@ const verifyOtp = async (req, res, next) => {
       if (req.flash) {
         req.flash("success_msg", "Email verified successfully! You can now log in.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     res.redirect("/login")
   } catch (error) {
-    console.error("OTP verification error:", error)
+    console.error("User verifyOtp error:", error)
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
 
     if (isAjax) {
@@ -725,8 +719,8 @@ const verifyOtp = async (req, res, next) => {
       if (req.flash) {
         req.flash("error_msg", "Verification failed. Please try again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
+    } catch (e) {
+      console.error("User verifyOtp flash error:", e)
     }
     res.redirect("/otp")
   }
@@ -750,9 +744,9 @@ const resendOtp = async (req, res) => {
         if (req.flash) {
           req.flash("error_msg", errorMessage)
         }
-      } catch (flashError) {
-        console.error("Flash error:", flashError)
-      }
+      } catch (e) {
+    
+  }
       return res.redirect("/signup")
     }
 
@@ -776,12 +770,12 @@ const resendOtp = async (req, res) => {
       if (req.flash) {
         req.flash("success_msg", "OTP resent successfully!")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     res.redirect("/otp")
   } catch (error) {
-    console.error("Resend OTP error:", error)
+    console.error("User resendOtp error:", error)
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
 
     if (isAjax) {
@@ -795,8 +789,8 @@ const resendOtp = async (req, res) => {
       if (req.flash) {
         req.flash("error_msg", "Failed to resend OTP. Please try again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
+    } catch (e) {
+      console.error("User resendOtp flash error:", e)
     }
     res.redirect("/otp")
   }
@@ -817,8 +811,8 @@ const loadForgetPassword = (req, res) => {
         error: req.flash("error") || [],
       }
     }
-  } catch (error) {
-    console.error("Flash message error:", error)
+  } catch (e) {
+    
   }
 
   res.render("pages/forgetPassword", {
@@ -905,12 +899,11 @@ const forgetPassword = async (req, res) => {
       if (req.flash) {
         req.flash("success_msg", "Password reset OTP sent to your email")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     return res.redirect("/newpassword")
   } catch (error) {
-    console.error("Forget Password Error:", error)
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
 
     if (isAjax) {
@@ -924,9 +917,9 @@ const forgetPassword = async (req, res) => {
       if (req.flash) {
         req.flash("error_msg", "Failed to process request. Please try again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     return res.redirect("/forgetpassword")
   }
 }
@@ -937,9 +930,9 @@ const loadNewPassword = (req, res) => {
       if (req.flash) {
         req.flash("error_msg", "Session expired. Please try again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     return res.redirect("/forgetpassword")
   }
 
@@ -957,8 +950,8 @@ const loadNewPassword = (req, res) => {
         error: req.flash("error") || [],
       }
     }
-  } catch (error) {
-    console.error("Flash message error:", error)
+  } catch (e) {
+    
   }
 
   res.render("pages/newPassword", {
@@ -1018,9 +1011,9 @@ const resetPassword = async (req, res) => {
         if (req.flash) {
           req.flash("error_msg", errorMessage)
         }
-      } catch (flashError) {
-        console.error("Flash error:", flashError)
-      }
+      } catch (e) {
+    
+  }
       return res.redirect("/forgetpassword")
     }
     const validation = validateResetPasswordInput(otp, newPassword, confirmPassword)
@@ -1094,12 +1087,11 @@ const resetPassword = async (req, res) => {
       if (req.flash) {
         req.flash("success_msg", "Password reset successful! You can now log in.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     res.redirect("/login")
   } catch (error) {
-    console.error("Reset password error:", error)
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.indexOf("json") > -1)
 
     if (isAjax) {
@@ -1113,9 +1105,9 @@ const resetPassword = async (req, res) => {
       if (req.flash) {
         req.flash("error_msg", "Something went wrong. Please try again.")
       }
-    } catch (flashError) {
-      console.error("Flash error:", flashError)
-    }
+    } catch (e) {
+    
+  }
     res.redirect("/newpassword")
   }
 }
@@ -1123,13 +1115,11 @@ const resetPassword = async (req, res) => {
 const logout = (req, res, next) => {
   req.logout((err) => {
     if (err) {
-      console.error("Logout error:", err)
       return next(err)
     }
     req.session.destroy((err) => {
       if (err) {
-        console.error("Session destroy error:", err)
-      }
+        }
       res.clearCookie("connect.sid")
       res.redirect("/login?logout=success")
     })

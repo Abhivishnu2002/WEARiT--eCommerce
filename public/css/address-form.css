@@ -1,303 +1,1 @@
-/* Address Form Specific Styles */
-.address-form-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.address-form {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-}
-
-/* Required field indicator */
-.form-label.required::after {
-  content: " *";
-  color: #dc3545;
-  font-weight: bold;
-}
-
-/* Form field styling */
-.form-control,
-.form-select {
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  background-color: #ffffff;
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: #1a1a1a;
-  box-shadow: 0 0 0 0.2rem rgba(26, 26, 26, 0.1);
-  background-color: #ffffff;
-}
-
-/* Valid state */
-.form-control.is-valid,
-.form-select.is-valid {
-  border-color: #28a745;
-  background-color: #ffffff;
-}
-
-.form-control.is-valid:focus,
-.form-select.is-valid:focus {
-  border-color: #28a745;
-  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.1);
-}
-
-/* Invalid state */
-.form-control.is-invalid,
-.form-select.is-invalid {
-  border-color: #dc3545;
-  background-color: #fff5f5;
-  animation: shake 0.5s ease-in-out;
-}
-
-.form-control.is-invalid:focus,
-.form-select.is-invalid:focus {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);
-}
-
-/* Shake animation for invalid fields */
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-5px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(5px);
-  }
-}
-
-/* Error message styling - FIXED: Only show when field is invalid */
-.invalid-feedback {
-  display: none; /* Hidden by default */
-  width: 100%;
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #dc3545;
-  font-weight: 500;
-  padding: 8px 12px;
-  background-color: #fff5f5;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-}
-
-/* Only show error message when field is invalid */
-.is-invalid ~ .invalid-feedback {
-  display: block;
-}
-
-/* Alternative: Show when there's content */
-.invalid-feedback:not(:empty) {
-  display: block;
-}
-
-.invalid-feedback i {
-  margin-right: 4px;
-}
-
-/* Success feedback */
-.valid-feedback {
-  display: none; /* Hidden by default */
-  width: 100%;
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #28a745;
-  font-weight: 500;
-  padding: 8px 12px;
-  background-color: #f0f9f0;
-  border: 1px solid #c3e6cb;
-  border-radius: 6px;
-}
-
-/* Show success feedback when field is valid */
-.is-valid ~ .valid-feedback {
-  display: block;
-}
-
-/* Form labels */
-.form-label {
-  font-weight: 600;
-  color: #1a1a1a;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-/* Textarea specific */
-textarea.form-control {
-  resize: vertical;
-  min-height: 100px;
-}
-
-/* Checkbox styling */
-.form-check {
-  padding: 15px 20px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.form-check-input {
-  width: 1.2em;
-  height: 1.2em;
-  margin-top: 0.1em;
-}
-
-.form-check-label {
-  font-weight: 500;
-  color: #495057;
-  margin-left: 8px;
-}
-
-/* Submit button */
-.btn-dark {
-  background-color: #1a1a1a;
-  border-color: #1a1a1a;
-  padding: 15px 30px;
-  font-weight: 600;
-  font-size: 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-dark:hover {
-  background-color: #333333;
-  border-color: #333333;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3);
-}
-
-.btn-dark:active {
-  transform: translateY(0);
-}
-
-/* Loading state */
-.btn-loading {
-  display: none;
-}
-
-.btn-dark.loading .btn-text {
-  display: none;
-}
-
-.btn-dark.loading .btn-loading {
-  display: inline-block;
-}
-
-/* Alert styling */
-.alert {
-  border-radius: 8px;
-  border: none;
-  padding: 15px 20px;
-  margin-bottom: 20px;
-  font-weight: 500;
-}
-
-.alert-danger {
-  background-color: #fff5f5;
-  color: #dc3545;
-  border-left: 4px solid #dc3545;
-}
-
-/* Input group styling for better UX */
-.input-group-text {
-  background-color: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-right: none;
-  color: #6c757d;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .address-form {
-    padding: 20px;
-    margin: 0 10px;
-  }
-
-  .form-control,
-  .form-select {
-    padding: 10px 14px;
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  .btn-dark {
-    padding: 12px 24px;
-    font-size: 14px;
-  }
-}
-
-/* Focus management */
-.form-control:focus,
-.form-select:focus {
-  outline: none;
-}
-
-/* Placeholder styling */
-.form-control::placeholder {
-  color: #6c757d;
-  opacity: 0.8;
-}
-
-/* Select arrow customization */
-.form-select {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px 12px;
-}
-
-/* Smooth transitions */
-.form-control,
-.form-select {
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-/* Loading spinner */
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
-}
-
-/* Hide empty error messages */
-.invalid-feedback:empty {
-  display: none !important;
-}
-
-/* Ensure proper spacing when no errors */
-.mb-3 {
-  margin-bottom: 1rem !important;
-}
-
-/* Clean form field containers */
-.form-floating {
-  position: relative;
-}
-
-/* Better error message positioning */
-.invalid-feedback {
-  position: relative;
-  z-index: 1;
-}
-
-/* Prevent layout shift when showing/hiding errors */
-.form-group {
-  min-height: auto;
-}
+.address-form-container {  max-width: 800px;  margin: 0 auto;}.address-form {  background: #ffffff;  padding: 30px;  border-radius: 12px;  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);}.form-label.required::after {  content: " *";  color: #dc3545;  font-weight: bold;}.form-control,.form-select {  border: 2px solid #e9ecef;  border-radius: 8px;  padding: 12px 16px;  font-size: 14px;  transition: all 0.3s ease;  background-color: #ffffff;}.form-control:focus,.form-select:focus {  border-color: #1a1a1a;  box-shadow: 0 0 0 0.2rem rgba(26, 26, 26, 0.1);  background-color: #ffffff;}.form-control.is-valid,.form-select.is-valid {  border-color: #28a745;  background-color: #ffffff;}.form-control.is-valid:focus,.form-select.is-valid:focus {  border-color: #28a745;  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.1);}.form-control.is-invalid,.form-select.is-invalid {  border-color: #dc3545;  background-color: #fff5f5;  animation: shake 0.5s ease-in-out;}.form-control.is-invalid:focus,.form-select.is-invalid:focus {  border-color: #dc3545;  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1);}@keyframes shake {  0%,  100% {    transform: translateX(0);  }  10%,  30%,  50%,  70%,  90% {    transform: translateX(-5px);  }  20%,  40%,  60%,  80% {    transform: translateX(5px);  }}.invalid-feedback {  display: none;  width: 100%;  margin-top: 0.5rem;  font-size: 0.875rem;  color: #dc3545;  font-weight: 500;  padding: 8px 12px;  background-color: #fff5f5;  border: 1px solid #fecaca;  border-radius: 6px;}.is-invalid ~ .invalid-feedback {  display: block;}.invalid-feedback:not(:empty) {  display: block;}.invalid-feedback i {  margin-right: 4px;}.valid-feedback {  display: none;  width: 100%;  margin-top: 0.5rem;  font-size: 0.875rem;  color: #28a745;  font-weight: 500;  padding: 8px 12px;  background-color: #f0f9f0;  border: 1px solid #c3e6cb;  border-radius: 6px;}.is-valid ~ .valid-feedback {  display: block;}.form-label {  font-weight: 600;  color: #1a1a1a;  margin-bottom: 8px;  font-size: 14px;}textarea.form-control {  resize: vertical;  min-height: 100px;}.form-check {  padding: 15px 20px;  background-color: #f8f9fa;  border-radius: 8px;  border: 1px solid #e9ecef;}.form-check-input {  width: 1.2em;  height: 1.2em;  margin-top: 0.1em;}.form-check-label {  font-weight: 500;  color: #495057;  margin-left: 8px;}.btn-dark {  background-color: #1a1a1a;  border-color: #1a1a1a;  padding: 15px 30px;  font-weight: 600;  font-size: 16px;  border-radius: 8px;  transition: all 0.3s ease;  position: relative;  overflow: hidden;}.btn-dark:hover {  background-color: #333333;  border-color: #333333;  transform: translateY(-2px);  box-shadow: 0 4px 15px rgba(26, 26, 26, 0.3);}.btn-dark:active {  transform: translateY(0);}.btn-loading {  display: none;}.btn-dark.loading .btn-text {  display: none;}.btn-dark.loading .btn-loading {  display: inline-block;}.alert {  border-radius: 8px;  border: none;  padding: 15px 20px;  margin-bottom: 20px;  font-weight: 500;}.alert-danger {  background-color: #fff5f5;  color: #dc3545;  border-left: 4px solid #dc3545;}.input-group-text {  background-color: #f8f9fa;  border: 2px solid #e9ecef;  border-right: none;  color: #6c757d;}@media (max-width: 768px) {  .address-form {    padding: 20px;    margin: 0 10px;  }  .form-control,  .form-select {    padding: 10px 14px;    font-size: 16px;  }  .btn-dark {    padding: 12px 24px;    font-size: 14px;  }}.form-control:focus,.form-select:focus {  outline: none;}.form-control::placeholder {  color: #6c757d;  opacity: 0.8;}.form-select {  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");  background-repeat: no-repeat;  background-position: right 12px center;  background-size: 16px 12px;}.form-control,.form-select {  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;}.spinner-border-sm {  width: 1rem;  height: 1rem;}.invalid-feedback:empty {  display: none !important;}.mb-3 {  margin-bottom: 1rem !important;}.form-floating {  position: relative;}.invalid-feedback {  position: relative;  z-index: 1;}.form-group {  min-height: auto;}

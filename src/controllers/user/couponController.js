@@ -1,8 +1,6 @@
 const Coupon = require("../../models/couponModel")
 const UserCoupon = require("../../models/userCouponModel")
 const Cart = require("../../models/cartModel")
-const Product = require("../../models/productModel")
-const logger = require("../../utils/logger")
 
 const getUserCoupons = async (req, res) => {
   try {
@@ -25,7 +23,6 @@ const getUserCoupons = async (req, res) => {
       })
 
       await Promise.all(updatePromises)
-      logger.info(`Auto-expired ${couponsToUpdate.length} coupons that reached usage limit`)
     }
     const userCoupons = await UserCoupon.find({ user: userId })
     const userCouponMap = {}
@@ -69,7 +66,6 @@ const getUserCoupons = async (req, res) => {
       activePage: "coupons",
     })
   } catch (error) {
-    logger.error(`Error fetching user coupons: ${error.message}`, { stack: error.stack })
     req.flash("error_msg", "Failed to load coupons")
     res.redirect("/profile")
   }
@@ -96,7 +92,6 @@ const getAvailableCoupons = async (req, res) => {
       })
 
       await Promise.all(updatePromises)
-      logger.info(`Auto-expired ${couponsToUpdate.length} coupons that reached usage limit during checkout`)
     }
     const userCoupons = await UserCoupon.find({ user: userId })
     const userCouponMap = {}
@@ -161,7 +156,6 @@ const getAvailableCoupons = async (req, res) => {
       coupons: formattedCoupons,
     })
   } catch (error) {
-    logger.error(`Error fetching available coupons: ${error.message}`, { stack: error.stack })
     res.status(500).json({
       success: false,
       message: "Failed to load available coupons",
@@ -201,7 +195,6 @@ const applyCoupon = async (req, res) => {
       if (coupon.autoExpire && coupon.isActive) {
         coupon.isActive = false
         await coupon.save()
-        logger.info(`Coupon ${coupon.code} auto-expired during application due to usage limit`)
       }
 
       return res.status(400).json({
@@ -312,7 +305,6 @@ const applyCoupon = async (req, res) => {
       },
     })
   } catch (error) {
-    logger.error(`Error applying coupon: ${error.message}`, { stack: error.stack })
     res.status(500).json({
       success: false,
       message: "Failed to apply coupon",
@@ -362,7 +354,6 @@ const removeCoupon = async (req, res) => {
       },
     })
   } catch (error) {
-    logger.error(`Error removing coupon: ${error.message}`, { stack: error.stack })
     res.status(500).json({
       success: false,
       message: "Failed to remove coupon",
@@ -396,7 +387,6 @@ const getSessionCoupon = async (req, res) => {
       })
     }
   } catch (error) {
-    logger.error(`Error getting session coupon: ${error.message}`, { stack: error.stack })
     res.status(500).json({
       success: false,
       message: "Failed to get session coupon",
@@ -447,7 +437,6 @@ const processCouponUsage = async (userId, couponId, orderId) => {
       isExpired,
     }
   } catch (error) {
-    logger.error(`Error processing coupon usage: ${error.message}`, { stack: error.stack })
     return { success: false, error: error.message }
   }
 }
@@ -458,7 +447,6 @@ async function getWishlistCount(userId) {
     const wishlist = await Wishlist.findOne({ user: userId })
     return wishlist ? wishlist.products.length : 0
   } catch (error) {
-    logger.error(`Error getting wishlist count: ${error.message}`, { stack: error.stack })
     return 0
   }
 }

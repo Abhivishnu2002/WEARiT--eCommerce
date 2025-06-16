@@ -52,7 +52,7 @@ const loadCategory = async (req, res) => {
       limit,
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadCategory error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminCategory", { error_msg: "Server Error" })
   }
@@ -118,7 +118,7 @@ const addCategory = async (req, res) => {
     req.flash("success_msg", "Category added successfully")
     res.redirect("/admin/category")
   } catch (error) {
-    console.error(error)
+    console.error("Admin addCategory error:", error)
     req.flash("error_msg", "Server error: " + error.message)
     res.status(500).render("admin/pages/adminAddCategory", {
       error_msg: "Server Error: " + error.message,
@@ -149,7 +149,7 @@ const loadEditCategory = async (req, res) => {
 
     res.render("admin/pages/adminEditCategory", { admin, category })
   } catch (error) {
-    console.error(error)
+    console.error("Admin loadEditCategory error:", error)
     req.flash("error_msg", "Server error")
     res.status(500).render("admin/pages/adminEditCategory", { error_msg: "Server error" })
   }
@@ -215,7 +215,7 @@ const updateCategory = async (req, res) => {
     req.flash("success_msg", "Category updated successfully")
     res.redirect("/admin/category")
   } catch (error) {
-    console.error(error)
+    console.error("Admin updateCategory error:", error)
     req.flash("error_msg", "Server error: " + error.message)
     res.status(500).render("admin/pages/adminEditCategory", { error_msg: "Server error: " + error.message })
   }
@@ -239,7 +239,7 @@ const deleteCategory = async (req, res) => {
       message: "Category deleted successfully",
     })
   } catch (error) {
-    console.error(error)
+    console.error("Admin deleteCategory error:", error)
     res.status(500).json({ success: false, message: "Server error" })
   }
 }
@@ -263,7 +263,7 @@ const toggleCategoryListing = async (req, res) => {
     req.flash("success_msg", `Category ${category.isListed ? "listed" : "unlisted"} successfully`)
     res.redirect("/admin/category")
   } catch (error) {
-    console.error(error)
+    console.error("Admin toggleCategoryListing error:", error)
     req.flash("error_msg", "Server error")
     res.redirect("/admin/category")
   }

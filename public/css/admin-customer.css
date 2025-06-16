@@ -1,398 +1,1 @@
-/* Admin Customer CSS - Enhanced Responsive Design */
-
-/* CSS Variables for Consistency */
-:root {
-  --primary-color: #212529;
-  --secondary-color: #f8f9fa;
-  --accent-color: #667eea;
-  --success-color: #198754;
-  --danger-color: #dc3545;
-  --warning-color: #ffc107;
-  --light-color: #f8f9fa;
-  --dark-color: #212529;
-  --border-color: #dee2e6;
-  --text-muted: #6c757d;
-}
-
-/* Base Styles */
-body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #f8f9fa;
-  color: #333843;
-  line-height: 1.6;
-}
-
-/* Main Layout */
-.admin-main {
-  margin-left: 250px;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-  transition: margin-left 0.3s ease;
-}
-
-.admin-content {
-  padding: 2rem;
-  max-width: 100%;
-}
-
-/* Header Section */
-.breadcrumb-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.breadcrumb-section h2 {
-  color: #2c3e50;
-  font-weight: 600;
-  margin: 0;
-}
-
-.header-stats {
-  display: flex;
-  gap: 1rem;
-}
-
-.stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 10px;
-  text-align: center;
-  min-width: 120px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Enhanced Filters Container */
-.filters-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin-bottom: 1.5rem;
-}
-
-.filters-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-bottom: 1px solid #dee2e6;
-}
-
-.filters-title {
-  display: flex;
-  align-items: center;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0;
-}
-
-.filters-content {
-  padding: 1.5rem;
-}
-
-/* Customer Table */
-.customer-table {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.table {
-  margin-bottom: 0;
-}
-
-.table thead th {
-  background: linear-gradient(135deg, #2c3e50, #34495e);
-  color: white;
-  font-weight: 600;
-  border: none;
-  padding: 1rem;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.table tbody td {
-  padding: 1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #f1f3f4;
-}
-
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-/* Customer Info */
-.customer-info {
-  display: flex;
-  align-items: center;
-}
-
-.customer-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
-  overflow: hidden;
-}
-
-.customer-name {
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.customer-email {
-  font-size: 0.75rem;
-  color: #6c757d;
-  margin-bottom: 0;
-}
-
-/* Status Badges */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.status-active {
-  background-color: #d1ecf1;
-  color: #0c5460;
-}
-
-.status-blocked {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  transition: all 0.2s;
-  text-decoration: none;
-  background: none;
-  border: none;
-  color: #6c757d;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  color: #0d6efd;
-}
-
-/* Pagination */
-.pagination .page-link {
-  color: #667eea;
-  border-color: #dee2e6;
-  padding: 0.5rem 0.75rem;
-}
-
-.pagination .page-item.active .page-link {
-  background-color: #667eea;
-  border-color: #667eea;
-}
-
-.pagination .page-link:hover {
-  color: #5a6fd8;
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
-}
-
-/* Mobile Card Layout */
-.customer-cards-container {
-  display: none;
-}
-
-.customer-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
-  overflow: hidden;
-}
-
-.customer-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: var(--light-color);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.customer-card-title {
-  font-weight: 600;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-}
-
-.customer-card-body {
-  padding: 1rem;
-}
-
-.customer-card-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.customer-card-label {
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.customer-card-value {
-  font-weight: 500;
-}
-
-.customer-card-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .admin-main {
-    margin-left: 0;
-  }
-
-  .admin-content {
-    padding: 1.5rem;
-  }
-}
-
-@media (max-width: 991.98px) {
-  .breadcrumb-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .customer-table-container {
-    display: none;
-  }
-
-  .customer-cards-container {
-    display: block;
-  }
-
-  .filters-content .row {
-    flex-direction: column;
-  }
-
-  .filters-content .col-md-8,
-  .filters-content .col-md-4 {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-}
-
-@media (max-width: 767.98px) {
-  .admin-content {
-    padding: 1rem;
-  }
-
-  .stat-card {
-    padding: 0.75rem 1rem;
-    min-width: 100px;
-  }
-
-  .stat-value {
-    font-size: 1.25rem;
-  }
-
-  .filters-content {
-    padding: 1rem;
-  }
-
-  .customer-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .customer-card-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .customer-card-actions .btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .admin-content {
-    padding: 0.75rem;
-  }
-
-  .customer-card-row {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .customer-card-label {
-    font-size: 0.875rem;
-  }
-
-  .pagination {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
-
-/* Desktop Table View */
-@media (min-width: 992px) {
-  .customer-cards-container {
-    display: none;
-  }
-
-  .customer-table-container {
-    display: block;
-  }
-}
+:root {  --primary-color: #212529;  --secondary-color: #f8f9fa;  --accent-color: #667eea;  --success-color: #198754;  --danger-color: #dc3545;  --warning-color: #ffc107;  --light-color: #f8f9fa;  --dark-color: #212529;  --border-color: #dee2e6;  --text-muted: #6c757d;}body {  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;  background-color: #f8f9fa;  color: #333843;  line-height: 1.6;}.admin-main {  margin-left: 250px;  min-height: 100vh;  background-color: #f8f9fa;  transition: margin-left 0.3s ease;}.admin-content {  padding: 2rem;  max-width: 100%;}.breadcrumb-section {  background: white;  padding: 1.5rem;  border-radius: 12px;  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  margin-bottom: 1.5rem;  display: flex;  justify-content: space-between;  align-items: center;}.breadcrumb-section h2 {  color: #2c3e50;  font-weight: 600;  margin: 0;}.header-stats {  display: flex;  gap: 1rem;}.stat-card {  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  color: white;  padding: 1rem 1.5rem;  border-radius: 10px;  text-align: center;  min-width: 120px;  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);}.stat-value {  font-size: 1.5rem;  font-weight: 700;  margin-bottom: 0.25rem;}.stat-label {  font-size: 0.75rem;  opacity: 0.9;  text-transform: uppercase;  letter-spacing: 0.5px;}.filters-container {  background: white;  border-radius: 12px;  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  overflow: hidden;  margin-bottom: 1.5rem;}.filters-header {  display: flex;  justify-content: space-between;  align-items: center;  padding: 1rem 1.5rem;  background: linear-gradient(135deg, #f8f9fa, #e9ecef);  border-bottom: 1px solid #dee2e6;}.filters-title {  display: flex;  align-items: center;  font-size: 1.1rem;  font-weight: 600;  color: #2c3e50;  margin: 0;}.filters-content {  padding: 1.5rem;}.customer-table {  background: white;  border-radius: 12px;  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  overflow: hidden;}.table {  margin-bottom: 0;}.table thead th {  background: linear-gradient(135deg, #2c3e50, #34495e);  color: white;  font-weight: 600;  border: none;  padding: 1rem;  font-size: 0.875rem;  text-transform: uppercase;  letter-spacing: 0.5px;}.table tbody td {  padding: 1rem;  vertical-align: middle;  border-bottom: 1px solid #f1f3f4;}.table tbody tr:hover {  background-color: #f8f9fa;}.customer-info {  display: flex;  align-items: center;}.customer-avatar {  width: 40px;  height: 40px;  border-radius: 50%;  background-color: #e9ecef;  display: flex;  align-items: center;  justify-content: center;  margin-right: 10px;  overflow: hidden;}.customer-name {  font-weight: 500;  margin-bottom: 0.25rem;}.customer-email {  font-size: 0.75rem;  color: #6c757d;  margin-bottom: 0;}.status-badge {  display: inline-flex;  align-items: center;  padding: 0.5rem 0.75rem;  border-radius: 20px;  font-size: 0.75rem;  font-weight: 600;  text-transform: capitalize;}.status-active {  background-color: #d1ecf1;  color: #0c5460;}.status-blocked {  background-color: #f8d7da;  color: #721c24;}.action-buttons {  display: flex;  gap: 0.5rem;}.action-btn {  display: inline-flex;  align-items: center;  justify-content: center;  width: 32px;  height: 32px;  border-radius: 6px;  transition: all 0.2s;  text-decoration: none;  background: none;  border: none;  color: #6c757d;}.action-btn:hover {  transform: translateY(-1px);  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  color: #0d6efd;}.pagination .page-link {  color: #667eea;  border-color: #dee2e6;  padding: 0.5rem 0.75rem;}.pagination .page-item.active .page-link {  background-color: #667eea;  border-color: #667eea;}.pagination .page-link:hover {  color: #5a6fd8;  background-color: #f8f9fa;  border-color: #dee2e6;}.customer-cards-container {  display: none;}.customer-card {  background: white;  border-radius: 12px;  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  margin-bottom: 1rem;  overflow: hidden;}.customer-card-header {  display: flex;  justify-content: space-between;  align-items: center;  padding: 1rem;  background-color: var(--light-color);  border-bottom: 1px solid var(--border-color);}.customer-card-title {  font-weight: 600;  margin-bottom: 0;  display: flex;  align-items: center;}.customer-card-body {  padding: 1rem;}.customer-card-row {  display: flex;  justify-content: space-between;  margin-bottom: 0.5rem;}.customer-card-label {  font-weight: 500;  color: var(--text-muted);}.customer-card-value {  font-weight: 500;}.customer-card-actions {  display: flex;  justify-content: flex-end;  gap: 0.5rem;  padding: 1rem;  border-top: 1px solid var(--border-color);}@media (max-width: 1200px) {  .admin-main {    margin-left: 0;  }  .admin-content {    padding: 1.5rem;  }}@media (max-width: 991.98px) {  .breadcrumb-section {    flex-direction: column;    align-items: flex-start;    gap: 1rem;  }  .customer-table-container {    display: none;  }  .customer-cards-container {    display: block;  }  .filters-content .row {    flex-direction: column;  }  .filters-content .col-md-8,  .filters-content .col-md-4 {    width: 100%;    margin-bottom: 1rem;  }}@media (max-width: 767.98px) {  .admin-content {    padding: 1rem;  }  .stat-card {    padding: 0.75rem 1rem;    min-width: 100px;  }  .stat-value {    font-size: 1.25rem;  }  .filters-content {    padding: 1rem;  }  .customer-card-header {    flex-direction: column;    align-items: flex-start;    gap: 0.5rem;  }  .customer-card-actions {    flex-direction: column;    align-items: stretch;  }  .customer-card-actions .btn {    width: 100%;  }}@media (max-width: 575.98px) {  .admin-content {    padding: 0.75rem;  }  .customer-card-row {    flex-direction: column;    gap: 0.25rem;  }  .customer-card-label {    font-size: 0.875rem;  }  .pagination {    flex-wrap: wrap;    justify-content: center;  }}@media (min-width: 992px) {  .customer-cards-container {    display: none;  }  .customer-table-container {    display: block;  }}

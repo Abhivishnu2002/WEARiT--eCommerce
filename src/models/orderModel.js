@@ -61,9 +61,36 @@ const orderSchema = new mongoose.Schema(
     },
     products: [productSchema],
     address: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Address",
-      required: true,
+      // Store address ID for reference (optional, can be null if address is deleted)
+      addressId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Address",
+      },
+      // Store actual address data to preserve it even if original address is deleted
+      name: {
+        type: String,
+        required: true,
+      },
+      mobile: {
+        type: String,
+        required: true,
+      },
+      pincode: {
+        type: String,
+        required: true,
+      },
+      address: {
+        type: String,
+        required: true,
+      },
+      city: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
     },
     totalAmount: {
       type: Number,

@@ -5,7 +5,6 @@ const getRazorpayClient = () => {
   const keySecret = process.env.RAZORPAY_KEY_SECRET
 
   if (!keyId || !keySecret) {
-    console.error("Razorpay credentials missing. Check environment variables.")
     throw new Error("Razorpay credentials are missing")
   }
 

@@ -67,8 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Error checking session coupon:", error)
-      })
+        })
   }
 
   function fetchAvailableCoupons() {
@@ -95,7 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Error fetching coupons:", error)
         availableCouponsContainer.innerHTML = `
           <div class="text-center py-3">
             <p>Failed to load coupons. Please try again.</p>
@@ -189,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Error applying coupon:", error)
         showNotification("Failed to apply coupon. Please try again.", "error")
       })
       .finally(() => {
@@ -222,7 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
       .catch((error) => {
-        console.error("Error removing coupon:", error)
         showNotification("Failed to remove coupon. Please try again.", "error")
       })
   }

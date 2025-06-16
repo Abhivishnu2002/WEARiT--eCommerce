@@ -9,6 +9,7 @@ const userRoutes = require('./routes/userRoutes.js')
 const adminRoutes = require('./routes/adminRoutes.js');
 const apiRoutes = require('./routes/apiRoutes.js');
 const { checkUserStatus } = require('./middlewares/auth.js');
+const { getCartWishlistCounts } = require('./middlewares/cartWishlistCountMiddleware.js');
 const passport = require('passport');
 require('./config/db.js');
 require('./config/passport.js');
@@ -54,17 +55,30 @@ app.use((req, res, next)=>{
 })
 
 app.use(checkUserStatus);
+app.use(getCartWishlistCounts);
 
 app.use('/', userRoutes);
 app.use("/admin", adminRoutes);
 app.use('/api', apiRoutes);
 
+// 404 handler for unmatched routes
+app.use((req, res, next)=>{
+    res.status(404).render('errors/404', {
+        message: 'Page not found',
+        url: req.originalUrl
+    });
+});
+
+// Error handler
 app.use((err, req, res, next)=>{
-    console.log(err.stack);
-    res.status(404).render('errors/404', {err});
-})
+    console.error('Application error:', err);
+    res.status(500).render('errors/500', {
+        message: 'Internal server error',
+        error: err
+    });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=>{
-    console.log(`Server started at: http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 })

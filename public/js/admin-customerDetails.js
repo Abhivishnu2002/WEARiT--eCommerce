@@ -56,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
               })
             })
             .catch((error) => {
-              console.error("Error:", error)
               Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -90,6 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     }
   } catch (e) {
-    console.error("Flash message check error:", e)
+    
   }
 })

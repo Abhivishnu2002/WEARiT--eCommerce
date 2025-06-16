@@ -253,7 +253,6 @@ class PriceCalculator {
         totalQuantity: products.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
       }
     } catch (error) {
-      console.error("[PRICE_CALCULATOR] Error calculating invoice totals:", error)
       return {
         subtotal: 0,
         productDiscount: 0,

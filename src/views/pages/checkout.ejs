@@ -13,10 +13,15 @@
   <link rel="stylesheet" href="/css/checkout.css" />
   <link rel="stylesheet" href="/css/toast-notification.css" />
 </head>
-<body>
+<body class="checkout-page">
   <%- include('../partials/header') %>
-  <div class="checkout-container">
-    <div class="row">
+
+  <!-- Main Content Wrapper -->
+  <main class="main-content">
+    <div class="container-fluid">
+      <div class="checkout-container">
+        <div class="container">
+          <div class="row">
       <div class="col-lg-8">
         <div class="checkout-content mb-4">
           <div class="checkout-header">
@@ -166,9 +171,11 @@
             <% } %>
           </div>
         </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <!-- Available Coupons Modal -->
   <div class="modal fade" id="couponsModal" tabindex="-1" aria-labelledby="couponsModalLabel" aria-hidden="true">

@@ -41,7 +41,6 @@ const sendOTPEmail = async (email, otp) => {
     const info = await transporter.sendMail(mailOptions)
     return info
   } catch (error) {
-    console.error("Email sending error:", error)
     throw new Error("Failed to send email")
   }
 }
@@ -76,7 +75,6 @@ const sendPasswordResetEmail = async (email, otp) => {
     const info = await transporter.sendMail(mailOptions)
     return info
   } catch (error) {
-    console.error("Email sending error:", error)
     throw new Error("Failed to send email")
   }
 }

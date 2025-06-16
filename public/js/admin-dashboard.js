@@ -27,7 +27,7 @@ function handleFlashMessages() {
       }
     }
   } catch (e) {
-    console.log("Flash message check error:", e)
+    
   }
 }
 
@@ -46,15 +46,7 @@ function initializeInteractiveElements() {
   const bestSellingItems = document.querySelectorAll(".best-selling-item")
   bestSellingItems.forEach((item) => {
     item.addEventListener("click", function () {
-      console.log("Best selling item clicked:", this)
+
     })
   })
 }
-
-window.addEventListener("resize", () => {
-  console.log("Window resized")
-})
-
-window.addEventListener("error", (e) => {
-  console.error("Dashboard error:", e.error)
-})
