@@ -237,6 +237,11 @@ async function createOrderFromCart(userId, addressId, paymentMethod, req) {
 
 const createPaypalPayment = async (req, res) => {
   try {
+    console.error("PayPal payment creation started:", {
+      body: req.body,
+      userId: req.user._id
+    })
+
     const { orderId, addressId } = req.body
     const userId = req.user._id
     const baseUrl = getBaseUrl(req)
@@ -244,6 +249,7 @@ const createPaypalPayment = async (req, res) => {
     let order
 
     if (orderId) {
+      console.error("Finding existing order:", orderId)
       order = await Order.findOne({
         _id: orderId,
         user: userId,
@@ -251,14 +257,17 @@ const createPaypalPayment = async (req, res) => {
       })
 
       if (!order) {
+        console.error("Order not found:", { orderId, userId })
         return res.status(404).json({
           success: false,
           message: "Order not found or already paid",
         })
       }
     } else if (addressId) {
+      console.error("Creating order from cart:", { addressId, userId })
       order = await createOrderFromCart(userId, addressId, "paypal", req)
     } else {
+      console.error("Missing required parameters:", { orderId, addressId })
       return res.status(400).json({
         success: false,
         message: "Missing required parameters",
@@ -277,6 +286,7 @@ const createPaypalPayment = async (req, res) => {
       await existingTransaction.save()
     }
 
+    console.error("Creating PayPal client and order request")
     const paypalClient = getPayPalClient()
     const request = new paypal.orders.OrdersCreateRequest()
     const amountUSD = (order.finalAmount / 75).toFixed(2)
@@ -284,8 +294,16 @@ const createPaypalPayment = async (req, res) => {
     const returnUrl = `${baseUrl}/payment/paypal/success?orderId=${order._id}`
     const cancelUrl = `${baseUrl}/payment/paypal/cancel?orderId=${order._id}`
 
+    console.error("PayPal URLs:", { baseUrl, returnUrl, cancelUrl })
+    console.error("PayPal order details:", {
+      orderId: order._id,
+      orderID: order.orderID,
+      finalAmount: order.finalAmount,
+      amountUSD: amountUSD
+    })
+
     request.prefer("return=representation")
-    request.requestBody({
+    const requestBody = {
       intent: "CAPTURE",
       purchase_units: [
         {
@@ -304,10 +322,22 @@ const createPaypalPayment = async (req, res) => {
         return_url: returnUrl,
         cancel_url: cancelUrl,
       },
+    }
+
+    console.error("PayPal request body:", JSON.stringify(requestBody, null, 2))
+    request.requestBody(requestBody)
+
+    console.error("Executing PayPal order creation request")
+    const response = await paypalClient.execute(request)
+    console.error("PayPal order creation response:", {
+      status: response.statusCode,
+      id: response.result.id,
+      status_detail: response.result.status
     })
 
-    const response = await paypalClient.execute(request)
     const approvalUrl = response.result.links.find((link) => link.rel === "approve").href
+    console.error("PayPal approval URL:", approvalUrl)
+
     const transactionId = generateTransactionId("PAYPAL")
 
     await Transaction.create({

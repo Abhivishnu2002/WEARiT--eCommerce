@@ -275,75 +275,93 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         createOrder: async (data, actions) => {
-          if (!paypalInitialized) {
-            showLoading("Validating cart...")
-          }
+          try {
+            if (!paypalInitialized) {
+              showLoading("Validating cart...")
+            }
 
-          const stockValid = await validateStock()
-          hideLoading() // Always hide loading after validation
-          if (!stockValid) {
-            return null
-          }
+            const stockValid = await validateStock()
+            hideLoading() // Always hide loading after validation
+            if (!stockValid) {
+              throw new Error("Stock validation failed")
+            }
 
-          if (!paypalInitialized) {
-            showLoading("Initializing PayPal payment...")
-          }
+            if (!paypalInitialized) {
+              showLoading("Initializing PayPal payment...")
+            }
 
-          hideErrors()
-          return fetch("/payment/paypal/create", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
+            hideErrors()
+
+            const requestData = {
               orderId: orderId,
               addressId: document.querySelector('input[name="addressId"]')?.value,
-            }),
-          })
-            .then((res) => {
-              if (!res.ok) {
-                hideLoading()
-                throw new Error("Failed to create PayPal order. Status: " + res.status)
-              }
-              return res.json()
+            }
+
+            console.log("PayPal createOrder request:", requestData)
+
+            const response = await fetch("/payment/paypal/create", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(requestData),
             })
-            .then((data) => {
+
+            console.log("PayPal createOrder response status:", response.status)
+
+            if (!response.ok) {
               hideLoading()
-              paypalInitialized = true
+              const errorText = await response.text()
+              console.error("PayPal createOrder HTTP error:", response.status, errorText)
+              showError(`Failed to create PayPal order. Status: ${response.status}`, "paypal")
+              throw new Error(`HTTP ${response.status}: ${errorText}`)
+            }
 
-              if (!data.success) {
-                showError("Error creating PayPal payment: " + (data.message || "Unknown error"), "paypal")
-                return null
+            const responseData = await response.json()
+            console.log("PayPal createOrder response data:", responseData)
+
+            hideLoading()
+            paypalInitialized = true
+
+            if (!responseData.success) {
+              console.error("PayPal createOrder failed:", responseData)
+              showError("Error creating PayPal payment: " + (responseData.message || "Unknown error"), "paypal")
+              throw new Error(responseData.message || "PayPal order creation failed")
+            }
+
+            if (responseData.orderId && hiddenOrderId) {
+              hiddenOrderId.value = responseData.orderId
+            }
+
+            // Return the PayPal order ID directly
+            if (responseData.paypalOrderId) {
+              console.log("PayPal order created successfully:", responseData.paypalOrderId)
+              return responseData.paypalOrderId
+            }
+
+            // Fallback: try to extract token from approval URL
+            if (responseData.approvalUrl) {
+              const urlParams = new URLSearchParams(new URL(responseData.approvalUrl).search)
+              const token = urlParams.get("token")
+              if (token) {
+                console.log("PayPal token extracted from URL:", token)
+                return token
               }
+            }
 
-              if (data.orderId && hiddenOrderId) {
-                hiddenOrderId.value = data.orderId
-              }
+            console.error("No PayPal order ID received in response:", responseData)
+            showError("No PayPal order ID received", "paypal")
+            throw new Error("No PayPal order ID received")
 
-              // Return the PayPal order ID directly
-              if (data.paypalOrderId) {
-                console.log("PayPal order created successfully:", data.paypalOrderId)
-                return data.paypalOrderId
-              }
+          } catch (error) {
+            hideLoading()
+            console.error("PayPal createOrder error:", error)
+            showError("Error creating PayPal payment: " + error.message, "paypal")
 
-              // Fallback: try to extract token from approval URL
-              if (data.approvalUrl) {
-                const urlParams = new URLSearchParams(new URL(data.approvalUrl).search)
-                const token = urlParams.get("token")
-                if (token) {
-                  console.log("PayPal token extracted from URL:", token)
-                  return token
-                }
-              }
-
-              showError("No PayPal order ID received", "paypal")
-              return null
-            })
-            .catch((err) => {
-              hideLoading()
-              showError("Error creating PayPal payment: " + err.message, "paypal")
-              return null
-            })
+            // Instead of returning null (which causes the PayPal SDK error),
+            // we throw an error to prevent the PayPal button from proceeding
+            throw error
+          }
         },
 
         onApprove: (data, actions) => {
