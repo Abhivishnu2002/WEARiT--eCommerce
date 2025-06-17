@@ -85,9 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const productId = this.dataset.productId || ""
         const variantSize = this.dataset.variantSize || ""
         const variantIndex = this.dataset.variantIndex || ""
-        const currentStatus = this.dataset.currentStatus
-
-        // Define order status constants (matching backend enums)
+        const currentStatus = this.dataset.currentStatus
         const ORDER_STATUS = {
           PENDING: 'pending',
           SHIPPED: 'shipped',
@@ -96,9 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
           CANCELLED: 'cancelled',
           RETURNED: 'returned',
           RETURN_PENDING: 'return pending'
-        }
-
-        // Define status hierarchy for validation
+        }
         const statusHierarchy = {
           [ORDER_STATUS.PENDING]: 0,
           [ORDER_STATUS.SHIPPED]: 1,
@@ -107,9 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
           [ORDER_STATUS.CANCELLED]: 4,
           [ORDER_STATUS.RETURNED]: 5,
           [ORDER_STATUS.RETURN_PENDING]: 6
-        }
-
-        // If current status is delivered, cancelled, or returned, show info message
+        }
         if (currentStatus === ORDER_STATUS.DELIVERED || currentStatus === ORDER_STATUS.CANCELLED || currentStatus === ORDER_STATUS.RETURNED) {
           const Swal = window.Swal
           Swal.fire({
@@ -121,9 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return
         }
 
-        const currentLevel = statusHierarchy[currentStatus] || 0
-
-        // Generate all status options with validation
+        const currentLevel = statusHierarchy[currentStatus] || 0
         const allStatuses = [
           { value: ORDER_STATUS.PENDING, label: 'Pending' },
           { value: ORDER_STATUS.SHIPPED, label: 'Shipped' },
@@ -137,19 +129,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const statusOptions = allStatuses.map(status => {
           const statusLevel = statusHierarchy[status.value]
           let disabled = false
-          let disabledReason = ''
-
-          // Current status should be selected but not disabled
+          let disabledReason = ''
           if (status.value === currentStatus) {
             return `<option value="${status.value}" selected>${status.label} (Current)</option>`
-          }
-
-          // Check if status change is valid
-          if (status.value === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED) {
-            // Can cancel from any status except delivered
+          }
+          if (status.value === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED) {
             disabled = false
-          } else if (statusLevel <= currentLevel && status.value !== ORDER_STATUS.CANCELLED) {
-            // Cannot go backwards
+          } else if (statusLevel <= currentLevel && status.value !== ORDER_STATUS.CANCELLED) {
             disabled = true
             disabledReason = ' (Cannot go backwards)'
           }

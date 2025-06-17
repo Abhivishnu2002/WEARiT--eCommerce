@@ -6,9 +6,7 @@ const { generateInvoice } = require("../../utils/invoiceGenerator")
 const PriceCalculator = require("../../utils/priceCalculator")
 const mongoose = require("mongoose")
 const fs = require("fs")
-const path = require("path")
-
-// Import enums and constants
+const path = require("path")
 const {
   ORDER_STATUS,
   PAYMENT_STATUS,
@@ -28,65 +26,44 @@ function generateTransactionId() {
   return `REFUND-${Date.now()}-${Math.floor(Math.random() * 10000)
     .toString()
     .padStart(4, "0")}`
-}
-
-// Use imported status hierarchy from enums
-const STATUS_HIERARCHY = ORDER_STATUS_HIERARCHY
-
-// Function to validate status transitions
-function isValidStatusTransition(currentStatus, newStatus) {
-  // Allow same status (no change)
+}
+const STATUS_HIERARCHY = ORDER_STATUS_HIERARCHY
+function isValidStatusTransition(currentStatus, newStatus) {
   if (currentStatus === newStatus) {
     return { valid: true }
-  }
-
-  // Get status hierarchy levels
+  }
   const currentLevel = STATUS_HIERARCHY[currentStatus]
-  const newLevel = STATUS_HIERARCHY[newStatus]
-
-  // If either status is not recognized, allow the change (for backward compatibility)
+  const newLevel = STATUS_HIERARCHY[newStatus]
   if (currentLevel === undefined || newLevel === undefined) {
     return { valid: true }
-  }
-
-  // Allow cancellation from any status except delivered
+  }
   if (newStatus === ORDER_STATUS.CANCELLED && currentStatus !== ORDER_STATUS.DELIVERED) {
     return { valid: true }
-  }
-
-  // Prevent changing from cancelled status
+  }
   if (currentStatus === ORDER_STATUS.CANCELLED) {
     return {
       valid: false,
       message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.FINAL_STATE(currentStatus),
       allowedTransitions: []
     }
-  }
-
-  // Prevent changing from returned status
+  }
   if (currentStatus === ORDER_STATUS.RETURNED) {
     return {
       valid: false,
       message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.FINAL_STATE(currentStatus),
       allowedTransitions: []
     }
-  }
-
-  // Prevent changing from delivered status (except through return process)
+  }
   if (currentStatus === ORDER_STATUS.DELIVERED) {
     return {
       valid: false,
       message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.USE_RETURN_PROCESS,
       allowedTransitions: []
     }
-  }
-
-  // Allow forward progression (higher level numbers)
+  }
   if (newLevel > currentLevel && newStatus !== ORDER_STATUS.CANCELLED) {
     return { valid: true }
-  }
-
-  // Prevent backwards progression
+  }
   if (newLevel < currentLevel) {
     const allowedStatuses = Object.keys(STATUS_HIERARCHY).filter(status => {
       const level = STATUS_HIERARCHY[status]
@@ -98,9 +75,7 @@ function isValidStatusTransition(currentStatus, newStatus) {
       message: ORDER_STATUS_MESSAGES.TRANSITION_ERROR.INVALID(currentStatus, newStatus),
       allowedTransitions: allowedStatuses
     }
-  }
-
-  // Default allow (shouldn't reach here with current logic)
+  }
   return { valid: true }
 }
 
@@ -269,9 +244,7 @@ const adminOrderController = {
       const productBreakdown = order.products.map((product, index) => {
         const regularPrice = (Number(product.variant?.varientPrice) || 0) * (Number(product.quantity) || 0)
         const salePrice = (Number(product.variant?.salePrice) || 0) * (Number(product.quantity) || 0)
-        const itemDiscount = regularPrice - salePrice
-
-        // Handle deleted products gracefully
+        const itemDiscount = regularPrice - salePrice
         const productData = product.product || {
           _id: 'deleted',
           name: 'Product Deleted',
@@ -373,9 +346,7 @@ const adminOrderController = {
           })
         }
 
-        const previousStatus = productItem.status
-
-        // Validate status transition for individual product
+        const previousStatus = productItem.status
         const transitionValidation = isValidStatusTransition(previousStatus, status)
         if (!transitionValidation.valid) {
           return res.status(400).json({
@@ -405,9 +376,7 @@ const adminOrderController = {
           }
         }
         const productStatuses = order.products.map((p) => p.status)
-        const uniqueStatuses = [...new Set(productStatuses)]
-
-        // Count different status types
+        const uniqueStatuses = [...new Set(productStatuses)]
         const statusCounts = {
           [ORDER_STATUS.DELIVERED]: productStatuses.filter(s => s === ORDER_STATUS.DELIVERED).length,
           [ORDER_STATUS.RETURNED]: productStatuses.filter(s => s === ORDER_STATUS.RETURNED).length,
@@ -418,46 +387,32 @@ const adminOrderController = {
           [ORDER_STATUS.OUT_FOR_DELIVERY]: productStatuses.filter(s => s === ORDER_STATUS.OUT_FOR_DELIVERY).length
         }
 
-        const totalProducts = order.products.length
-
-        // Determine order status based on product statuses
-        if (statusCounts[ORDER_STATUS.RETURNED] === totalProducts) {
-          // All products returned
+        const totalProducts = order.products.length
+        if (statusCounts[ORDER_STATUS.RETURNED] === totalProducts) {
           order.orderStatus = ORDER_STATUS.RETURNED
-        } else if (statusCounts[ORDER_STATUS.CANCELLED] === totalProducts) {
-          // All products cancelled
+        } else if (statusCounts[ORDER_STATUS.CANCELLED] === totalProducts) {
           order.orderStatus = ORDER_STATUS.CANCELLED
-        } else if (statusCounts[ORDER_STATUS.DELIVERED] === totalProducts) {
-          // All products delivered
-          order.orderStatus = ORDER_STATUS.DELIVERED
-          // Update payment status for COD orders when all products are delivered
+        } else if (statusCounts[ORDER_STATUS.DELIVERED] === totalProducts) {
+          order.orderStatus = ORDER_STATUS.DELIVERED
           if ((order.paymentMethod === PAYMENT_METHOD.COD || order.paymentMentod === PAYMENT_METHOD.COD) && order.paymentStatus === PAYMENT_STATUS.PENDING) {
             order.paymentStatus = PAYMENT_STATUS.COMPLETED
-            order.deliveryDate = new Date()
-
-            // Update the transaction status as well
+            order.deliveryDate = new Date()
             await Transaction.updateOne(
               { order: order._id, paymentMethod: PAYMENT_METHOD.COD, status: PAYMENT_STATUS.PENDING },
               { status: PAYMENT_STATUS.COMPLETED }
             )
           }
-        } else if (statusCounts[ORDER_STATUS.RETURN_PENDING] > 0) {
-          // Some products have pending returns
+        } else if (statusCounts[ORDER_STATUS.RETURN_PENDING] > 0) {
           order.orderStatus = ORDER_STATUS.RETURN_PENDING
-        } else if (statusCounts[ORDER_STATUS.PENDING] === totalProducts) {
-          // All products pending
+        } else if (statusCounts[ORDER_STATUS.PENDING] === totalProducts) {
           order.orderStatus = ORDER_STATUS.PENDING
-        } else if (statusCounts[ORDER_STATUS.DELIVERED] > 0) {
-          // Some products delivered (mixed status)
+        } else if (statusCounts[ORDER_STATUS.DELIVERED] > 0) {
           order.orderStatus = ORDER_STATUS.DELIVERED
-        } else if (statusCounts[ORDER_STATUS.OUT_FOR_DELIVERY] > 0) {
-          // Some products out for delivery
+        } else if (statusCounts[ORDER_STATUS.OUT_FOR_DELIVERY] > 0) {
           order.orderStatus = ORDER_STATUS.OUT_FOR_DELIVERY
-        } else if (statusCounts[ORDER_STATUS.SHIPPED] > 0) {
-          // Some products shipped
+        } else if (statusCounts[ORDER_STATUS.SHIPPED] > 0) {
           order.orderStatus = ORDER_STATUS.SHIPPED
-        } else {
-          // Default fallback
+        } else {
           order.orderStatus = ORDER_STATUS.PENDING
         }
         if (!order.trackingDetails) {
@@ -472,9 +427,7 @@ const adminOrderController = {
             `${productItem.product?.name || "Product Deleted"} (${productItem.variant?.size || "N/A"}) status updated to ${status}. ${note || ""}`.trim(),
         })
       } else {
-        const previousStatus = order.orderStatus
-
-        // Validate status transition for entire order
+        const previousStatus = order.orderStatus
         const transitionValidation = isValidStatusTransition(previousStatus, status)
         if (!transitionValidation.valid) {
           return res.status(400).json({
@@ -495,12 +448,9 @@ const adminOrderController = {
           }
         })
         if (status === "delivered") {
-          order.deliveryDate = new Date()
-          // Update payment status for COD orders when delivered
+          order.deliveryDate = new Date()
           if ((order.paymentMethod === "COD" || order.paymentMentod === "COD") && order.paymentStatus === "pending") {
-            order.paymentStatus = "completed"
-
-            // Update the transaction status as well
+            order.paymentStatus = "completed"
             await Transaction.updateOne(
               { order: order._id, paymentMethod: "COD", status: "pending" },
               { status: "completed" }
@@ -742,8 +692,7 @@ const adminOrderController = {
         const deliveredProducts = order.products.filter((p) => p.status === "delivered")
         const cancelledProducts = order.products.filter((p) => p.status === "cancelled")
 
-        if (returnedProducts.length === order.products.length) {
-          // All products returned - set order status to "returned"
+        if (returnedProducts.length === order.products.length) {
           order.orderStatus = "returned"
 
           if (!order.trackingDetails) {
@@ -756,11 +705,9 @@ const adminOrderController = {
             timestamp: new Date(),
             description: `All items in this order have been returned.`,
           })
-        } else if (cancelledProducts.length === order.products.length) {
-          // All products cancelled - set order status to "cancelled"
+        } else if (cancelledProducts.length === order.products.length) {
           order.orderStatus = "cancelled"
-        } else if (returnedProducts.length > 0 && deliveredProducts.length > 0) {
-          // Mixed status - some returned, some delivered - keep as "delivered" with partial return note
+        } else if (returnedProducts.length > 0 && deliveredProducts.length > 0) {
           order.orderStatus = "delivered"
 
           if (!order.trackingDetails) {
@@ -773,11 +720,9 @@ const adminOrderController = {
             timestamp: new Date(),
             description: `Some items in this order have been returned.`,
           })
-        } else if (deliveredProducts.length > 0) {
-          // Some products delivered, others might be cancelled/returned
+        } else if (deliveredProducts.length > 0) {
           order.orderStatus = "delivered"
-        } else {
-          // Fallback - if no clear status, keep as delivered
+        } else {
           order.orderStatus = "delivered"
         }
       }
@@ -838,24 +783,20 @@ const adminOrderController = {
           error_msg: "Order not found",
           admin: req.session.admin,
         })
-      }
-
-      // Enhanced invoice availability conditions for admin
+      }
       const paymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase()
       let canDownloadInvoice = false
       let errorMessage = "Invoice is not available for this order"
 
       if (order.paymentStatus === "failed") {
         errorMessage = "Invoice is not available for failed payments"
-      } else if (paymentMethod === 'cod') {
-        // For COD orders, invoice available after delivery (when payment status becomes completed)
+      } else if (paymentMethod === 'cod') {
         if (order.orderStatus === 'delivered' || order.paymentStatus === 'completed') {
           canDownloadInvoice = true
         } else {
           errorMessage = "Invoice for COD orders is only available after delivery"
         }
-      } else {
-        // For other payment methods, invoice available after payment completion
+      } else {
         if (order.paymentStatus === 'completed') {
           canDownloadInvoice = true
         } else {

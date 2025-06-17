@@ -327,9 +327,7 @@
                         }
 
                         const offer = document.getElementById("categoryOffer").value;
-                        const offerValue = parseInt(offer);
-
-                        // Validate offer percentage
+                        const offerValue = parseInt(offer);
                         if (offer !== "" && (isNaN(offerValue) || offerValue < 0 || offerValue > 99)) {
                             e.preventDefault();
                             Swal.fire({

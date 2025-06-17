@@ -17,6 +17,15 @@
     </head>
     <body class="address-page">
         <%- include('../partials/header') %>
+
+        <!-- Breadcrumb -->
+        <%- include('../partials/breadcrumb', {
+            breadcrumbs: [
+                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
+                { name: 'My Addresses', icon: 'fa-solid fa-location-dot' }
+            ]
+        }) %>
+
         <main class="main-content">
             <div class="container-fluid address-container">
                 <div class="row">

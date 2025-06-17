@@ -50,9 +50,7 @@ const loadCheckout = async (req, res) => {
     const unavailableProducts = []
 
     for (const item of cart.products) {
-      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
-
-      // Check if product is unlisted or inactive
+      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
       if (!freshProduct || !freshProduct.isActive) {
         unavailableProducts.push({
           productName: item.product.name,
@@ -60,9 +58,7 @@ const loadCheckout = async (req, res) => {
           reason: "Product is no longer available",
         })
         continue
-      }
-
-      // Check if category is unlisted
+      }
       if (!freshProduct.categoryId || !freshProduct.categoryId.isListed) {
         unavailableProducts.push({
           productName: freshProduct.name,
@@ -70,9 +66,7 @@ const loadCheckout = async (req, res) => {
           reason: "Product category is no longer available",
         })
         continue
-      }
-
-      // Check stock availability
+      }
       const variant = freshProduct.variants.find((v) => v.size === item.size)
       if (!variant) {
         stockIssues.push({
@@ -100,14 +94,10 @@ const loadCheckout = async (req, res) => {
           availableStock: variant.varientquatity,
         })
         continue
-      }
-
-      // Product is valid and has sufficient stock
+      }
       item.product = freshProduct
       validProducts.push(item)
-    }
-
-    // If there are unavailable products or stock issues, redirect to cart with error messages
+    }
     if (unavailableProducts.length > 0) {
       let errorMessage = "Some products in your cart are no longer available: "
       errorMessage += unavailableProducts.map(item => `${item.productName} (${item.size})`).join(", ")

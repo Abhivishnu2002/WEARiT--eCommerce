@@ -51,7 +51,7 @@
             color: #6c757d;
             font-size: 0.9em;
         }
-        /* Enhanced styling for refund transactions */
+        
         .wallet-transactions tbody tr:has(.product-return-badge) {
             border-left: 4px solid #28a745;
             background-color: #f8fff9;
@@ -68,7 +68,15 @@
 </head>
 <body>
     <%- include('../partials/header') %>
-    
+
+    <!-- Breadcrumb -->
+    <%- include('../partials/breadcrumb', {
+        breadcrumbs: [
+            { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
+            { name: 'My Wallet', icon: 'fa-solid fa-wallet' }
+        ]
+    }) %>
+
     <div class="container-fluid wallet-container">
         <div class="row">
             <div class="col-lg-3 col-md-4">
@@ -464,9 +472,7 @@
                                 </h6>
                             </div>
                             <div class="card-body">
-                    `;
-                    
-                    // Show returned items for product returns
+                    `;
                     if (isProductReturn && transaction.paymentDetails.returnedItems && transaction.paymentDetails.returnedItems.length > 0) {
                         detailsHTML += `<h6 class="text-success mb-3">Returned Products (${transaction.paymentDetails.returnedItems.length})</h6>`;
                         
@@ -493,8 +499,7 @@
                                 </div>
                             `;
                         });
-                    }
-                    // Show product details for order cancellations
+                    }
                     else if (transaction.paymentDetails.productDetails && transaction.paymentDetails.productDetails.length > 0) {
                         detailsHTML += `<h6 class="text-${isOrderCancellation ? 'danger' : 'info'} mb-3">
                             ${isOrderCancellation ? 'Cancelled' : ''} Products (${transaction.paymentDetails.productDetails.length})

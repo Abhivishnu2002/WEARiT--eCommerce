@@ -254,20 +254,14 @@
               </a>
             <% } %>
 
-            <%
-              // Invoice download conditions:
-              // 1. Payment status should not be 'failed'
-              // 2. For COD orders, invoice is available after delivery (payment status becomes completed after delivery)
-              // 3. For other payment methods, invoice is available after payment completion
+            <%
               let canDownloadInvoice = false;
               const paymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase();
 
               if (order.paymentStatus !== 'failed') {
-                if (paymentMethod === 'cod') {
-                  // For COD, invoice available after delivery (when payment status becomes completed)
+                if (paymentMethod === 'cod') {
                   canDownloadInvoice = order.orderStatus === 'delivered' || order.paymentStatus === 'completed';
-                } else {
-                  // For other payment methods, invoice available after payment completion
+                } else {
                   canDownloadInvoice = order.paymentStatus === 'completed';
                 }
               }

@@ -1,20 +1,14 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // Initialize tooltips
+document.addEventListener("DOMContentLoaded", () => {
     if (typeof bootstrap !== "undefined" && bootstrap.Tooltip) {
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         })
-    }
-
-    // Category offer validation
+    }
     const categoryOfferInput = document.getElementById("categoryOffer")
-    if (categoryOfferInput) {
-        // Real-time validation for offer input
+    if (categoryOfferInput) {
         function validateOfferValue() {
-            const offerValue = parseInt(categoryOfferInput.value)
-
-            // Clear any existing validation
+            const offerValue = parseInt(categoryOfferInput.value)
             clearOfferValidation()
 
             if (categoryOfferInput.value !== "" && (isNaN(offerValue) || offerValue < 0 || offerValue > 99)) {
@@ -22,24 +16,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 return false
             }
             return true
-        }
-
-        // Show validation error
+        }
         function showOfferValidationError(message) {
-            const errorElement = document.getElementById("categoryOffer-error")
-
-            // Add error styling to input
+            const errorElement = document.getElementById("categoryOffer-error")
             categoryOfferInput.classList.remove("is-valid")
-            categoryOfferInput.classList.add("is-invalid")
-
-            // Show error message
+            categoryOfferInput.classList.add("is-invalid")
             if (errorElement) {
                 errorElement.textContent = message
                 errorElement.style.display = "block"
                 errorElement.style.color = "#dc3545"
                 errorElement.classList.add("d-block")
-            } else {
-                // Fallback: create error element if it doesn't exist
+            } else {
                 const newErrorElement = document.createElement("div")
                 newErrorElement.id = "categoryOffer-error"
                 newErrorElement.className = "invalid-feedback d-block"
@@ -49,38 +36,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 newErrorElement.textContent = message
                 categoryOfferInput.parentNode.insertBefore(newErrorElement, categoryOfferInput.nextSibling)
             }
-        }
-
-        // Clear validation error
+        }
         function clearOfferValidation() {
-            const errorElement = document.getElementById("categoryOffer-error")
-
-            // Remove error styling from input
-            categoryOfferInput.classList.remove("is-invalid", "is-valid")
-
-            // Hide error message
+            const errorElement = document.getElementById("categoryOffer-error")
+            categoryOfferInput.classList.remove("is-invalid", "is-valid")
             if (errorElement) {
                 errorElement.textContent = ""
                 errorElement.style.display = "none"
                 errorElement.classList.remove("d-block")
             }
-        }
-
-        // Add event listeners for real-time validation
+        }
         categoryOfferInput.addEventListener("input", validateOfferValue)
-        categoryOfferInput.addEventListener("blur", validateOfferValue)
-
-        // Form submission validation
+        categoryOfferInput.addEventListener("blur", validateOfferValue)
         const categoryForm = categoryOfferInput.closest("form")
         if (categoryForm) {
             categoryForm.addEventListener("submit", function(event) {
                 if (!validateOfferValue()) {
-                    event.preventDefault()
-
-                    // Focus on the invalid input
-                    categoryOfferInput.focus()
-
-                    // Scroll to the field if needed
+                    event.preventDefault()
+                    categoryOfferInput.focus()
                     categoryOfferInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 }
             })

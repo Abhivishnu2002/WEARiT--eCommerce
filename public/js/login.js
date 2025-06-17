@@ -15,11 +15,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let isEmailValid = false
   let isPasswordValid = false
   let hasUserInteracted = false
+  let formSubmitted = false
   function validateEmail() {
     const email = emailInput.value.trim()
 
     if (!email) {
-      if (hasUserInteracted) {
+      if (formSubmitted || (hasUserInteracted && email.length > 0)) {
         showFieldError(emailInput, emailError, "Email address is required")
         updateValidationIcon("email", false)
       }
@@ -28,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!emailPattern.test(email)) {
-      if (hasUserInteracted) {
+      if (formSubmitted || (hasUserInteracted && email.length > 0)) {
         showFieldError(emailInput, emailError, "Please enter a valid email address")
         updateValidationIcon("email", false)
       }
@@ -46,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = passwordInput.value
 
     if (!password) {
-      if (hasUserInteracted) {
+      if (formSubmitted || (hasUserInteracted && password.length > 0)) {
         showFieldError(passwordInput, passwordError, "Password is required")
       }
       isPasswordValid = false
@@ -54,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (password.length < passwordMinLength) {
-      if (hasUserInteracted) {
+      if (formSubmitted || (hasUserInteracted && password.length > 0)) {
         showFieldError(passwordInput, passwordError, `Password must be at least ${passwordMinLength} characters long`)
       }
       isPasswordValid = false
@@ -68,30 +69,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showFieldError(input, errorContainer, message) {
     input.classList.add("is-invalid")
-    input.classList.remove("is-valid")
+    input.classList.remove("is-valid")
+    const inputGroup = input.closest('.input-group')
+    if (inputGroup) {
+      inputGroup.style.borderColor = '#ef4444'
+      inputGroup.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)'
+    }
+
     errorContainer.textContent = message
     errorContainer.style.display = "block"
-    errorContainer.classList.add("show")
-    input.style.animation = "shake 0.5s ease-in-out"
+    errorContainer.classList.add("show")
+    errorContainer.style.opacity = '0'
+    errorContainer.style.transform = 'translateY(-10px)'
+    setTimeout(() => {
+      errorContainer.style.transition = 'all 0.3s ease'
+      errorContainer.style.opacity = '1'
+      errorContainer.style.transform = 'translateY(0)'
+    }, 10)
+    input.style.animation = "modernShake 0.4s ease-in-out"
     setTimeout(() => {
       input.style.animation = ""
-    }, 500)
+    }, 400)
   }
+
   function hideFieldError(input, errorContainer) {
     input.classList.remove("is-invalid")
-    input.classList.add("is-valid")
-    errorContainer.textContent = ""
-    errorContainer.style.display = "none"
-    errorContainer.classList.remove("show")
+    input.classList.add("is-valid")
+    const inputGroup = input.closest('.input-group')
+    if (inputGroup) {
+      inputGroup.style.borderColor = '#198754'
+      inputGroup.style.boxShadow = '0 0 0 3px rgba(25, 135, 84, 0.1)'
+      setTimeout(() => {
+        inputGroup.style.borderColor = ''
+        inputGroup.style.boxShadow = ''
+      }, 2000)
+    }
+    errorContainer.style.transition = 'all 0.3s ease'
+    errorContainer.style.opacity = '0'
+    errorContainer.style.transform = 'translateY(-10px)'
+
+    setTimeout(() => {
+      errorContainer.textContent = ""
+      errorContainer.style.display = "none"
+      errorContainer.classList.remove("show")
+      errorContainer.style.transition = ''
+    }, 300)
   }
   function updateValidationIcon(field, isValid) {
     if (field === "email" && emailValid && emailInvalid) {
       if (isValid) {
         emailValid.classList.remove("d-none")
-        emailInvalid.classList.add("d-none")
+        emailInvalid.classList.add("d-none")
+        emailValid.style.animation = "bounceIn 0.5s ease"
+        setTimeout(() => {
+          emailValid.style.animation = ""
+        }, 500)
       } else {
         emailValid.classList.add("d-none")
-        emailInvalid.classList.remove("d-none")
+        emailInvalid.classList.remove("d-none")
+        emailInvalid.style.animation = "bounceIn 0.5s ease"
+        setTimeout(() => {
+          emailInvalid.style.animation = ""
+        }, 500)
       }
     }
   }
@@ -99,8 +138,8 @@ document.addEventListener("DOMContentLoaded", () => {
     hasUserInteracted = true
   }
   emailInput.addEventListener("input", function () {
-    markUserInteraction()
     if (this.value.trim()) {
+      markUserInteraction()
       validateEmail()
     } else {
       this.classList.remove("is-valid", "is-invalid")
@@ -118,13 +157,15 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 
   emailInput.addEventListener("blur", () => {
-    markUserInteraction()
-    validateEmail()
+    if (this.value.trim()) {
+      markUserInteraction()
+      validateEmail()
+    }
   })
 
   passwordInput.addEventListener("input", function () {
-    markUserInteraction()
     if (this.value) {
+      markUserInteraction()
       validatePassword()
     } else {
       this.classList.remove("is-valid", "is-invalid")
@@ -138,8 +179,10 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 
   passwordInput.addEventListener("blur", () => {
-    markUserInteraction()
-    validatePassword()
+    if (this.value) {
+      markUserInteraction()
+      validatePassword()
+    }
   })
   if (togglePassword) {
     togglePassword.addEventListener("click", function () {
@@ -172,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginForm) {
     loginForm.addEventListener("submit", function (e) {
       e.preventDefault()
+      formSubmitted = true
       markUserInteraction()
       const emailIsValid = validateEmail()
       const passwordIsValid = validatePassword()
@@ -291,21 +335,56 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const style = document.createElement("style")
   style.textContent = `
-        @keyframes shake {
+        @keyframes modernShake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
         }
-        
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
         .animated {
             animation-duration: 0.5s;
             animation-fill-mode: both;
         }
-        
+
         .fadeInUp {
             animation-name: fadeInUp;
         }
-        
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -315,6 +394,73 @@ document.addEventListener("DOMContentLoaded", () => {
                 opacity: 1;
                 transform: translate3d(0, 0, 0);
             }
+        }
+
+        .invalid-feedback {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #dc2626;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .invalid-feedback::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #dc2626;
+        }
+
+        .invalid-feedback.show {
+            animation: slideInDown 0.3s ease;
+        }
+
+        .form-control.is-valid {
+            border-color: #10b981;
+            background-image: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: #ef4444;
+            background-image: none;
+        }
+
+        .input-group:focus-within {
+            transform: translateY(-1px);
+            transition: all 0.3s ease;
+        }
+
+        .auth-btn:hover:not(:disabled) {
+            animation: pulse 0.3s ease;
+        }
+
+        .auth-btn:disabled {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-btn:disabled::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
     `
   document.head.appendChild(style)

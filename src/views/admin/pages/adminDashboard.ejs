@@ -407,8 +407,7 @@
 
         <!-- Dashboard Chart Data -->
         <% if (locals.chartData && locals.paymentMethods) { %>
-        <script>
-            // Make chart data available to the dashboard script
+        <script>
             window.dashboardChartData = {
                 chartData: <%- JSON.stringify(chartData) %>,
                 paymentMethods: <%- JSON.stringify(paymentMethods) %>,

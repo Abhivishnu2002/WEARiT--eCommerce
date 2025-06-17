@@ -154,9 +154,7 @@ const createCoupon = async (req, res) => {
     if (discountType === "fixed" && discountValue <= 0) {
       req.flash("error_msg", "Fixed discount must be greater than 0")
       return res.redirect("/admin/coupons/add")
-    }
-
-    // Validate maximum discount vs minimum purchase amount
+    }
     const minPurchase = Number.parseFloat(minimumPurchase || 0)
     const discountVal = Number.parseFloat(discountValue)
     const maxDiscount = maximumDiscount ? Number.parseFloat(maximumDiscount) : null
@@ -167,15 +165,11 @@ const createCoupon = async (req, res) => {
           req.flash("error_msg", "Fixed discount value must be less than minimum purchase amount")
           return res.redirect("/admin/coupons/add")
         }
-      } else if (discountType === "percentage") {
-        // For percentage discounts, check if maximum discount (if set) is less than minimum purchase
+      } else if (discountType === "percentage") {
         if (maxDiscount && maxDiscount >= minPurchase) {
           req.flash("error_msg", "Maximum discount amount must be less than minimum purchase amount")
           return res.redirect("/admin/coupons/add")
-        }
-
-        // Also check if the percentage could result in a discount >= minimum purchase
-        // This is a theoretical maximum (percentage of minimum purchase amount)
+        }
         const theoreticalMaxDiscount = (minPurchase * discountVal) / 100
         if (theoreticalMaxDiscount >= minPurchase) {
           req.flash("error_msg", "Percentage discount is too high relative to minimum purchase amount")
@@ -316,9 +310,7 @@ const updateCoupon = async (req, res) => {
     if (Number.parseInt(usageLimit) < coupon.usedCount) {
       req.flash("error_msg", "Usage limit cannot be less than current usage count")
       return res.redirect(`/admin/coupons/edit/${couponId}`)
-    }
-
-    // Validate maximum discount vs minimum purchase amount
+    }
     const minPurchase = Number.parseFloat(minimumPurchase || 0)
     const discountVal = Number.parseFloat(discountValue)
     const maxDiscount = maximumDiscount ? Number.parseFloat(maximumDiscount) : null
@@ -329,15 +321,11 @@ const updateCoupon = async (req, res) => {
           req.flash("error_msg", "Fixed discount value must be less than minimum purchase amount")
           return res.redirect(`/admin/coupons/edit/${couponId}`)
         }
-      } else if (discountType === "percentage") {
-        // For percentage discounts, check if maximum discount (if set) is less than minimum purchase
+      } else if (discountType === "percentage") {
         if (maxDiscount && maxDiscount >= minPurchase) {
           req.flash("error_msg", "Maximum discount amount must be less than minimum purchase amount")
           return res.redirect(`/admin/coupons/edit/${couponId}`)
-        }
-
-        // Also check if the percentage could result in a discount >= minimum purchase
-        // This is a theoretical maximum (percentage of minimum purchase amount)
+        }
         const theoreticalMaxDiscount = (minPurchase * discountVal) / 100
         if (theoreticalMaxDiscount >= minPurchase) {
           req.flash("error_msg", "Percentage discount is too high relative to minimum purchase amount")

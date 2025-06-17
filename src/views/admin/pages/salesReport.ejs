@@ -898,8 +898,7 @@
         </script>
     <% } %>
     
-    <script>
-        // Custom date range toggle
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             const timeFilterInputs = document.querySelectorAll('input[name="timeFilter"]');
             const customDateRange = document.querySelector('.custom-date-range');
@@ -912,9 +911,7 @@
                         customDateRange.classList.add('d-none');
                     }
                 });
-            });
-            
-            // Initialize flatpickr for date inputs
+            });
             if (typeof flatpickr !== 'undefined') {
                 flatpickr("#startDate", {
                     dateFormat: "Y-m-d",
@@ -925,11 +922,8 @@
                     dateFormat: "Y-m-d",
                     maxDate: "today"
                 });
-            }
-            
-            // Initialize DataTables for search functionality
-            if (typeof $ !== 'undefined' && $.fn.DataTable) {
-                // Order search
+            }
+            if (typeof $ !== 'undefined' && $.fn.DataTable) {
                 $('#orderSearchInput').on('keyup', function() {
                     const searchTerm = this.value.toLowerCase();
                     const tableRows = document.querySelectorAll('#orderDetailsTable tbody tr');
@@ -942,9 +936,7 @@
                             row.style.display = 'none';
                         }
                     });
-                });
-                
-                // Transaction search
+                });
                 $('#transactionSearchInput').on('keyup', function() {
                     const searchTerm = this.value.toLowerCase();
                     const tableRows = document.querySelectorAll('#transactionDetailsTable tbody tr');
@@ -957,9 +949,7 @@
                             row.style.display = 'none';
                         }
                     });
-                });
-
-                // Handle custom date range toggle
+                });
                 $('input[name="timeFilter"]').on('change', function() {
                     const customDateRange = $('.custom-date-range');
                     const startDateInput = $('#startDate');
@@ -968,9 +958,7 @@
                     if (this.value === 'custom') {
                         customDateRange.removeClass('d-none');
                         startDateInput.prop('required', true);
-                        endDateInput.prop('required', true);
-
-                        // Set default dates if empty
+                        endDateInput.prop('required', true);
                         if (!startDateInput.val()) {
                             const thirtyDaysAgo = new Date();
                             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -985,9 +973,7 @@
                         startDateInput.prop('required', false);
                         endDateInput.prop('required', false);
                     }
-                });
-
-                // Validate custom date range
+                });
                 $('#startDate, #endDate').on('change', function() {
                     const startDate = new Date($('#startDate').val());
                     const endDate = new Date($('#endDate').val());
@@ -1000,9 +986,7 @@
                             this.value = $('#startDate').val();
                         }
                     }
-                });
-
-                // Form validation before submission
+                });
                 $('#reportFilterForm').on('submit', function(e) {
                     const timeFilter = $('input[name="timeFilter"]:checked').val();
 

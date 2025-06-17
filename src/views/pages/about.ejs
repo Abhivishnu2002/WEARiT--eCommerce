@@ -44,12 +44,10 @@
                 overflow-x: hidden;
             }
 
-            /* Smooth scrolling */
             html {
                 scroll-behavior: smooth;
             }
 
-            /* Animations */
             @keyframes fadeInUp {
                 from {
                     opacity: 0;
@@ -83,7 +81,6 @@
                 }
             }
 
-            /* Hero Section */
             .hero-section {
                 background: var(--gradient-primary);
                 color: white;
@@ -154,7 +151,6 @@
                 letter-spacing: 0.1em;
             }
 
-            /* Story Section */
             .story-section {
                 padding: 100px 0;
                 background: white;
@@ -203,7 +199,6 @@
                 transform: scale(1.02);
             }
 
-            /* Values Section */
             .values-section {
                 padding: 100px 0;
                 background: var(--secondary-color);
@@ -249,7 +244,6 @@
                 line-height: 1.6;
             }
 
-            /* Team Section */
             .team-section {
                 padding: 100px 0;
                 background: white;
@@ -294,7 +288,6 @@
                 font-size: 0.95rem;
             }
 
-            /* CTA Section */
             .cta-section {
                 padding: 100px 0;
                 background: var(--gradient-secondary);
@@ -337,7 +330,6 @@
                 color: var(--text-dark);
             }
 
-            /* Responsive Styles */
             @media (max-width: 768px) {
                 .hero-stats {
                     flex-direction: column;
@@ -402,7 +394,6 @@
                 }
             }
 
-            /* Utility Classes */
             .text-gradient {
                 background: var(--gradient-primary);
                 -webkit-background-clip: text;
@@ -478,7 +469,7 @@
                     </div>
                     <div class="col-lg-6 story-image">
                         <img
-                            src="/images/shirt.jpg"
+                            src="/images/back.png"
                             alt="WEARiT clothing showcase"
                             class="story-image"
                         />
@@ -645,8 +636,7 @@
 
         <!-- Scripts -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-        <script>
-            // Intersection Observer for fade-in animations
+        <script>
             const observerOptions = {
                 threshold: 0.1,
                 rootMargin: '0px 0px -50px 0px'
@@ -658,14 +648,10 @@
                         entry.target.classList.add('visible');
                     }
                 });
-            }, observerOptions);
-
-            // Observe all fade-in elements
+            }, observerOptions);
             document.querySelectorAll('.fade-in').forEach(el => {
                 observer.observe(el);
-            });
-
-            // Counter animation for hero stats
+            });
             function animateCounter(element, target, duration = 2000) {
                 let start = 0;
                 const increment = target / (duration / 16);
@@ -681,9 +667,7 @@
                 }
 
                 updateCounter();
-            }
-
-            // Animate counters when hero section is visible
+            }
             const heroObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -706,9 +690,7 @@
             const heroSection = document.querySelector('.hero-section');
             if (heroSection) {
                 heroObserver.observe(heroSection);
-            }
-
-            // Smooth scrolling for anchor links
+            }
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();

@@ -13,9 +13,7 @@ window.stockValidator = {
 
       if (!data.success) {
         throw new Error(data.message || "Failed to validate stock")
-      }
-
-      // Check for unavailable products first
+      }
       if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
         let unavailableMessage = '<div class="unavailable-products">'
         unavailableMessage += '<p><strong>The following products are no longer available:</strong></p>'

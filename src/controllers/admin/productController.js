@@ -364,19 +364,11 @@ const updateProduct = async (req, res) => {
       }
     })
 
-    const totalStock = variants.reduce((sum, v) => sum + v.varientquatity, 0)
-
-    // Get existing product to work with current images
+    const totalStock = variants.reduce((sum, v) => sum + v.varientquatity, 0)
     const existingProduct = await Product.findById(productId)
-    let images = [...existingProduct.images] // Start with existing images
-
-    // Handle image deletions first
-    const imagesToDelete = []
-
-    // Check which images are marked for deletion
-    const deletedImages = req.body.deletedImages ? JSON.parse(req.body.deletedImages) : []
-
-    // Remove deleted images from the images array and mark them for deletion from Cloudinary
+    let images = [...existingProduct.images] // Start with existing images
+    const imagesToDelete = []
+    const deletedImages = req.body.deletedImages ? JSON.parse(req.body.deletedImages) : []
     if (deletedImages.length > 0) {
       for (const deletedImageUrl of deletedImages) {
         const imageIndex = images.findIndex(img => img.url === deletedImageUrl)
@@ -385,9 +377,7 @@ const updateProduct = async (req, res) => {
           images.splice(imageIndex, 1)
         }
       }
-    }
-
-    // Delete images from Cloudinary
+    }
     for (const imageUrl of imagesToDelete) {
       try {
         const publicId = imageUrl.split("/").pop().split(".")[0]
@@ -395,9 +385,7 @@ const updateProduct = async (req, res) => {
         } catch (e) {
           console.error("Admin updateProduct cloudinary delete error:", e)
         }
-    }
-
-    // Handle new image uploads
+    }
     if (req.files && Object.keys(req.files).length > 0) {
       for (const fieldName in req.files) {
         const file = req.files[fieldName][0]
@@ -405,9 +393,7 @@ const updateProduct = async (req, res) => {
           url: file.path,
           thumbnail: file.path.replace("/upload/", "/upload/w_200,h_200,c_thumb/"),
           isMain: fieldName === "mainImage",
-        }
-
-        // If this is a main image replacement, remove the old main image first
+        }
         if (fieldName === "mainImage") {
           const existingMainIndex = images.findIndex(img => img.isMain)
           if (existingMainIndex !== -1) {

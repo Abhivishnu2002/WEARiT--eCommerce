@@ -124,9 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       })
-    }
-
-    // Function to update cart and wishlist counts in header
+    }
     window.updateHeaderCounts = function() {
       fetch('/api/cart-wishlist-counts')
         .then(response => response.json())
@@ -148,8 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cartCountElement) {
           cartCountElement.textContent = count
           cartCountElement.style.display = 'flex'
-        } else if (cartContainer) {
-          // Create count badge if it doesn't exist
+        } else if (cartContainer) {
           const badge = document.createElement('span')
           badge.className = 'count-badge cart-count'
           badge.id = 'headerCartCount'
@@ -171,8 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (wishlistCountElement) {
           wishlistCountElement.textContent = count
           wishlistCountElement.style.display = 'flex'
-        } else if (wishlistContainer) {
-          // Create count badge if it doesn't exist
+        } else if (wishlistContainer) {
           const badge = document.createElement('span')
           badge.className = 'count-badge wishlist-count'
           badge.id = 'headerWishlistCount'
@@ -184,9 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
           wishlistCountElement.style.display = 'none'
         }
       }
-    }
-
-    // Update counts on page load if user is logged in
+    }
     if (document.querySelector('.user-dropdown')) {
       updateHeaderCounts()
     }

@@ -24,11 +24,9 @@ router.post("/editaccount", verifyAdminSession, authController.updateAccount);
 router.get("/changepassword", verifyAdminSession, authController.loadChangePassword);
 router.post("/changepassword", verifyAdminSession, authController.updatePassword);
 
-
 router.get("/customer", verifyAdminSession, customerController.loadCustomer);
 router.get("/customerdetails/:id", verifyAdminSession, customerController.loadCustomerDetails);
 router.post("/block-unblock-user/:id", verifyAdminSession, customerController.blockUnblockUser);
-
 
 router.get("/category", verifyAdminSession, categoryController.loadCategory)
 router.get("/addcategory", verifyAdminSession, categoryController.loadAddCategory)
@@ -37,7 +35,6 @@ router.get("/editcategory", verifyAdminSession, categoryController.loadEditCateg
 router.post("/editcategory/:id", verifyAdminSession, categoryController.updateCategory)
 router.delete("/deletecategory/:id", verifyAdminSession, categoryController.deleteCategory)
 router.post("/toggle-category-listing/:id", verifyAdminSession, categoryController.toggleCategoryListing)
-
 
 router.get("/products", verifyAdminSession, productController.loadProducts);
 router.get("/addproducts", verifyAdminSession, productController.loadAddProducts);

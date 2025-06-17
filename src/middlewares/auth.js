@@ -47,7 +47,6 @@ const ensureAuthenticated = (req, res, next) => {
     req.flash("error_msg", "Please log in to view this resource")
     res.redirect("/login")
   }
-  
 
 const forwardAuthenticated = (req, res, next) => {
     if (!req.isAuthenticated()) {

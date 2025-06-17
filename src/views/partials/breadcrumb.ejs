@@ -1,0 +1,180 @@
+<!-- Breadcrumb Component -->
+<nav aria-label="breadcrumb" class="breadcrumb-nav">
+    <div class="container-fluid">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="/">
+                    <i class="fa-solid fa-house"></i>
+                    Home
+                </a>
+            </li>
+            
+            <% if (typeof breadcrumbs !== 'undefined' && breadcrumbs && breadcrumbs.length > 0) { %>
+                <% breadcrumbs.forEach((crumb, index) => { %>
+                    <% if (index === breadcrumbs.length - 1) { %>
+                        <!-- Last item (current page) -->
+                        <li class="breadcrumb-item active" aria-current="page">
+                            <% if (crumb.icon) { %>
+                                <i class="<%= crumb.icon %>"></i>
+                            <% } %>
+                            <%= crumb.name %>
+                        </li>
+                    <% } else { %>
+                        <!-- Intermediate items -->
+                        <li class="breadcrumb-item">
+                            <a href="<%= crumb.url %>">
+                                <% if (crumb.icon) { %>
+                                    <i class="<%= crumb.icon %>"></i>
+                                <% } %>
+                                <%= crumb.name %>
+                            </a>
+                        </li>
+                    <% } %>
+                <% }) %>
+            <% } %>
+        </ol>
+    </div>
+</nav>
+
+<style>
+
+.breadcrumb-nav {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 12px 0;
+    margin-bottom: 20px;
+}
+
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: ">";
+    color: #6c757d;
+    padding: 0 8px;
+    font-weight: 600;
+}
+
+.breadcrumb-item a {
+    color: #495057;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.breadcrumb-item a:hover {
+    color: #000;
+    text-decoration: none;
+}
+
+.breadcrumb-item.active {
+    color: #000;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.breadcrumb-item i {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .breadcrumb-nav {
+        padding: 8px 0;
+        margin-bottom: 15px;
+    }
+    
+    .breadcrumb {
+        font-size: 13px;
+        flex-wrap: wrap;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        padding: 0 6px;
+    }
+    
+    .breadcrumb-item a {
+        gap: 4px;
+    }
+    
+    .breadcrumb-item.active {
+        gap: 4px;
+    }
+    
+    .breadcrumb-item i {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 576px) {
+    .breadcrumb-nav {
+        padding: 6px 0;
+        margin-bottom: 10px;
+    }
+    
+    .breadcrumb {
+        font-size: 12px;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        padding: 0 4px;
+        font-size: 12px;
+    }
+
+    .breadcrumb-item i {
+        display: none;
+    }
+}
+
+.breadcrumb-nav {
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .breadcrumb-nav {
+        background-color: #343a40;
+        border-bottom-color: #495057;
+    }
+    
+    .breadcrumb-item a {
+        color: #adb5bd;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: #fff;
+    }
+    
+    .breadcrumb-item.active {
+        color: #fff;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        color: #6c757d;
+    }
+}
+</style>

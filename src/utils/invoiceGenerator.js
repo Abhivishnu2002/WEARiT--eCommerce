@@ -176,8 +176,7 @@ function drawProductsTable(doc, colors, validProducts, totals) {
   })
   let y = tableTop + 25
   doc.font("Helvetica").fontSize(9).fillColor(colors.text)
-  validProducts.forEach((item, index) => {
-    // Handle deleted products gracefully
+  validProducts.forEach((item, index) => {
     const product = item.product || { name: "Product Deleted" }
     const variant = item.variant || { size: "N/A", salePrice: 0 }
     const unitPrice = variant.salePrice || 0
@@ -196,9 +195,7 @@ function drawProductsTable(doc, colors, validProducts, totals) {
     let productName = product.name || "Product Deleted"
     if (item.status && item.status !== "pending") {
       productName += ` [${item.status.toUpperCase()}]`
-    }
-
-    // Add indicator for deleted products
+    }
     if (!item.product) {
       productName += " [DELETED]"
     }

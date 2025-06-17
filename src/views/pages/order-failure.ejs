@@ -373,6 +373,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -381,8 +382,7 @@
       const loadingOverlay = document.getElementById('loading-overlay')
       const loadingMessage = document.getElementById('loading-message')
       let selectedPaymentMethod = null
-      
-      // Validate required DOM elements
+
       if (!loadingOverlay) {
         console.warn('Loading overlay element not found')
       }
@@ -393,32 +393,126 @@
         console.warn('Retry button element not found')
         return
       }
+
+      async function validateOrderStock(orderId) {
+        try {
+          const response = await fetch(`/order/check-stock/${orderId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+          })
+
+          const data = await response.json()
+
+          if (!data.success) {
+            await Swal.fire({
+              title: 'Error',
+              text: data.message || 'Failed to validate order stock',
+              icon: 'error',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#1a1a1a'
+            })
+            return false
+          }
+
+          if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
+            let unavailableMessage = '<div class="unavailable-products">'
+            unavailableMessage += '<p><strong>The following products are no longer available:</strong></p>'
+            unavailableMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+            data.unavailableProducts.forEach(item => {
+              unavailableMessage += `<li><strong>${item.productName}</strong> (Size: ${item.size}) - ${item.reason}</li>`
+            })
+
+            unavailableMessage += '</ul>'
+            unavailableMessage += '<p>Please contact support for assistance with this order.</p>'
+            unavailableMessage += '</div>'
+
+            await Swal.fire({
+              title: 'Products Unavailable',
+              html: unavailableMessage,
+              icon: 'error',
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#1a1a1a'
+            })
+
+            return false
+          }
+
+          if (data.hasStockIssues && data.stockIssues.length > 0) {
+            let stockIssueMessage = '<div class="stock-issues">'
+            stockIssueMessage += "<p><strong>Stock issues detected:</strong></p>"
+            stockIssueMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+            data.stockIssues.forEach((issue) => {
+              if (issue.availableStock === 0) {
+                stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) is <span style="color: #dc3545;">out of stock</span></li>`
+              } else if (issue.isPartialStock) {
+                stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) - Only ${issue.availableStock} available (order quantity: ${issue.requestedQuantity})</li>`
+              }
+            })
+
+            stockIssueMessage += "</ul>"
+            stockIssueMessage += "<p>Please contact support for assistance with this order.</p>"
+            stockIssueMessage += "</div>"
+
+            await Swal.fire({
+              title: "Stock Issues Detected",
+              html: stockIssueMessage,
+              icon: "error",
+              confirmButtonText: "OK",
+              confirmButtonColor: "#1a1a1a"
+            })
+
+            return false
+          }
+
+          return true
+
+        } catch (error) {
+          console.error("Stock validation error:", error)
+          await Swal.fire({
+            title: "Error",
+            text: "Failed to validate stock. Please try again.",
+            icon: "error",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#1a1a1a"
+          })
+          return false
+        }
+      }
       
-      // Payment option selection
       paymentOptions.forEach(option => {
         option.addEventListener('click', function() {
-          // Remove previous selection
           paymentOptions.forEach(opt => opt.classList.remove('border-primary', 'bg-light'))
-          
-          // Add selection to clicked option
+
           this.classList.add('border-primary', 'bg-light')
           selectedPaymentMethod = this.dataset.method
           retryBtn.disabled = false
         })
       })
       
-      // Retry payment button
       retryBtn.addEventListener('click', async function() {
         if (!selectedPaymentMethod) {
           alert('Please select a payment method')
           return
         }
-        
+
         try {
           if (loadingOverlay) {
             loadingOverlay.style.display = 'flex'
           }
-          
+
+          const stockValid = await validateOrderStock('<%= order._id %>')
+          if (!stockValid) {
+            if (loadingOverlay) {
+              loadingOverlay.style.display = 'none'
+            }
+            return
+          }
+
           const response = await fetch(`/order/retry-payment/<%= order._id %>`, {
             method: 'POST',
             headers: {
@@ -435,7 +529,6 @@
             if (data.redirect) {
               window.location.href = data.redirect
             } else if (data.razorpayOrderId) {
-              // Handle Razorpay payment
               const options = {
                 key: data.key,
                 amount: data.amount,
@@ -491,7 +584,6 @@
                 if (loadingOverlay) {
                   loadingOverlay.style.display = 'none'
                 }
-                // Send failure data to server
                 fetch('/payment/razorpay/failure', {
                   method: 'POST',
                   headers: {
@@ -515,7 +607,56 @@
             if (loadingOverlay) {
               loadingOverlay.style.display = 'none'
             }
-            alert(data.message || 'Failed to retry payment. Please try again.')
+
+            if (data.errorCode === 'STOCK_VALIDATION_FAILED') {
+              if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
+                let unavailableMessage = '<div class="unavailable-products">'
+                unavailableMessage += '<p><strong>The following products are no longer available:</strong></p>'
+                unavailableMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+                data.unavailableProducts.forEach(item => {
+                  unavailableMessage += `<li><strong>${item.productName}</strong> (Size: ${item.size}) - ${item.reason}</li>`
+                })
+
+                unavailableMessage += '</ul>'
+                unavailableMessage += '<p>Please contact support for assistance with this order.</p>'
+                unavailableMessage += '</div>'
+
+                Swal.fire({
+                  title: 'Products Unavailable',
+                  html: unavailableMessage,
+                  icon: 'error',
+                  confirmButtonText: 'OK',
+                  confirmButtonColor: '#1a1a1a'
+                })
+              } else if (data.hasStockIssues && data.stockIssues.length > 0) {
+                let stockIssueMessage = '<div class="stock-issues">'
+                stockIssueMessage += "<p><strong>Stock issues detected:</strong></p>"
+                stockIssueMessage += '<ul style="text-align: left; margin: 10px 0;">'
+
+                data.stockIssues.forEach((issue) => {
+                  if (issue.availableStock === 0) {
+                    stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) is <span style="color: #dc3545;">out of stock</span></li>`
+                  } else if (issue.isPartialStock) {
+                    stockIssueMessage += `<li><strong>${issue.productName}</strong> (Size: ${issue.size}) - Only ${issue.availableStock} available (order quantity: ${issue.requestedQuantity})</li>`
+                  }
+                })
+
+                stockIssueMessage += "</ul>"
+                stockIssueMessage += "<p>Please contact support for assistance with this order.</p>"
+                stockIssueMessage += "</div>"
+
+                Swal.fire({
+                  title: "Stock Issues Detected",
+                  html: stockIssueMessage,
+                  icon: "error",
+                  confirmButtonText: "OK",
+                  confirmButtonColor: "#1a1a1a"
+                })
+              }
+            } else {
+              alert(data.message || 'Failed to retry payment. Please try again.')
+            }
           }
         } catch (error) {
           if (loadingOverlay) {

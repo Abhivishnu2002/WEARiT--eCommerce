@@ -4,9 +4,7 @@ const searchController = require('../controllers/user/searchController');
 const { ensureAuthenticated } = require('../middlewares/auth');
 const { getCartCount, getWishlistCount } = require('../middlewares/cartWishlistCountMiddleware');
 
-router.get('/search', searchController.searchProducts);
-
-// Get cart and wishlist counts for authenticated users
+router.get('/search', searchController.searchProducts);
 router.get('/cart-wishlist-counts', async (req, res) => {
   try {
     let cartCount = 0;

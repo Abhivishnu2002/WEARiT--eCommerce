@@ -73,9 +73,7 @@
                     <div class="product-image">
                       <%
                         const mainImageObj = product.images && product.images.find(img => img.isMain);
-                        const mainImageUrl = mainImageObj ? mainImageObj.url : '/images/placeholder.jpg';
-                        
-                        // Calculate discount percentage
+                        const mainImageUrl = mainImageObj ? mainImageObj.url : '/images/placeholder.jpg';
                         let discountPercentage = 0;
                         if (product.variants && product.variants.length > 0) {
                           const variant = product.variants[0];

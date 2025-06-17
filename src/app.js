@@ -59,17 +59,13 @@ app.use(getCartWishlistCounts);
 
 app.use('/', userRoutes);
 app.use("/admin", adminRoutes);
-app.use('/api', apiRoutes);
-
-// 404 handler for unmatched routes
+app.use('/api', apiRoutes);
 app.use((req, res, next)=>{
     res.status(404).render('errors/404', {
         message: 'Page not found',
         url: req.originalUrl
     });
-});
-
-// Error handler
+});
 app.use((err, req, res, next)=>{
     console.error('Application error:', err);
     res.status(500).render('errors/500', {

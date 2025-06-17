@@ -10,8 +10,7 @@ const transactionSchema = new Schema(
     },
     order: {
       type: Schema.Types.ObjectId,
-      ref: "Order",
-      // Not required for wallet top-ups
+      ref: "Order",
     },
     transactionId: {
       type: String,

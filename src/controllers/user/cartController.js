@@ -382,9 +382,7 @@ const checkStock = async (req, res) => {
     const unavailableProducts = []
 
     for (const item of cart.products) {
-      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
-
-      // Check if product is unlisted or inactive
+      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
       if (!freshProduct || !freshProduct.isActive) {
         unavailableProducts.push({
           productName: item.product.name,
@@ -392,9 +390,7 @@ const checkStock = async (req, res) => {
           reason: "Product is no longer available",
         })
         continue
-      }
-
-      // Check if category is unlisted
+      }
       if (!freshProduct.categoryId || !freshProduct.categoryId.isListed) {
         unavailableProducts.push({
           productName: freshProduct.name,
@@ -402,9 +398,7 @@ const checkStock = async (req, res) => {
           reason: "Product category is no longer available",
         })
         continue
-      }
-
-      // Check stock availability
+      }
       const variant = freshProduct.variants.find((v) => v.size === item.size)
       if (!variant) {
         stockIssues.push({

@@ -1,9 +1,4 @@
-/**
- * Application Messages
- * Centralized message constants for consistent user communication
- */
-
-// Order Status Messages
+
 const ORDER_STATUS_MESSAGES = {
   TRANSITION_ERROR: {
     INVALID: (currentStatus, newStatus) => 
@@ -25,9 +20,7 @@ const ORDER_STATUS_MESSAGES = {
     ORDER_RETURNED: 'All items in this order have been returned.',
     PARTIAL_RETURN: 'Some items in this order have been returned.'
   }
-}
-
-// Payment Messages
+}
 const PAYMENT_MESSAGES = {
   SUCCESS: {
     PAYMENT_COMPLETED: 'Payment completed successfully',
@@ -44,9 +37,7 @@ const PAYMENT_MESSAGES = {
     ORDER_PLACED: 'Order placed successfully. Pay on delivery.',
     PAYMENT_COMPLETED_ON_DELIVERY: 'Payment completed on delivery'
   }
-}
-
-// Invoice Messages
+}
 const INVOICE_MESSAGES = {
   AVAILABILITY: {
     NOT_AVAILABLE: 'Invoice is not available for this order',
@@ -60,9 +51,7 @@ const INVOICE_MESSAGES = {
     ERROR: 'Failed to generate invoice. Please try again.',
     GENERATING: 'Generating invoice...'
   }
-}
-
-// User Messages
+}
 const USER_MESSAGES = {
   AUTH: {
     LOGIN_SUCCESS: 'Login successful',
@@ -77,9 +66,7 @@ const USER_MESSAGES = {
     PASSWORD_CHANGED: 'Password changed successfully',
     INVALID_CURRENT_PASSWORD: 'Current password is incorrect'
   }
-}
-
-// Address Messages
+}
 const ADDRESS_MESSAGES = {
   SUCCESS: {
     ADDED: 'Address added successfully',
@@ -103,9 +90,7 @@ const ADDRESS_MESSAGES = {
     PINCODE_REQUIRED: 'PIN code is required',
     PINCODE_INVALID: 'Please enter a valid 6-digit PIN code'
   }
-}
-
-// Product Messages
+}
 const PRODUCT_MESSAGES = {
   STOCK: {
     OUT_OF_STOCK: 'This product is currently out of stock',
@@ -125,9 +110,7 @@ const PRODUCT_MESSAGES = {
     REMOVED: 'Product removed from wishlist',
     MOVED_TO_CART: 'Product moved to cart'
   }
-}
-
-// Coupon Messages
+}
 const COUPON_MESSAGES = {
   SUCCESS: {
     APPLIED: 'Coupon applied successfully',
@@ -141,9 +124,7 @@ const COUPON_MESSAGES = {
     ALREADY_USED: 'This coupon has already been used',
     USER_LIMIT_EXCEEDED: 'You have exceeded the usage limit for this coupon'
   }
-}
-
-// Return Messages
+}
 const RETURN_MESSAGES = {
   SUCCESS: {
     REQUEST_SUBMITTED: 'Return request submitted successfully',
@@ -157,9 +138,7 @@ const RETURN_MESSAGES = {
     ALREADY_RETURNED: 'This product has already been returned',
     CANNOT_RETURN: 'This product cannot be returned'
   }
-}
-
-// General Messages
+}
 const GENERAL_MESSAGES = {
   SUCCESS: {
     OPERATION_COMPLETED: 'Operation completed successfully',

@@ -17,6 +17,15 @@
     </head>
     <body>
         <%- include('../partials/header') %>
+
+        <!-- Breadcrumb -->
+        <%- include('../partials/breadcrumb', {
+            breadcrumbs: [
+                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
+                { name: 'My Wishlist', icon: 'fa-solid fa-heart' }
+            ]
+        }) %>
+
         <div class="container-fluid wishlist-container">
             <div class="row">
                 <div class="col-lg-3 col-md-4">

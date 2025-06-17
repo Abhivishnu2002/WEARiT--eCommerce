@@ -14,19 +14,16 @@
 </head>
 <body>
   <%- include('../partials/header') %>
+
+  <!-- Breadcrumb -->
+  <%- include('../partials/breadcrumb', {
+      breadcrumbs: [
+          { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
+          { name: 'My Orders', icon: 'fa-solid fa-bag-shopping' }
+      ]
+  }) %>
+
   <div class="container my-4">
-    <div class="breadcrumb-container">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item">
-            <a href="/profile">Profile</a>
-          </li>
-          <li class="breadcrumb-item active" aria-current="page">
-            my orders
-          </li>
-        </ol>
-      </nav>
-    </div>
     <div class="row">
       <div class="col-lg-3 mb-4">
         <%- include('../partials/navbar', {activePage:
@@ -63,20 +60,14 @@
                                                 %></span>
                   </div>
                   <div class="col-md-4 text-end">
-                    <%
-                      // Invoice download conditions:
-                      // 1. Payment status should not be 'failed'
-                      // 2. For COD orders, invoice is available after delivery (payment status becomes completed after delivery)
-                      // 3. For other payment methods, invoice is available after payment completion
+                    <%
                       let canDownloadInvoice = false;
                       const paymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase();
 
                       if (order.paymentStatus !== 'failed') {
-                        if (paymentMethod === 'cod') {
-                          // For COD, invoice available after delivery (when payment status becomes completed)
+                        if (paymentMethod === 'cod') {
                           canDownloadInvoice = order.orderStatus === 'delivered' || order.paymentStatus === 'completed';
-                        } else {
-                          // For other payment methods, invoice available after payment completion
+                        } else {
                           canDownloadInvoice = order.paymentStatus === 'completed';
                         }
                       }
@@ -175,7 +166,6 @@
                       </button>
                       <% } %>
                     </div>
-
 
                     <% if (order.orderStatus==='pending'
                                             ) { %>

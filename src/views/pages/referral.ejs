@@ -16,6 +16,15 @@
 </head>
 <body>
     <%- include('../partials/header') %>
+
+    <!-- Breadcrumb -->
+    <%- include('../partials/breadcrumb', {
+        breadcrumbs: [
+            { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
+            { name: 'Referral Program', icon: 'fa-solid fa-users' }
+        ]
+    }) %>
+
     <div class="container-fluid referral-container">
         <div class="row">
             <div class="col-lg-3 col-md-4">

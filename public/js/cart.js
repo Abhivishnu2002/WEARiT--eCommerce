@@ -167,9 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(".empty-cart-btn")?.remove()
               }
               
-              showToast("Item removed from cart", "success")
-
-              // Update header counts
+              showToast("Item removed from cart", "success")
               if (typeof window.updateHeaderCounts === 'function') {
                 window.updateHeaderCounts()
               }
@@ -254,9 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
               document.querySelector(".cart-actions")?.remove()
               emptyCartBtn.remove()
               
-              showToast("Cart emptied successfully", "success")
-
-              // Update header counts
+              showToast("Cart emptied successfully", "success")
               if (typeof window.updateHeaderCounts === 'function') {
                 window.updateHeaderCounts()
               }
@@ -285,9 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300)
       })
     })
-  }
-
-  // Add checkout validation
+  }
   const checkoutBtn = document.querySelector('.checkout-btn')
   if (checkoutBtn) {
     checkoutBtn.addEventListener('click', async function(e) {
@@ -319,9 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
           this.textContent = originalText
           this.disabled = false
           return
-        }
-
-        // Check for unavailable products (unlisted/inactive)
+        }
         if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
           let unavailableMessage = '<div class="unavailable-products">'
           unavailableMessage += '<p><strong>The following products are no longer available:</strong></p>'
@@ -346,9 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
           this.textContent = originalText
           this.disabled = false
           return
-        }
-
-        // Check for stock issues
+        }
         if (data.hasStockIssues && data.stockIssues.length > 0) {
           let stockMessage = '<div class="stock-issues">'
           stockMessage += '<p><strong>Stock issues detected:</strong></p>'
@@ -377,9 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
           this.textContent = originalText
           this.disabled = false
           return
-        }
-
-        // If all validations pass, proceed to checkout
+        }
         window.location.href = '/checkout'
 
       } catch (error) {

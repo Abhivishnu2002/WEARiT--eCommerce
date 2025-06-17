@@ -60,13 +60,11 @@ const orderSchema = new mongoose.Schema(
       unique: true,
     },
     products: [productSchema],
-    address: {
-      // Store address ID for reference (optional, can be null if address is deleted)
+    address: {
       addressId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Address",
-      },
-      // Store actual address data to preserve it even if original address is deleted
+      },
       name: {
         type: String,
         required: true,

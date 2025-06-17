@@ -1,16 +1,11 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Import Bootstrap
-  const bootstrap = window.bootstrap
-
-  // Initialize toast container
+document.addEventListener("DOMContentLoaded", () => {
+  const bootstrap = window.bootstrap
   if (!document.getElementById("toastContainer")) {
     const toastContainer = document.createElement("div")
     toastContainer.id = "toastContainer"
     toastContainer.className = "toast-container position-fixed bottom-0 end-0 p-3"
     document.body.appendChild(toastContainer)
-  }
-
-  // Toast notification function
+  }
   function showToast(message, type = "success") {
     const toastContainer = document.getElementById("toastContainer")
     const toastId = `toast-${Date.now()}`
@@ -33,9 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toastElement.addEventListener("hidden.bs.toast", () => {
       toastElement.remove()
     })
-  }
-
-  // Stock status checking function
+  }
   function checkStockStatus() {
     fetch("/wishlist/check-stock", {
       method: "GET",
@@ -52,9 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .catch((error) => {
         })
-  }
-
-  // Update stock display based on current status
+  }
   function updateStockDisplay(stockStatus) {
     Object.keys(stockStatus).forEach((productId) => {
       const productItem = document.querySelector(`.wishlist-item[data-product-id="${productId}"]`)
@@ -62,13 +53,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const stock = stockStatus[productId]
       const currentStatus = productItem.getAttribute("data-stock-status")
-      const newStatus = stock.stockStatus
-
-      // Only update if status has changed
+      const newStatus = stock.stockStatus
       if (currentStatus !== newStatus) {
-        updateProductStockUI(productItem, stock)
-
-        // Show notification for status change
+        updateProductStockUI(productItem, stock)
         const productName = productItem.querySelector(".product-title a").textContent.trim()
         if (newStatus === "in-stock" && currentStatus === "out-of-stock") {
           showToast(`${productName} is now back in stock!`, "success")
@@ -77,16 +64,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     })
-  }
-
-  // Update individual product stock UI
+  }
   function updateProductStockUI(productItem, stockInfo) {
-    const productId = productItem.getAttribute("data-product-id")
-
-    // Update data attribute
-    productItem.setAttribute("data-stock-status", stockInfo.stockStatus)
-
-    // Update stock badge
+    const productId = productItem.getAttribute("data-product-id")
+    productItem.setAttribute("data-stock-status", stockInfo.stockStatus)
     const stockBadge = productItem.querySelector(".stock-status-badge")
     if (stockBadge) {
       if (stockInfo.hasStock) {
@@ -104,13 +85,10 @@ document.addEventListener("DOMContentLoaded", () => {
           </span>
         `
       }
-    }
-
-    // Update size selection
+    }
     const sizeSelection = productItem.querySelector(".size-selection")
     if (stockInfo.hasStock && stockInfo.availableVariants.length > 0) {
-      if (!sizeSelection) {
-        // Create size selection if it doesn't exist
+      if (!sizeSelection) {
         const sizeSelectionHTML = `
           <div class="size-selection mb-3">
             <label class="form-label small">Available Sizes:</label>
@@ -126,8 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         productItem.querySelector(".product-price").insertAdjacentHTML("afterend", sizeSelectionHTML)
-      } else {
-        // Update existing size selection
+      } else {
         const sizeSelector = sizeSelection.querySelector(".size-selector")
         sizeSelector.innerHTML = stockInfo.availableVariants
           .map((variant, index) => {
@@ -139,32 +116,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else if (sizeSelection) {
       sizeSelection.remove()
-    }
-
-    // Update button
+    }
     const addToCartBtn = productItem.querySelector(".add-to-cart-btn")
     const outOfStockBtn = productItem.querySelector(".out-of-stock-btn")
     const stockAlert = productItem.querySelector(".stock-alert")
 
-    if (stockInfo.hasStock) {
-      // Show add to cart button
+    if (stockInfo.hasStock) {
       if (outOfStockBtn) {
         outOfStockBtn.outerHTML = `
           <button class="btn btn-dark add-to-cart-btn" data-product-id="${productId}" data-size="${stockInfo.availableVariants[0]?.size || ""}">
             <i class="fas fa-shopping-cart me-2"></i>
             Add To Cart
           </button>
-        `
-        // Re-attach event listener
+        `
         attachAddToCartListener(productItem.querySelector(".add-to-cart-btn"))
-      }
-
-      // Remove stock alert
+      }
       if (stockAlert) {
         stockAlert.remove()
       }
-    } else {
-      // Show out of stock button
+    } else {
       if (addToCartBtn) {
         addToCartBtn.outerHTML = `
           <button class="btn btn-secondary out-of-stock-btn" disabled data-product-id="${productId}">
@@ -172,9 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             Out of Stock
           </button>
         `
-      }
-
-      // Add stock alert if it doesn't exist
+      }
       if (!stockAlert) {
         const stockAlertHTML = `
           <div class="stock-alert mt-2">
@@ -186,16 +154,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         productItem.querySelector(".remove-btn").insertAdjacentHTML("afterend", stockAlertHTML)
       }
-    }
-
-    // Add animation class
+    }
     productItem.classList.add("stock-status-update")
     setTimeout(() => {
       productItem.classList.remove("stock-status-update")
     }, 600)
-  }
-
-  // Attach event listener to add to cart button
+  }
   function attachAddToCartListener(button) {
     if (!button) return
 
@@ -217,9 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
           this.classList.remove("loading")
         })
     })
-  }
-
-  // Handle size selection changes
+  }
   document.addEventListener("change", (e) => {
     if (e.target.classList.contains("size-selector")) {
       const productId = e.target.getAttribute("data-product-id")
@@ -230,9 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addToCartBtn.setAttribute("data-size", selectedSize)
       }
     }
-  })
-
-  // Initialize event listeners for existing buttons
+  })
   document.querySelectorAll(".remove-btn").forEach((button) => {
     button.addEventListener("click", function () {
       const productId = this.getAttribute("data-product-id")
@@ -278,14 +238,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300)
       })
     })
-  })
-
-  // Initialize add to cart listeners
+  })
   document.querySelectorAll(".add-to-cart-btn").forEach((button) => {
     attachAddToCartListener(button)
-  })
-
-  // Empty wishlist functionality
+  })
   const emptyWishlistBtn = document.getElementById("emptyWishlist")
   if (emptyWishlistBtn) {
     emptyWishlistBtn.addEventListener("click", () => {
@@ -354,9 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300)
       })
     })
-  }
-
-  // Move all to cart functionality
+  }
   const moveAllToCartBtn = document.getElementById("moveAllToCart")
   if (moveAllToCartBtn) {
     moveAllToCartBtn.addEventListener("click", () => {
@@ -431,9 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300)
       })
     })
-  }
-
-  // Helper functions
+  }
   function removeFromWishlist(productId, reload = true) {
     return fetch("/wishlist/remove", {
       method: "POST",
@@ -461,9 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             }
 
-            showToast("Item removed from wishlist", "success")
-
-            // Update header counts
+            showToast("Item removed from wishlist", "success")
             if (typeof window.updateHeaderCounts === 'function') {
               window.updateHeaderCounts()
             }
@@ -489,9 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          showToast("Product added to cart", "success")
-
-          // Update header counts
+          showToast("Product added to cart", "success")
           if (typeof window.updateHeaderCounts === 'function') {
             window.updateHeaderCounts()
           }
@@ -511,11 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("An error occurred. Please try again.", "danger")
         return Promise.reject(error)
       })
-  }
-
-  // Auto-check stock status every 30 seconds
-  setInterval(checkStockStatus, 30000)
-
-  // Initial stock check
+  }
+  setInterval(checkStockStatus, 30000)
   checkStockStatus()
 })

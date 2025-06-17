@@ -32,21 +32,16 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         discountSymbol.textContent = "₹"
         maxDiscountContainer.classList.add("d-none")
-      }
-      // Validate discount vs minimum purchase when discount type changes
+      }
       validateDiscountVsMinimumPurchase()
     })
-  }
-
-  // Real-time validation for discount vs minimum purchase
+  }
   function validateDiscountVsMinimumPurchase() {
     const discountType = document.getElementById("discountType").value
     const discountValue = Number.parseFloat(document.getElementById("discountValue").value || 0)
     const minimumPurchase = Number.parseFloat(document.getElementById("minimumPurchase").value || 0)
     const maximumDiscount = document.getElementById("maximumDiscount").value ?
-      Number.parseFloat(document.getElementById("maximumDiscount").value) : null
-
-    // Clear any existing validation messages
+      Number.parseFloat(document.getElementById("maximumDiscount").value) : null
     clearFieldValidation("maximumDiscount")
     clearFieldValidation("minimumPurchase")
     clearFieldValidation("discountValue")
@@ -57,14 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
           showFieldValidation("discountValue", "Fixed discount value must be less than minimum purchase amount")
           return false
         }
-      } else if (discountType === "percentage") {
-        // For percentage discounts, check if maximum discount (if set) is less than minimum purchase
+      } else if (discountType === "percentage") {
         if (maximumDiscount && maximumDiscount >= minimumPurchase) {
           showFieldValidation("maximumDiscount", "Maximum discount amount must be less than minimum purchase amount")
           return false
-        }
-
-        // Also check if the percentage could result in a discount >= minimum purchase
+        }
         const theoreticalMaxDiscount = (minimumPurchase * discountValue) / 100
         if (theoreticalMaxDiscount >= minimumPurchase) {
           showFieldValidation("discountValue", "Percentage discount is too high relative to minimum purchase amount")
@@ -73,26 +65,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     return true
-  }
-
-  // Show field-specific validation error
+  }
   function showFieldValidation(fieldId, message) {
     const field = document.getElementById(fieldId)
     const errorElement = document.getElementById(`${fieldId}-error`)
 
-    if (field && errorElement) {
-      // Remove any existing validation classes
+    if (field && errorElement) {
       field.classList.remove("is-valid")
-      field.classList.add("is-invalid")
-
-      // Set error message and make it visible
+      field.classList.add("is-invalid")
       errorElement.textContent = message
       errorElement.style.display = "block"
       errorElement.classList.add("d-block")
     }
-  }
-
-  // Clear field-specific validation error
+  }
   function clearFieldValidation(fieldId) {
     const field = document.getElementById(fieldId)
     const errorElement = document.getElementById(`${fieldId}-error`)
@@ -106,9 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
       errorElement.style.display = "none"
       errorElement.classList.remove("d-block")
     }
-  }
-
-  // Add event listeners for real-time validation
+  }
   const discountValueInput = document.getElementById("discountValue")
   const minimumPurchaseInput = document.getElementById("minimumPurchase")
   const maximumDiscountInput = document.getElementById("maximumDiscount")
@@ -236,8 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault()
         isValid = false
         showErrorToast("Usage limit must be at least 1 when auto-expire is enabled")
-      }
-      // Validate discount value vs minimum purchase amount
+      }
       if (!validateDiscountVsMinimumPurchase()) {
         event.preventDefault()
         isValid = false

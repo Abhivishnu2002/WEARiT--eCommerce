@@ -19,12 +19,9 @@ getSalesReport = async (req, res) => {
     const dailySalesPage = Number.parseInt(req.query.dailySalesPage) || 1
     const dailySalesLimit = Number.parseInt(req.query.dailySalesLimit) || 10
     const transactionPage = Number.parseInt(req.query.transactionPage) || 1
-    const transactionLimit = Number.parseInt(req.query.transactionLimit) || 10
-
-    // Enhanced date range handling
+    const transactionLimit = Number.parseInt(req.query.transactionLimit) || 10
     let dateRange
-    if (timeFilter === "custom" && customStartDate && customEndDate) {
-      // Validate custom date range
+    if (timeFilter === "custom" && customStartDate && customEndDate) {
       if (customStartDate > customEndDate) {
         return res.render("admin/pages/salesReport", {
           admin: req.session.admin,
@@ -219,12 +216,9 @@ const downloadPDF = async (req, res) => {
     const paymentMethod = req.query.paymentMethod || ""
     const search = req.query.search || ""
     const sortBy = req.query.sortBy || "orderDate"
-    const sortOrder = req.query.sortOrder || "desc"
-
-    // Enhanced date range handling for PDF
+    const sortOrder = req.query.sortOrder || "desc"
     let dateRange
-    if (timeFilter === "custom" && customStartDate && customEndDate) {
-      // Validate custom date range
+    if (timeFilter === "custom" && customStartDate && customEndDate) {
       if (customStartDate > customEndDate) {
         return res.status(400).send("Invalid date range: Start date cannot be later than end date")
       }
@@ -255,8 +249,7 @@ const downloadPDF = async (req, res) => {
         { orderID: { $regex: search, $options: "i" } },
         { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
       ]
-    }
-    // Build sort object
+    }
     const sortObj = {}
     sortObj[sortBy] = sortOrder === "asc" ? 1 : -1
 
@@ -760,12 +753,9 @@ const downloadExcel = async (req, res) => {
     const paymentMethod = req.query.paymentMethod || ""
     const search = req.query.search || ""
     const sortBy = req.query.sortBy || "orderDate"
-    const sortOrder = req.query.sortOrder || "desc"
-
-    // Enhanced date range handling for Excel
+    const sortOrder = req.query.sortOrder || "desc"
     let dateRange
-    if (timeFilter === "custom" && customStartDate && customEndDate) {
-      // Validate custom date range
+    if (timeFilter === "custom" && customStartDate && customEndDate) {
       if (customStartDate > customEndDate) {
         return res.status(400).send("Invalid date range: Start date cannot be later than end date")
       }
@@ -790,9 +780,7 @@ const downloadExcel = async (req, res) => {
         { orderID: { $regex: search, $options: "i" } },
         { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
       ]
-    }
-
-    // Build sort object for Excel
+    }
     const sortObj = {}
     sortObj[sortBy] = sortOrder === "asc" ? 1 : -1
 

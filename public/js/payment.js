@@ -10,9 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const orderForm = document.getElementById("order-form")
   const loadingOverlay = document.getElementById("loading-overlay")
   const loadingMessage = document.getElementById("loading-message")
-  const hiddenOrderId = document.getElementById("hiddenOrderId")
-
-  // Stock validation function
+  const hiddenOrderId = document.getElementById("hiddenOrderId")
   async function validateStock() {
     try {
       const response = await fetch('/cart/check-stock', {
@@ -25,8 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json()
 
-      if (!data.success) {
-        // Ensure loading overlay is hidden before showing SweetAlert
+      if (!data.success) {
         hideLoading()
 
         await Swal.fire({
@@ -37,11 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
           confirmButtonColor: '#1a1a1a'
         })
         return false
-      }
-
-      // Check for unavailable products (unlisted/inactive)
-      if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
-        // Ensure loading overlay is hidden before showing SweetAlert
+      }
+      if (data.hasUnavailableProducts && data.unavailableProducts.length > 0) {
         hideLoading()
 
         let unavailableMessage = '<div class="unavailable-products">'
@@ -72,11 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         return false
-      }
-
-      // Check for stock issues
-      if (data.hasStockIssues && data.stockIssues.length > 0) {
-        // Ensure loading overlay is hidden before showing SweetAlert
+      }
+      if (data.hasStockIssues && data.stockIssues.length > 0) {
         hideLoading()
 
         let stockMessage = '<div class="stock-issues">'
@@ -115,8 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       return true
 
-    } catch (error) {
-      // Ensure loading overlay is hidden before showing SweetAlert
+    } catch (error) {
       hideLoading()
 
       await Swal.fire({
@@ -134,9 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const orderId = hiddenOrderId ? hiddenOrderId.value : ""
   let paypalInitialized = false
   const paypal = window.paypal
-  const Razorpay = window.Razorpay
-
-  // Validate required DOM elements exist
+  const Razorpay = window.Razorpay
   function validateDOMElements() {
     const requiredElements = {
       loadingOverlay: loadingOverlay,
@@ -147,9 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!element) {
         }
     }
-  }
-
-  // Call validation on page load
+  }
   validateDOMElements()
 
   const checkedInput = document.querySelector('input[name="paymentMethod"]:checked')
@@ -179,8 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadingMessage.textContent = message || "Processing your payment..."
     }
     if (loadingOverlay) {
-      loadingOverlay.classList.remove("d-none")
-      // Reset display and z-index when showing
+      loadingOverlay.classList.remove("d-none")
       loadingOverlay.style.display = "block"
       loadingOverlay.style.zIndex = "1050"
     }
@@ -188,8 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function hideLoading() {
     if (loadingOverlay) {
-      loadingOverlay.classList.add("d-none")
-      // Additional safety: ensure the overlay is completely hidden
+      loadingOverlay.classList.add("d-none")
       loadingOverlay.style.display = "none"
       loadingOverlay.style.zIndex = "-1"
     }
@@ -210,11 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (razorpayErrorContainer) {
       razorpayErrorContainer.classList.add("d-none")
     }
-  }
-
-  // Enhanced error handling for Razorpay
-  function handleRazorpayError(error, orderId) {
-    // Send error details to server for logging and user feedback
+  }
+  function handleRazorpayError(error, orderId) {
     fetch("/payment/razorpay/failure", {
       method: "POST",
       headers: {
@@ -229,8 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         if (data.redirectUrl) {
           window.location.href = data.redirectUrl
-        } else {
-          // Fallback error handling
+        } else {
           const errorMessage = getErrorMessage(error)
           showError(errorMessage, "razorpay")
         }
@@ -245,9 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!error) return "Payment failed. Please try again."
 
     const errorCode = error.code || error.error?.code
-    const errorDescription = error.description || error.error?.description || error.reason
-
-    // Map common error codes to user-friendly messages
+    const errorDescription = error.description || error.error?.description || error.reason
     const errorMessages = {
       BAD_REQUEST_ERROR: "Invalid payment request. Please check your details and try again.",
       GATEWAY_ERROR: "Payment gateway error. Please try again in a few moments.",
@@ -269,9 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return "Payment failed. Please try again or contact support."
-  }
-
-  // PayPal Integration
+  }
   if (paypalButtonContainer && typeof paypal !== "undefined") {
     paypal
       .Buttons({
@@ -285,9 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
         createOrder: async (data, actions) => {
           if (!paypalInitialized) {
             showLoading("Validating cart...")
-          }
-
-          // Validate stock before creating PayPal order
+          }
           const stockValid = await validateStock()
           hideLoading() // Always hide loading after validation
           if (!stockValid) {
@@ -326,9 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
               if (data.orderId && hiddenOrderId) {
                 hiddenOrderId.value = data.orderId
-              }
-
-              // Extract PayPal order ID from approval URL
+              }
               const urlParams = new URLSearchParams(new URL(data.approvalUrl).search)
               const token = urlParams.get("token")
 
@@ -372,18 +344,14 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((err) => {
         showError("Failed to load PayPal payment option", "paypal")
       })
-  }
-
-  // Razorpay Integration
+  }
   if (razorpayButtonContainer && typeof Razorpay !== "undefined") {
     const razorpayBtn = document.getElementById("razorpay-pay-btn")
     if (razorpayBtn) {
       razorpayBtn.addEventListener("click", async () => {
         try {
           showLoading("Validating cart...")
-          hideErrors()
-
-          // Validate stock before creating Razorpay order
+          hideErrors()
           const stockValid = await validateStock()
           hideLoading() // Always hide loading after validation
           if (!stockValid) {
@@ -415,9 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (!data.success) {
             const errorMessage = data.message || "Error creating Razorpay payment"
-            showError(errorMessage, "razorpay")
-
-            // If the error is retryable, don't redirect to failure page
+            showError(errorMessage, "razorpay")
             if (data.retryable === false) {
               setTimeout(() => {
                 window.location.href = `/order-failure/${data.orderId || orderId}`
@@ -463,9 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   window.location.href = verifyData.redirectUrl || `/order-success/${data.orderId}`
                 } else {
                   const errorMessage = verifyData.message || "Payment verification failed"
-                  showError(errorMessage, "razorpay")
-
-                  // Redirect to failure page after showing error
+                  showError(errorMessage, "razorpay")
                   setTimeout(() => {
                     window.location.href = verifyData.redirectUrl || `/order-failure/${data.orderId}`
                   }, 3000)
@@ -473,9 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
               } catch (err) {
                 hideLoading()
                 const errorMessage = "Error verifying payment: " + err.message
-                showError(errorMessage, "razorpay")
-
-                // Redirect to failure page
+                showError(errorMessage, "razorpay")
                 setTimeout(() => {
                   window.location.href = `/order-failure/${data.orderId}`
                 }, 3000)
@@ -503,9 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
     }
-  }
-
-  // Payment method selection handling
+  }
   paymentMethodInputs.forEach((input) => {
     input.addEventListener("change", () => {
       updateSelectedCard()
@@ -513,9 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (selectedPaymentMethodInput) {
         selectedPaymentMethodInput.value = input.value
-      }
-
-      // Show/hide payment buttons based on selection
+      }
       if (input.value === "paypal") {
         if (paypalButtonContainer) paypalButtonContainer.classList.remove("d-none")
         if (razorpayButtonContainer) razorpayButtonContainer.classList.add("d-none")
@@ -530,16 +488,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (placeOrderBtn) placeOrderBtn.style.display = "block"
       }
     })
-  })
-
-  // Initialize payment method display
+  })
   const initialSelectedInput = document.querySelector('input[name="paymentMethod"]:checked')
   if (initialSelectedInput) {
     const event = new Event("change")
     initialSelectedInput.dispatchEvent(event)
-  }
-
-  // Form submission handling
+  }
   if (orderForm) {
     orderForm.addEventListener("submit", async (e) => {
       e.preventDefault()
@@ -558,9 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (selectedMethod.value === "paypal" || selectedMethod.value === "razorpay") {
         return
-      }
-
-      // Validate stock for COD and Wallet payments
+      }
       showLoading("Validating cart...")
       const stockValid = await validateStock()
       hideLoading() // Always hide loading after validation
@@ -568,9 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
-      showLoading("Processing your order...")
-
-      // Submit the form programmatically
+      showLoading("Processing your order...")
       const formData = new FormData(orderForm)
 
       try {
@@ -583,8 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (response.redirected) {
           window.location.href = response.url
         } else {
-          const result = await response.text()
-          // If response contains error, handle it
+          const result = await response.text()
           if (result.includes('error') || !response.ok) {
             hideLoading()
             await Swal.fire({
@@ -594,8 +543,7 @@ document.addEventListener("DOMContentLoaded", () => {
               confirmButtonText: 'OK',
               confirmButtonColor: '#1a1a1a'
             })
-          } else {
-            // Success case - this should not happen as successful payments redirect
+          } else {
             window.location.href = '/'
           }
         }

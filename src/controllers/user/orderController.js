@@ -107,7 +107,6 @@ function normalizePaymentMethod(order) {
   return order.paymentMethod || "COD"
 }
 
-// Enhanced order failure page with comprehensive error handling
 const orderFailure = async (req, res) => {
   try {
     const orderId = req.params.id
@@ -127,7 +126,6 @@ const orderFailure = async (req, res) => {
       return res.redirect("/orders")
     }
 
-    // Normalize payment method
     if (!order.paymentMethod && order.paymentMentod) {
       order.paymentMethod = order.paymentMentod
       await order.save()
@@ -138,13 +136,11 @@ const orderFailure = async (req, res) => {
       await order.save()
     }
 
-    // Get the latest failed transaction for this order
     const failedTransaction = await Transaction.findOne({
       order: orderId,
       status: "failed",
     }).sort({ createdAt: -1 })
 
-    // Determine error details
     const errorDetails = {
       code: "PAYMENT_FAILED",
       message: "Payment failed",
@@ -161,7 +157,6 @@ const orderFailure = async (req, res) => {
     if (order.failureReason) {
       errorDetails.message = order.failureReason
 
-      // Parse common error scenarios for better user experience
       const failureReason = order.failureReason.toLowerCase()
 
       if (failureReason.includes("insufficient")) {
@@ -212,7 +207,6 @@ const orderFailure = async (req, res) => {
       }
     }
 
-    // Get additional transaction details if available
     if (failedTransaction && failedTransaction.paymentDetails) {
       const paymentDetails = failedTransaction.paymentDetails
 
@@ -228,7 +222,6 @@ const orderFailure = async (req, res) => {
     const wishlistCount = await getWishlistCount(req.user._id)
     const user = await User.findById(req.user._id)
 
-    // Check available payment options for retry
     const paymentOptions = {
       hasWalletBalance: user.wallet && user.wallet.balance >= order.finalAmount,
       canUseCOD: order.finalAmount < 1000,
@@ -236,7 +229,6 @@ const orderFailure = async (req, res) => {
       orderAmount: order.finalAmount,
     }
 
-    // Get order calculation details
     const calculatedTotals = priceCalculator.calculateOrderDetailsTotals(order)
 
     res.render("pages/order-failure", {
@@ -256,7 +248,6 @@ const orderFailure = async (req, res) => {
   }
 }
 
-// Rest of the existing methods remain the same...
 const cancelProduct = async (req, res) => {
   const session = await mongoose.startSession()
 
@@ -718,7 +709,6 @@ const getOrderInvoice = async (req, res) => {
       return res.redirect("/orders")
     }
 
-    // Enhanced invoice availability conditions
     const currentPaymentMethod = (order.paymentMethod || order.paymentMentod || '').toLowerCase()
     let canDownloadInvoice = false
     let errorMessage = "Invoice is not available for this order"
@@ -726,14 +716,12 @@ const getOrderInvoice = async (req, res) => {
     if (order.paymentStatus === "failed") {
       errorMessage = "Invoice is not available for failed payments"
     } else if (currentPaymentMethod === 'cod') {
-      // For COD orders, invoice available after delivery (when payment status becomes completed)
       if (order.orderStatus === 'delivered' || order.paymentStatus === 'completed') {
         canDownloadInvoice = true
       } else {
         errorMessage = "Invoice for COD orders is only available after delivery"
       }
     } else {
-      // For other payment methods, invoice available after payment completion
       if (order.paymentStatus === 'completed') {
         canDownloadInvoice = true
       } else {
@@ -1215,6 +1203,100 @@ const searchOrders = async (req, res) => {
   }
 }
 
+const checkOrderStock = async (req, res) => {
+  try {
+    const orderId = req.params.id
+
+    if (!orderId || orderId === "null" || orderId === "undefined") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      })
+    }
+
+    const order = await Order.findOne({
+      _id: orderId,
+      user: req.user._id,
+    }).populate({
+      path: "products.product",
+      select: "name variants isActive",
+    })
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      })
+    }
+
+    const stockIssues = []
+    const unavailableProducts = []
+
+    for (const item of order.products) {
+      const product = item.product
+
+      if (!product || !product.isActive) {
+        unavailableProducts.push({
+          productName: item.productName || "Unknown Product",
+          size: item.variant.size,
+          reason: "Product no longer available",
+        })
+        continue
+      }
+
+      const variant = product.variants.find((v) => v.size === item.variant.size)
+      if (!variant) {
+        stockIssues.push({
+          productName: product.name,
+          size: item.variant.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          isPartialStock: false,
+        })
+        continue
+      }
+
+      if (variant.varientquatity === 0) {
+        stockIssues.push({
+          productName: product.name,
+          size: item.variant.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          isPartialStock: false,
+        })
+      } else if (variant.varientquatity < item.quantity) {
+        stockIssues.push({
+          productName: product.name,
+          size: item.variant.size,
+          requestedQuantity: item.quantity,
+          availableStock: variant.varientquatity,
+          isPartialStock: true,
+        })
+      }
+    }
+
+    const hasStockIssues = stockIssues.length > 0
+    const hasUnavailableProducts = unavailableProducts.length > 0
+
+    return res.json({
+      success: true,
+      hasStockIssues,
+      hasUnavailableProducts,
+      stockIssues,
+      unavailableProducts,
+      message: hasStockIssues || hasUnavailableProducts
+        ? "Some items in your order have stock issues"
+        : "All order items are available",
+    })
+  } catch (error) {
+    console.error("User checkOrderStock error:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Failed to validate order stock",
+    })
+  }
+}
+
 const trackOrder = async (req, res) => {
   try {
     const orderId = req.params.id
@@ -1557,6 +1639,7 @@ module.exports = {
   returnProduct,
   reorderItems,
   searchOrders,
+  checkOrderStock,
   trackOrder,
   orderSuccess,
   orderFailure,

@@ -9,8 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const wishlistIcon = wishlistBtn ? wishlistBtn.querySelector("i") : null
   let selectedSize = null
 
-  if (sizeButtons.length > 0) {
-    // Find the first available (in-stock) size button, or default to 'S' or first button
+  if (sizeButtons.length > 0) {
     const availableSizeBtn = Array.from(sizeButtons).find((btn) =>
       !btn.disabled && !btn.classList.contains("out-of-stock")
     )
@@ -71,9 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showAlert("warning", "Please select a size")
         highlightSizeSelection()
         return
-      }
-
-      // Check if selected variant is in stock
+      }
       const variant = window.productVariants.find((v) => v.size === selectedSize)
       if (!variant || variant.varientquatity === 0) {
         const availableVariants = getAvailableVariants()
@@ -177,9 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .then((data) => {
         showAlert("success", "Product added to cart successfully!")
-        updateCartCount(data.cartCount)
-
-        // Update header counts
+        updateCartCount(data.cartCount)
         if (typeof window.updateHeaderCounts === 'function') {
           window.updateHeaderCounts()
         }
@@ -228,9 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
           wishlistIcon.classList.remove("far")
           wishlistIcon.classList.add("fas")
           showAlert("success", "Product added to wishlist")
-        }
-
-        // Update header counts
+        }
         if (typeof window.updateHeaderCounts === 'function') {
           window.updateHeaderCounts()
         }

@@ -1,5 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Elements
+document.addEventListener("DOMContentLoaded", () => {
   const couponCodeInput = document.getElementById("couponCode")
   const applyCouponBtn = document.getElementById("applyCouponBtn")
   const viewAvailableCoupons = document.getElementById("viewAvailableCoupons")

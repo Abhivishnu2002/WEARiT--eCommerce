@@ -41,7 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let isPasswordValid = false
   let isConfirmPasswordValid = false
   let isTermsChecked = false
-  let isReferralValid = true 
+  let isReferralValid = true
+  let hasUserInteracted = false
+  let hasNameInteracted = false
+  let hasMobileInteracted = false
+  let formSubmitted = false
 
   function initializeValidation() {
     if (nameInput.value.trim()) validateName()
@@ -58,22 +62,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = nameInput.value.trim()
 
     if (!name) {
-      showFieldError(nameInput, nameError, "Full name is required")
-      updateValidationIcon("name", false)
+      if (formSubmitted || hasNameInteracted) {
+        showFieldError(nameInput, nameError, "Full name is required")
+        updateValidationIcon("name", false)
+      }
       isNameValid = false
       return false
     }
 
     if (name.length < 2) {
-      showFieldError(nameInput, nameError, "Name must be at least 2 characters long")
-      updateValidationIcon("name", false)
+      if (formSubmitted || hasNameInteracted) {
+        showFieldError(nameInput, nameError, "Name must be at least 2 characters long")
+        updateValidationIcon("name", false)
+      }
       isNameValid = false
       return false
     }
 
     if (!namePattern.test(name)) {
-      showFieldError(nameInput, nameError, "Name can only contain letters and spaces")
-      updateValidationIcon("name", false)
+      if (formSubmitted || hasNameInteracted) {
+        showFieldError(nameInput, nameError, "Name can only contain letters and spaces")
+        updateValidationIcon("name", false)
+      }
       isNameValid = false
       return false
     }
@@ -88,15 +98,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const email = emailInput.value.trim()
 
     if (!email) {
-      showFieldError(emailInput, emailError, "Email address is required")
-      updateValidationIcon("email", false)
+      if (formSubmitted || (hasUserInteracted && email.length > 0)) {
+        showFieldError(emailInput, emailError, "Email address is required")
+        updateValidationIcon("email", false)
+      }
       isEmailValid = false
       return false
     }
 
     if (!emailPattern.test(email)) {
-      showFieldError(emailInput, emailError, "Please enter a valid email address")
-      updateValidationIcon("email", false)
+      if (formSubmitted || (hasUserInteracted && email.length > 0)) {
+        showFieldError(emailInput, emailError, "Please enter a valid email address")
+        updateValidationIcon("email", false)
+      }
       isEmailValid = false
       return false
     }
@@ -111,15 +125,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const mobile = mobileInput.value.trim()
 
     if (!mobile) {
-      showFieldError(mobileInput, mobileError, "Mobile number is required")
-      updateValidationIcon("mobile", false)
+      if (formSubmitted || hasMobileInteracted) {
+        showFieldError(mobileInput, mobileError, "Mobile number is required")
+        updateValidationIcon("mobile", false)
+      }
       isMobileValid = false
       return false
     }
 
     if (!mobilePattern.test(mobile)) {
-      showFieldError(mobileInput, mobileError, "Please enter a valid 10-digit mobile number")
-      updateValidationIcon("mobile", false)
+      if (formSubmitted || hasMobileInteracted) {
+        showFieldError(mobileInput, mobileError, "Please enter a valid 10-digit mobile number")
+        updateValidationIcon("mobile", false)
+      }
       isMobileValid = false
       return false
     }
@@ -215,68 +233,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showFieldError(input, errorContainer, message) {
     input.classList.add("is-invalid")
-    input.classList.remove("is-valid")
+    input.classList.remove("is-valid")
+    const inputGroup = input.closest('.input-group')
+    if (inputGroup) {
+      inputGroup.style.borderColor = '#ef4444'
+      inputGroup.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)'
+    }
+
     errorContainer.textContent = message
     errorContainer.style.display = "block"
-
-    input.style.animation = "shake 0.5s ease-in-out"
+    errorContainer.classList.add("show")
+    errorContainer.style.opacity = '0'
+    errorContainer.style.transform = 'translateY(-10px)'
+    setTimeout(() => {
+      errorContainer.style.transition = 'all 0.3s ease'
+      errorContainer.style.opacity = '1'
+      errorContainer.style.transform = 'translateY(0)'
+    }, 10)
+    input.style.animation = "modernShake 0.4s ease-in-out"
     setTimeout(() => {
       input.style.animation = ""
-    }, 500)
+    }, 400)
   }
 
   function hideFieldError(input, errorContainer) {
     input.classList.remove("is-invalid")
-    input.classList.add("is-valid")
-    errorContainer.textContent = ""
-    errorContainer.style.display = "none"
+    input.classList.add("is-valid")
+    const inputGroup = input.closest('.input-group')
+    if (inputGroup) {
+      inputGroup.style.borderColor = '#198754'
+      inputGroup.style.boxShadow = '0 0 0 3px rgba(25, 135, 84, 0.1)'
+      setTimeout(() => {
+        inputGroup.style.borderColor = ''
+        inputGroup.style.boxShadow = ''
+      }, 2000)
+    }
+    errorContainer.style.transition = 'all 0.3s ease'
+    errorContainer.style.opacity = '0'
+    errorContainer.style.transform = 'translateY(-10px)'
+
+    setTimeout(() => {
+      errorContainer.textContent = ""
+      errorContainer.style.display = "none"
+      errorContainer.classList.remove("show")
+      errorContainer.style.transition = ''
+    }, 300)
   }
 
   function updateValidationIcon(field, isValid) {
-    if (field === "name") {
-      if (isValid === true) {
-        nameValid.classList.remove("d-none")
-        nameInvalid.classList.add("d-none")
-      } else if (isValid === false) {
-        nameValid.classList.add("d-none")
-        nameInvalid.classList.remove("d-none")
-      } else {
-        nameValid.classList.add("d-none")
-        nameInvalid.classList.add("d-none")
-      }
-    } else if (field === "email") {
-      if (isValid === true) {
-        emailValid.classList.remove("d-none")
-        emailInvalid.classList.add("d-none")
-      } else if (isValid === false) {
-        emailValid.classList.add("d-none")
-        emailInvalid.classList.remove("d-none")
-      } else {
-        emailValid.classList.add("d-none")
-        emailInvalid.classList.add("d-none")
-      }
-    } else if (field === "mobile") {
-      if (isValid === true) {
-        mobileValid.classList.remove("d-none")
-        mobileInvalid.classList.add("d-none")
-      } else if (isValid === false) {
-        mobileValid.classList.add("d-none")
-        mobileInvalid.classList.remove("d-none")
-      } else {
-        mobileValid.classList.add("d-none")
-        mobileInvalid.classList.add("d-none")
-      }
-    } else if (field === "referral") {
-      if (isValid === true) {
-        referralValid.classList.remove("d-none")
-        referralInvalid.classList.add("d-none")
-      } else if (isValid === false) {
-        referralValid.classList.add("d-none")
-        referralInvalid.classList.remove("d-none")
-      } else {
-        referralValid.classList.add("d-none")
-        referralInvalid.classList.add("d-none")
-      }
+    const icons = {
+      name: { valid: nameValid, invalid: nameInvalid },
+      email: { valid: emailValid, invalid: emailInvalid },
+      mobile: { valid: mobileValid, invalid: mobileInvalid },
+      referral: { valid: referralValid, invalid: referralInvalid }
+    }
+
+    const fieldIcons = icons[field]
+    if (!fieldIcons) return
+
+    if (isValid === true) {
+      fieldIcons.valid.classList.remove("d-none")
+      fieldIcons.invalid.classList.add("d-none")
+      fieldIcons.valid.style.animation = "bounceIn 0.5s ease"
+      setTimeout(() => {
+        fieldIcons.valid.style.animation = ""
+      }, 500)
+    } else if (isValid === false) {
+      fieldIcons.valid.classList.add("d-none")
+      fieldIcons.invalid.classList.remove("d-none")
+      fieldIcons.invalid.style.animation = "bounceIn 0.5s ease"
+      setTimeout(() => {
+        fieldIcons.invalid.style.animation = ""
+      }, 500)
+    } else {
+      fieldIcons.valid.classList.add("d-none")
+      fieldIcons.invalid.classList.add("d-none")
     }
   }
   function checkPasswordStrength(password) {
@@ -307,21 +338,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   function updatePasswordStrengthIndicator(strength) {
     passwordStrength.classList.remove("d-none")
-    const percentage = (strength.score / 5) * 100
-    passwordStrengthBar.style.width = `${percentage}%`
+    const percentage = (strength.score / 5) * 100
+    passwordStrengthBar.style.transition = 'width 0.5s ease, background-color 0.3s ease'
+    passwordStrengthBar.style.width = `${percentage}%`
     if (strength.score < 2) {
-      passwordStrengthBar.className = "progress-bar bg-danger"
+      passwordStrengthBar.className = "progress-bar"
+      passwordStrengthBar.style.backgroundColor = '#ef4444'
+      passwordStrengthText.style.color = '#ef4444'
     } else if (strength.score < 3) {
-      passwordStrengthBar.className = "progress-bar bg-warning"
+      passwordStrengthBar.className = "progress-bar"
+      passwordStrengthBar.style.backgroundColor = '#f59e0b'
+      passwordStrengthText.style.color = '#f59e0b'
     } else if (strength.score < 4) {
-      passwordStrengthBar.className = "progress-bar bg-info"
+      passwordStrengthBar.className = "progress-bar"
+      passwordStrengthBar.style.backgroundColor = '#3b82f6'
+      passwordStrengthText.style.color = '#3b82f6'
     } else {
-      passwordStrengthBar.className = "progress-bar bg-success"
-    }
-    passwordStrengthText.textContent = strength.message
+      passwordStrengthBar.className = "progress-bar"
+      passwordStrengthBar.style.backgroundColor = '#10b981'
+      passwordStrengthText.style.color = '#10b981'
+    }
+    passwordStrengthText.style.transition = 'color 0.3s ease'
+    passwordStrengthText.textContent = strength.message
+    passwordStrengthBar.style.animation = 'strengthPulse 0.3s ease'
+    setTimeout(() => {
+      passwordStrengthBar.style.animation = ''
+    }, 300)
   }
   nameInput.addEventListener("input", function () {
     if (this.value.trim()) {
+      hasNameInteracted = true
       validateName()
     } else {
       this.classList.remove("is-valid", "is-invalid")
@@ -332,10 +378,16 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSubmitButton()
   })
 
-  nameInput.addEventListener("blur", validateName)
+  nameInput.addEventListener("blur", function() {
+    if (this.value.trim()) {
+      hasNameInteracted = true
+      validateName()
+    }
+  })
 
   emailInput.addEventListener("input", function () {
     if (this.value.trim()) {
+      hasUserInteracted = true
       validateEmail()
     } else {
       this.classList.remove("is-valid", "is-invalid")
@@ -346,10 +398,16 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSubmitButton()
   })
 
-  emailInput.addEventListener("blur", validateEmail)
+  emailInput.addEventListener("blur", function() {
+    if (this.value.trim()) {
+      hasUserInteracted = true
+      validateEmail()
+    }
+  })
 
   mobileInput.addEventListener("input", function () {
     if (this.value.trim()) {
+      hasMobileInteracted = true
       validateMobile()
     } else {
       this.classList.remove("is-valid", "is-invalid")
@@ -360,7 +418,12 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSubmitButton()
   })
 
-  mobileInput.addEventListener("blur", validateMobile)
+  mobileInput.addEventListener("blur", function() {
+    if (this.value.trim()) {
+      hasMobileInteracted = true
+      validateMobile()
+    }
+  })
 
   passwordInput.addEventListener("input", function () {
     if (this.value) {
@@ -449,6 +512,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   signupForm.addEventListener("submit", (e) => {
     e.preventDefault()
+    formSubmitted = true
+    hasUserInteracted = true
+    hasNameInteracted = true
+    hasMobileInteracted = true
     const validations = [
       validateName(),
       validateEmail(),
@@ -594,9 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const errorElement = document.getElementById(field + "Error")
                 if (input && errorElement) {
                   showFieldError(input, errorElement, message)
-                  updateValidationIcon(field, false)
-
-                  // Update validation state
+                  updateValidationIcon(field, false)
                   if (field === "name") isNameValid = false
                   if (field === "email") isEmailValid = false
                   if (field === "mobile") isMobileValid = false
@@ -695,10 +760,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const style = document.createElement("style")
   style.textContent = `
-    @keyframes shake {
+    @keyframes modernShake {
         0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
+        25% { transform: translateX(-3px); }
+        75% { transform: translateX(3px); }
+    }
+
+    @keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.3);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        70% {
+            transform: scale(0.9);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes strengthPulse {
+        0% { transform: scaleY(1); }
+        50% { transform: scaleY(1.1); }
+        100% { transform: scaleY(1); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
     }
 
     .animated {
@@ -719,6 +825,99 @@ document.addEventListener("DOMContentLoaded", () => {
             opacity: 1;
             transform: translate3d(0, 0, 0);
         }
+    }
+
+    .invalid-feedback {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #dc2626;
+        font-weight: 500;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .invalid-feedback::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #dc2626;
+    }
+
+    .invalid-feedback.show {
+        animation: slideInDown 0.3s ease;
+    }
+
+    .form-control.is-valid {
+        border-color: #10b981;
+        background-image: none;
+    }
+
+    .form-control.is-invalid {
+        border-color: #ef4444;
+        background-image: none;
+    }
+
+    .input-group:focus-within {
+        transform: translateY(-1px);
+        transition: all 0.3s ease;
+    }
+
+    .auth-btn:hover:not(:disabled) {
+        animation: pulse 0.3s ease;
+    }
+
+    .auth-btn:disabled {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .auth-btn:disabled::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    .password-strength {
+        margin-top: 0.75rem;
+    }
+
+    .progress {
+        height: 6px;
+        border-radius: 3px;
+        background-color: #f3f4f6;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        border-radius: 3px;
+        transition: all 0.5s ease;
+    }
+
+    .form-check-input:checked {
+        background-color: #000;
+        border-color: #000;
+    }
+
+    .form-check-input:focus {
+        border-color: #000;
+        box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.25);
     }
 
     .opacity-50 {

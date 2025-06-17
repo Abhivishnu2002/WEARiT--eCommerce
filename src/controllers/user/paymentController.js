@@ -12,7 +12,6 @@ const PriceCalculator = require("../../utils/priceCalculator")
 
 const priceCalculator = new PriceCalculator()
 
-// PayPal Configuration
 function getPayPalClient() {
   const clientId = process.env.PAYPAL_CLIENT_ID
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET
@@ -29,7 +28,6 @@ function getPayPalClient() {
   return new paypal.core.PayPalHttpClient(environment)
 }
 
-// Razorpay Configuration
 function getRazorpayClient() {
   const keyId = process.env.RAZORPAY_KEY_ID
   const keySecret = process.env.RAZORPAY_KEY_SECRET
@@ -60,7 +58,6 @@ function generateTransactionId(paymentMethod = "PAYMENT") {
     .padStart(4, "0")}`
 }
 
-// Enhanced error handling for Razorpay
 function parseRazorpayError(error) {
   const errorMappings = {
     BAD_REQUEST_ERROR: {
@@ -110,7 +107,6 @@ function parseRazorpayError(error) {
     },
   }
 
-  // Default error for unknown cases
   const defaultError = {
     message: "Payment failed due to an unknown error.",
     userMessage: "Payment failed. Please try again or contact support.",
@@ -122,7 +118,6 @@ function parseRazorpayError(error) {
   }
 
   if (error.message) {
-    // Check for common error patterns in message
     const message = error.message.toLowerCase()
     if (message.includes("insufficient")) {
       return errorMappings.INSUFFICIENT_FUNDS
@@ -141,7 +136,6 @@ function parseRazorpayError(error) {
   return defaultError
 }
 
-// Common order creation logic
 async function createOrderFromCart(userId, addressId, paymentMethod, req) {
   const cart = await Cart.findOne({ user: userId }).populate("products.product")
 
@@ -193,7 +187,6 @@ async function createOrderFromCart(userId, addressId, paymentMethod, req) {
   const shippingCharge = saleTotal >= 1000 ? 0 : 200
   const finalAmount = saleTotal - couponDiscount + shippingCharge
 
-  // Generate order ID
   const date = new Date()
   const year = date.getFullYear().toString().slice(-2)
   const month = ("0" + (date.getMonth() + 1)).slice(-2)
@@ -242,7 +235,6 @@ async function createOrderFromCart(userId, addressId, paymentMethod, req) {
   return order
 }
 
-// PayPal Payment Methods
 const createPaypalPayment = async (req, res) => {
   try {
     const { orderId, addressId } = req.body
@@ -273,7 +265,6 @@ const createPaypalPayment = async (req, res) => {
       })
     }
 
-    // Mark existing pending transactions as failed
     const existingTransaction = await Transaction.findOne({
       order: order._id,
       status: "pending",
@@ -398,7 +389,6 @@ const executePaypalPayment = async (req, res) => {
 
     const response = await paypalClient.execute(request)
     if (response.result.status === "COMPLETED") {
-      // Update stock
       const stockUpdateOperations = []
       for (const orderProduct of order.products) {
         const product = await Product.findById(orderProduct.product)
@@ -412,7 +402,6 @@ const executePaypalPayment = async (req, res) => {
       }
       await Promise.all(stockUpdateOperations)
 
-      // Update order
       order.paymentStatus = "completed"
       order.isTemporary = false
       order.paymentDetails = {
@@ -428,7 +417,6 @@ const executePaypalPayment = async (req, res) => {
 
       await order.save()
 
-      // Update transaction
       transaction.status = "completed"
       transaction.paymentDetails = transaction.paymentDetails || {}
       transaction.paymentDetails.payerId = PayerID
@@ -445,7 +433,6 @@ const executePaypalPayment = async (req, res) => {
 
       await transaction.save()
 
-      // Process coupon and clear cart
       if (order.coupon && order.coupon.couponId) {
         await couponController.processCouponUsage(req.user._id, order.coupon.couponId, order._id)
       }
@@ -531,7 +518,6 @@ const cancelPaypalPayment = async (req, res) => {
   }
 }
 
-// Razorpay Payment Methods
 const createRazorpayOrder = async (req, res) => {
   try {
     const { orderId, addressId } = req.body
@@ -540,7 +526,6 @@ const createRazorpayOrder = async (req, res) => {
     let order
 
     if (orderId) {
-      // Retry payment scenario
       order = await Order.findOne({
         _id: orderId,
         user: userId,
@@ -555,7 +540,6 @@ const createRazorpayOrder = async (req, res) => {
         })
       }
     } else if (addressId) {
-      // New order scenario
       order = await createOrderFromCart(userId, addressId, "razorpay", req)
     } else {
       return res.status(400).json({
@@ -565,7 +549,6 @@ const createRazorpayOrder = async (req, res) => {
       })
     }
 
-    // Mark any existing pending transactions as failed
     const existingTransaction = await Transaction.findOne({
       order: order._id,
       status: "pending",
@@ -578,7 +561,6 @@ const createRazorpayOrder = async (req, res) => {
       await existingTransaction.save()
     }
 
-    // Create Razorpay order
     const razorpayClient = getRazorpayClient()
     const amountInPaise = Math.round(order.finalAmount * 100)
 
@@ -592,7 +574,6 @@ const createRazorpayOrder = async (req, res) => {
       },
     })
 
-    // Create transaction record
     const transactionId = generateTransactionId("RAZORPAY")
     await Transaction.create({
       user: userId,
@@ -654,7 +635,6 @@ const verifyRazorpayPayment = async (req, res) => {
       })
     }
 
-    // Verify signature
     const body = razorpay_order_id + "|" + razorpay_payment_id
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -671,7 +651,6 @@ const verifyRazorpayPayment = async (req, res) => {
       })
     }
 
-    // Find order and transaction
     order = await Order.findOne({
       _id: orderId,
       user: req.user._id,
@@ -709,12 +688,10 @@ const verifyRazorpayPayment = async (req, res) => {
       await transaction.save()
     }
 
-    // Verify payment with Razorpay
     const razorpayClient = getRazorpayClient()
     const payment = await razorpayClient.payments.fetch(razorpay_payment_id)
 
     if (payment.status === "captured") {
-      // Update stock
       const stockUpdateOperations = []
       for (const orderProduct of order.products) {
         const product = await Product.findById(orderProduct.product)
@@ -728,7 +705,6 @@ const verifyRazorpayPayment = async (req, res) => {
       }
       await Promise.all(stockUpdateOperations)
 
-      // Update order
       order.paymentStatus = "completed"
       order.isTemporary = false
       order.paymentDetails = {
@@ -745,7 +721,6 @@ const verifyRazorpayPayment = async (req, res) => {
 
       await order.save()
 
-      // Update transaction
       transaction.status = "completed"
       transaction.paymentDetails = {
         ...transaction.paymentDetails,
@@ -757,15 +732,12 @@ const verifyRazorpayPayment = async (req, res) => {
 
       await transaction.save()
 
-      // Process coupon usage only if not already processed
       if (order.coupon && order.coupon.couponId && !order.couponProcessed) {
         await couponController.processCouponUsage(req.user._id, order.coupon.couponId, order._id)
         order.couponProcessed = true
         await order.save()
       }
 
-      // Only clear cart for new orders, not retry payments
-      // Check if this is a retry payment by looking at order creation time vs current time
       const orderAge = Date.now() - new Date(order.orderDate).getTime()
       const isRetryPayment = orderAge > 60000 // If order is older than 1 minute, it's likely a retry
 
@@ -787,7 +759,6 @@ const verifyRazorpayPayment = async (req, res) => {
         redirectUrl: `/order-success/${order._id}`,
       })
     } else {
-      // Payment failed - parse the error for better user experience
       const errorInfo = parseRazorpayError({
         error: { code: payment.error_code, description: payment.error_description },
       })
@@ -869,7 +840,6 @@ const handleRazorpayFailure = async (req, res) => {
       order.failureReason = parsedError.message
       await order.save()
 
-      // Update transaction if exists
       const transaction = await Transaction.findOne({
         order: orderId,
         status: "pending",
@@ -965,7 +935,6 @@ const razorpayFailure = async (req, res) => {
   }
 }
 
-// Unified Retry Payment Method
 const retryPayment = async (req, res) => {
   try {
     const orderId = req.params.id
@@ -976,6 +945,9 @@ const retryPayment = async (req, res) => {
       _id: orderId,
       user: req.user._id,
       paymentStatus: { $in: ["pending", "failed"] },
+    }).populate({
+      path: "products.product",
+      select: "name variants isActive",
     })
 
     if (!order) {
@@ -983,6 +955,64 @@ const retryPayment = async (req, res) => {
         success: false,
         message: "Order not found or already paid",
         errorCode: "ORDER_NOT_FOUND",
+      })
+    }
+
+    const stockIssues = []
+    const unavailableProducts = []
+
+    for (const item of order.products) {
+      const product = item.product
+
+      if (!product || !product.isActive) {
+        unavailableProducts.push({
+          productName: item.productName || "Unknown Product",
+          size: item.variant.size,
+          reason: "Product no longer available",
+        })
+        continue
+      }
+
+      const variant = product.variants.find((v) => v.size === item.variant.size)
+      if (!variant) {
+        stockIssues.push({
+          productName: product.name,
+          size: item.variant.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          isPartialStock: false,
+        })
+        continue
+      }
+
+      if (variant.varientquatity === 0) {
+        stockIssues.push({
+          productName: product.name,
+          size: item.variant.size,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          isPartialStock: false,
+        })
+      } else if (variant.varientquatity < item.quantity) {
+        stockIssues.push({
+          productName: product.name,
+          size: item.variant.size,
+          requestedQuantity: item.quantity,
+          availableStock: variant.varientquatity,
+          isPartialStock: true,
+        })
+      }
+    }
+
+    if (stockIssues.length > 0 || unavailableProducts.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Stock validation failed",
+        errorCode: "STOCK_VALIDATION_FAILED",
+        hasStockIssues: stockIssues.length > 0,
+        hasUnavailableProducts: unavailableProducts.length > 0,
+        stockIssues,
+        unavailableProducts,
       })
     }
 
@@ -999,13 +1029,11 @@ const retryPayment = async (req, res) => {
 
     if (paymentMethod && ["online", "paypal", "razorpay", "wallet", "COD"].includes(paymentMethod)) {
       order.paymentMethod = paymentMethod
-      // Clear previous failure reason when retrying
       order.failureReason = null
       await order.save()
     }
 
     if (order.paymentMethod === "paypal") {
-      // Handle PayPal retry
       const existingTransaction = await Transaction.findOne({
         order: order._id,
         status: "pending",
@@ -1069,7 +1097,6 @@ const retryPayment = async (req, res) => {
         paypalOrderId: response.result.id,
       })
     } else if (order.paymentMethod === "razorpay") {
-      // Handle Razorpay retry
       const existingTransaction = await Transaction.findOne({
         order: order._id,
         status: "pending",

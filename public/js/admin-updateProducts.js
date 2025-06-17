@@ -19,9 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (e) {
     
-  }
-
-    // Track deleted images
+  }
     let deletedImages = []
     const cropperModalEl = document.getElementById("imageCropperModal")
     const cropperModal = new bootstrap.Modal(cropperModalEl)
@@ -145,9 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
       removeBtnElement.addEventListener("click", (e) => {
         e.preventDefault()
-        e.stopPropagation()
-
-        // Track the deleted image URL
+        e.stopPropagation()
         if (oldImageInput && oldImageInput.value) {
           deletedImages.push(oldImageInput.value)
           }
@@ -378,8 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
           isValid = false
         }
 
-        if (isValid) {
-          // Add deleted images data to form before submission
+        if (isValid) {
           const deletedImagesInput = document.createElement("input")
           deletedImagesInput.type = "hidden"
           deletedImagesInput.name = "deletedImages"

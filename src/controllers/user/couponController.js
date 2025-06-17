@@ -399,21 +399,15 @@ const processCouponUsage = async (userId, couponId, orderId) => {
     if (!couponId) return { success: true, message: "No coupon to process" }
 
     const coupon = await Coupon.findById(couponId)
-    if (!coupon) return { success: false, message: "Coupon not found" }
-
-    // Increment coupon usage count
-    coupon.usedCount += 1
-
-    // Check if coupon should be auto-expired
+    if (!coupon) return { success: false, message: "Coupon not found" }
+    coupon.usedCount += 1
     let isExpired = false
     if (coupon.autoExpire && coupon.usedCount >= coupon.usageLimit) {
       coupon.isActive = false
       isExpired = true
     }
 
-    await coupon.save()
-
-    // Update or create user coupon record
+    await coupon.save()
     const userCoupon = await UserCoupon.findOne({ user: userId, coupon: couponId })
 
     if (userCoupon) {

@@ -85,14 +85,10 @@ router.post("/checkout/apply-coupon", ensureAuthenticated, couponController.appl
 router.post("/checkout/remove-coupon", ensureAuthenticated, couponController.removeCoupon)
 router.get("/checkout/session-coupon", ensureAuthenticated, couponController.getSessionCoupon)
 router.get("/payment", ensureAuthenticated, checkoutController.loadPayment)
-router.post("/checkout/place-order", ensureAuthenticated, checkoutController.placeOrder)
-
-// PayPal Payment Routes
+router.post("/checkout/place-order", ensureAuthenticated, checkoutController.placeOrder)
 router.post("/payment/paypal/create", ensureAuthenticated, paymentController.createPaypalPayment)
 router.get("/payment/paypal/success", ensureAuthenticated, paymentController.executePaypalPayment)
-router.get("/payment/paypal/cancel", ensureAuthenticated, paymentController.cancelPaypalPayment)
-
-// Razorpay Payment Routes
+router.get("/payment/paypal/cancel", ensureAuthenticated, paymentController.cancelPaypalPayment)
 router.post("/payment/razorpay/create", ensureAuthenticated, paymentController.createRazorpayOrder)
 router.post("/payment/razorpay/verify", ensureAuthenticated, paymentController.verifyRazorpayPayment)
 router.post("/payment/razorpay/failure", ensureAuthenticated, paymentController.handleRazorpayFailure)
@@ -101,6 +97,7 @@ router.get("/payment/razorpay/failure", ensureAuthenticated, paymentController.r
 
 router.get("/order-success/:id", ensureAuthenticated, orderController.orderSuccess)
 router.get("/order-failure/:id", ensureAuthenticated, orderController.orderFailure)
+router.get("/order/check-stock/:id", ensureAuthenticated, orderController.checkOrderStock)
 router.post("/order/retry-payment/:id", ensureAuthenticated, paymentController.retryPayment)
 
 router.get("/profile/orders", ensureAuthenticated, orderController.getOrdersPage)
