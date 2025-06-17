@@ -32,7 +32,7 @@ passport.use(new LocalStrategy(
     }
 ))
 
-const callbackURL = process.env.NODE_ENV === 'production' ? 'https://www.wearitclothing.store/google/callback': 'http://localhost:3000/google/callback';
+const callbackURL = 'https://www.wearitclothing.store/google/callback'
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
