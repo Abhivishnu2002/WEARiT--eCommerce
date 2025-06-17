@@ -13,10 +13,24 @@ const PriceCalculator = require("../../utils/priceCalculator")
 const priceCalculator = new PriceCalculator()
 
 function getPayPalClient() {
-  const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET
+  // Fallback to hardcoded values if environment variables are not available
+  const clientId = process.env.PAYPAL_CLIENT_ID || "AdtZwCOrsHseqwIn1TNja60cn6WQrE-imJ53W1HwjBZND7TGbRqwH_z3ym4eWa1jV87wOyUAOIV6nvei"
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET || "EM2d1MgShWBV4608IgyXQsB2aEuQYJHnIms8wdUTFo3dWNUSkpUzSr73uUEz3Ll6JC-z1TCSnd7mFdzg"
+
+  console.error("PayPal credentials check:", {
+    hasClientId: !!clientId,
+    clientIdLength: clientId ? clientId.length : 0,
+    hasClientSecret: !!clientSecret,
+    clientSecretLength: clientSecret ? clientSecret.length : 0,
+    nodeEnv: process.env.NODE_ENV,
+    usingFallback: !process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET
+  })
 
   if (!clientId || !clientSecret) {
+    console.error("PayPal credentials missing:", {
+      PAYPAL_CLIENT_ID: clientId ? "SET" : "MISSING",
+      PAYPAL_CLIENT_SECRET: clientSecret ? "SET" : "MISSING"
+    })
     throw new Error("PayPal credentials are missing")
   }
 
@@ -24,6 +38,8 @@ function getPayPalClient() {
     process.env.NODE_ENV === "production"
       ? new paypal.core.LiveEnvironment(clientId, clientSecret)
       : new paypal.core.SandboxEnvironment(clientId, clientSecret)
+
+  console.error("PayPal environment:", process.env.NODE_ENV === "production" ? "LIVE" : "SANDBOX")
 
   return new paypal.core.PayPalHttpClient(environment)
 }
@@ -43,13 +59,40 @@ function getRazorpayClient() {
 }
 
 function getBaseUrl(req) {
-  if (process.env.BASE_URL && process.env.BASE_URL !== "undefined") {
-    return process.env.BASE_URL
+  // If BASE_URL is explicitly set and not undefined, use it
+  if (process.env.BASE_URL && process.env.BASE_URL !== "undefined" && process.env.BASE_URL.trim() !== "") {
+    console.error("Using BASE_URL from environment:", process.env.BASE_URL)
+    return process.env.BASE_URL.trim()
   }
 
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol
-  const host = req.headers["x-forwarded-host"] || req.get("host")
-  return `${protocol}://${host}`
+  // Auto-detect from request headers (for hosted environments)
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https"
+  const host = req.headers["x-forwarded-host"] || req.headers.host || req.get("host")
+
+  // Special handling for known hosting platforms
+  let baseUrl = `${protocol}://${host}`
+
+  // If we detect localhost, but we're in a hosted environment, use a fallback
+  if (host && host.includes('localhost') && req.headers['x-forwarded-host']) {
+    baseUrl = `https://${req.headers['x-forwarded-host']}`
+  }
+
+  // Additional fallback for common hosting platforms
+  if (host && host.includes('localhost')) {
+    // If we're getting localhost in any environment, use the known hosted domain
+    baseUrl = "https://www.wearitclothing.store"
+    console.error("Localhost detected, using fallback domain:", baseUrl)
+  }
+
+  console.error("Auto-detected BASE_URL:", {
+    protocol,
+    host,
+    'x-forwarded-host': req.headers['x-forwarded-host'],
+    'x-forwarded-proto': req.headers['x-forwarded-proto'],
+    finalBaseUrl: baseUrl
+  })
+
+  return baseUrl
 }
 
 function generateTransactionId(paymentMethod = "PAYMENT") {
@@ -240,6 +283,13 @@ const createPaypalPayment = async (req, res) => {
     console.error("PayPal payment creation started:", {
       body: req.body,
       userId: req.user._id
+    })
+
+    // Validate environment variables
+    console.error("Environment variables check:", {
+      PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID ? "SET" : "MISSING",
+      PAYPAL_CLIENT_SECRET: process.env.PAYPAL_CLIENT_SECRET ? "SET" : "MISSING",
+      NODE_ENV: process.env.NODE_ENV || "undefined"
     })
 
     const { orderId, addressId } = req.body
@@ -1160,6 +1210,17 @@ const retryPayment = async (req, res) => {
     }
 
     if (order.paymentMethod === "paypal") {
+      console.error("PayPal retry payment started:", {
+        orderId: order._id,
+        baseUrl: baseUrl,
+        headers: {
+          host: req.headers.host,
+          'x-forwarded-host': req.headers['x-forwarded-host'],
+          'x-forwarded-proto': req.headers['x-forwarded-proto'],
+          protocol: req.protocol
+        }
+      })
+
       const existingTransaction = await Transaction.findOne({
         order: order._id,
         status: "pending",
@@ -1177,6 +1238,8 @@ const retryPayment = async (req, res) => {
       const amountUSD = (order.finalAmount / 75).toFixed(2)
       const returnUrl = `${baseUrl}/payment/paypal/success?orderId=${order._id}`
       const cancelUrl = `${baseUrl}/payment/paypal/cancel?orderId=${order._id}`
+
+      console.error("PayPal retry URLs:", { baseUrl, returnUrl, cancelUrl })
 
       request.prefer("return=representation")
       request.requestBody({
