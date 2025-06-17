@@ -1,189 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>WEARiT - My Addresses</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <link rel="stylesheet" href="/css/navbar.css" />
-        <link rel="stylesheet" href="/css/address.css" />
-    </head>
-    <body class="address-page">
-        <%- include('../partials/header') %>
-
-        <!-- Breadcrumb -->
-        <%- include('../partials/breadcrumb', {
-            breadcrumbs: [
-                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
-                { name: 'My Addresses', icon: 'fa-solid fa-location-dot' }
-            ]
-        }) %>
-
-        <main class="main-content">
-            <div class="container-fluid address-container">
-                <div class="row">
-                <div class="col-lg-3 col-md-4">
-                    <%- include('../partials/navbar', { activePage: 'addresses',
-                    user: user }) %>
-                </div>
-                <div class="col-lg-9 col-md-8">
-                    <div class="address-content">
-                        <div class="address-header">
-                            <h2 class="address-title">Delivery Addresses</h2>
-                            <div class="address-actions">
-                                <a
-                                    href="/profile/addresses/add"
-                                    class="btn btn-dark add-address-btn"
-                                >
-                                    <i class="fas fa-plus me-2"></i> Add New
-                                    Address
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="address-list">
-                            <% if (addresses && addresses.length > 0) { %>
-                            <div class="row">
-                                <% addresses.forEach(address => { %>
-                                <div class="col-lg-6 mb-4">
-                                    <div
-                                        class="address-card <%= address.isDefault ? 'default-address' : '' %>"
-                                    >
-                                        <% if (address.isDefault) { %>
-                                        <div class="default-badge">Default</div>
-                                        <% } %>
-                                        <div class="address-card-header">
-                                            <h3 class="address-name">
-                                                <%= address.name %>
-                                            </h3>
-                                            <div class="address-actions">
-                                                <a
-                                                    href="/profile/addresses/edit/<%= address._id %>"
-                                                    class="edit-btn"
-                                                    title="Edit Address"
-                                                >
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="address-details">
-                                            <p class="address-line">
-                                                <%= address.address %>
-                                            </p>
-                                            <p class="address-city-state">
-                                                <%= address.city %>, <%=
-                                                address.state %> - <%=
-                                                address.pincode %>
-                                            </p>
-                                            <p class="address-country">
-                                                Kerala, India
-                                            </p>
-                                            <p class="address-mobile">
-                                                Mobile: <%= address.mobile %>
-                                            </p>
-                                        </div>
-                                        <div class="address-card-footer">
-                                            <% if (!address.isDefault) { %>
-                                            <a
-                                                href="/profile/addresses/set-default/<%= address._id %>"
-                                                class="btn btn-outline-dark btn-sm make-default-btn"
-                                            >
-                                                Make Default
-                                            </a>
-                                            <% } %>
-                                            <button
-                                                class="btn btn-danger btn-sm delete-address-btn"
-                                                data-address-id="<%= address._id %>"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <% }); %>
-                            </div>
-                            <% } else { %>
-                            <div class="no-address-container">
-                                <div class="no-address-message">
-                                    <i
-                                        class="fas fa-map-marker-alt fa-3x mb-3"
-                                    ></i>
-                                    <h3>No Saved Addresses</h3>
-                                    <p>
-                                        You don't have any saved addresses yet.
-                                        Add a new address to make checkout
-                                        faster.
-                                    </p>
-                                    <a
-                                        href="/profile/addresses/add"
-                                        class="btn btn-dark mt-3"
-                                        >Add New Address</a
-                                    >
-                                </div>
-                            </div>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div
-            class="modal fade"
-            id="deleteAddressModal"
-            tabindex="-1"
-            aria-labelledby="deleteAddressModalLabel"
-            aria-hidden="true"
-        >
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteAddressModalLabel">
-                            Confirm Delete
-                        </h5>
-                        <button
-                            type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to delete this address?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-danger"
-                            id="confirmDeleteBtn"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <% if(typeof messages !== 'undefined') { %> <% if(messages.success_msg)
-        { %>
-        <div class="alert-float alert-success"><%= messages.success_msg %></div>
-        <% } %> <% if(messages.error_msg) { %>
-        <div class="alert-float alert-danger"><%= messages.error_msg %></div>
-        <% } %> <% } %> <%- include('../partials/footer') %>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="/js/address.js"></script>
-    </body>
-</html>
+<!DOCTYPE html><html lang="en">    <head>        <meta charset="UTF-8" />        <meta name="viewport" content="width=device-width, initial-scale=1.0" />        <title>WEARiT - My Addresses</title>        <link            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"            rel="stylesheet"        />        <link            rel="stylesheet"            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"        />        <link rel="stylesheet" href="/css/navbar.css" />        <link rel="stylesheet" href="/css/address.css" />    </head>    <body class="address-page">        <%- include('../partials/header') %>        <%- include('../partials/breadcrumb', {            breadcrumbs: [                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },                { name: 'My Addresses', icon: 'fa-solid fa-location-dot' }            ]        }) %>        <main class="main-content">            <div class="container-fluid address-container">                <div class="row">                <div class="col-lg-3 col-md-4">                    <%- include('../partials/navbar', { activePage: 'addresses',                    user: user }) %>                </div>                <div class="col-lg-9 col-md-8">                    <div class="address-content">                        <div class="address-header">                            <h2 class="address-title">Delivery Addresses</h2>                            <div class="address-actions">                                <a                                    href="/profile/addresses/add"                                    class="btn btn-dark add-address-btn"                                >                                    <i class="fas fa-plus me-2"></i> Add New                                    Address                                </a>                            </div>                        </div>                        <div class="address-list">                            <% if (addresses && addresses.length > 0) { %>                            <div class="row">                                <% addresses.forEach(address => { %>                                <div class="col-lg-6 mb-4">                                    <div                                        class="address-card <%= address.isDefault ? 'default-address' : '' %>"                                    >                                        <% if (address.isDefault) { %>                                        <div class="default-badge">Default</div>                                        <% } %>                                        <div class="address-card-header">                                            <h3 class="address-name">                                                <%= address.name %>                                            </h3>                                            <div class="address-actions">                                                <a                                                    href="/profile/addresses/edit/<%= address._id %>"                                                    class="edit-btn"                                                    title="Edit Address"                                                >                                                    <i class="fas fa-edit"></i>                                                </a>                                            </div>                                        </div>                                        <div class="address-details">                                            <p class="address-line">                                                <%= address.address %>                                            </p>                                            <p class="address-city-state">                                                <%= address.city %>, <%=                                                address.state %> - <%=                                                address.pincode %>                                            </p>                                            <p class="address-country">                                                Kerala, India                                            </p>                                            <p class="address-mobile">                                                Mobile: <%= address.mobile %>                                            </p>                                        </div>                                        <div class="address-card-footer">                                            <% if (!address.isDefault) { %>                                            <a                                                href="/profile/addresses/set-default/<%= address._id %>"                                                class="btn btn-outline-dark btn-sm make-default-btn"                                            >                                                Make Default                                            </a>                                            <% } %>                                            <button                                                class="btn btn-danger btn-sm delete-address-btn"                                                data-address-id="<%= address._id %>"                                            >                                                Delete                                            </button>                                        </div>                                    </div>                                </div>                                <% }); %>                            </div>                            <% } else { %>                            <div class="no-address-container">                                <div class="no-address-message">                                    <i                                        class="fas fa-map-marker-alt fa-3x mb-3"                                    ></i>                                    <h3>No Saved Addresses</h3>                                    <p>                                        You don't have any saved addresses yet.                                        Add a new address to make checkout                                        faster.                                    </p>                                    <a                                        href="/profile/addresses/add"                                        class="btn btn-dark mt-3"                                        >Add New Address</a                                    >                                </div>                            </div>                            <% } %>                        </div>                    </div>                </div>            </div>        </div>        <div            class="modal fade"            id="deleteAddressModal"            tabindex="-1"            aria-labelledby="deleteAddressModalLabel"            aria-hidden="true"        >            <div class="modal-dialog modal-dialog-centered">                <div class="modal-content">                    <div class="modal-header">                        <h5 class="modal-title" id="deleteAddressModalLabel">                            Confirm Delete                        </h5>                        <button                            type="button"                            class="btn-close"                            data-bs-dismiss="modal"                            aria-label="Close"                        ></button>                    </div>                    <div class="modal-body">                        <p>Are you sure you want to delete this address?</p>                    </div>                    <div class="modal-footer">                        <button                            type="button"                            class="btn btn-secondary"                            data-bs-dismiss="modal"                        >                            Cancel                        </button>                        <button                            type="button"                            class="btn btn-danger"                            id="confirmDeleteBtn"                        >                            Delete                        </button>                    </div>                </div>            </div>        </div>        <% if(typeof messages !== 'undefined') { %> <% if(messages.success_msg)        { %>        <div class="alert-float alert-success"><%= messages.success_msg %></div>        <% } %> <% if(messages.error_msg) { %>        <div class="alert-float alert-danger"><%= messages.error_msg %></div>        <% } %> <% } %> <%- include('../partials/footer') %>        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>        <script src="/js/address.js"></script>    </body></html>

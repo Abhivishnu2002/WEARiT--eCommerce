@@ -1,363 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Products - WEARIT</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/header.css" />
-  <link rel="stylesheet" href="/css/footer.css" />
-  <link rel="stylesheet" href="/css/product.css" />
-</head>
-<body>
-  <%- include('../partials/header') %>
-
-  <div class="container-fluid px-0">
-    <!-- Category Navigation -->
-    <div class="category-nav">
-      <div class="container-fluid px-4">
-        <ul class="category-tabs">
-          <li class="<%= !filters.category ? 'active' : '' %>"><a href="/products">ALL SHIRTS</a></li>
-          <% if (categories && categories.length > 0) { %>
-            <% categories.forEach(category => { %>
-              <li class="<%= filters.category === category._id.toString() ? 'active' : '' %>">
-                <a href="/products?category=<%= category._id %>"><%= category.name.toUpperCase() %></a>
-              </li>
-            <% }); %>
-          <% } else { %>
-            <li><a href="/products?category=custom-made">CUSTOM-MADE</a></li>
-            <li><a href="/products?category=ready-to-ship">READY-TO-SHIP</a></li>
-          <% } %>
-        </ul>
-      </div>
-    </div>
-
-    <div class="container-fluid px-4">
-      <div class="products-header">
-        <h1 class="products-title">
-          <%= filters.category && categories ? (categories.find(c => c._id.toString() === filters.category)?.name || 'All Products') : 'All Shirts' %>
-          <% if (products && products.length > 0) { %>
-            <span class="product-count"><%= totalProducts %> Products</span>
-          <% } %>
-        </h1>
-        <p class="products-description">
-          High-quality shirts for all your occasions.
-        </p>
-      </div>
-
-      <div class="products-controls">
-        <div class="view-options">
-          <button class="view-option" data-view="grid-2"><i class="bi bi-grid"></i></button>
-          <button class="view-option" data-view="grid-3"><i class="bi bi-grid-3x3"></i></button>
-          <button class="view-option active" data-view="grid-4"><i class="bi bi-grid-3x3-gap"></i></button>
-          <button class="view-option" data-view="list"><i class="bi bi-list"></i></button>
-        </div>
-        <div class="filter-sort-controls">
-          <button class="btn btn-sort" id="sortToggle">SORT</button>
-          <button class="btn btn-filter" id="filterToggle">FILTER</button>
-        </div>
-      </div>
-
-      <div class="row">
-        <!-- Products Grid -->
-        <div class="col-12 products-container">
-          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="productsGrid">
-            <% if (products && products.length > 0) { %>
-              <% products.forEach(product => { %>
-                <div class="col">
-                  <div class="product-card">
-                    <div class="product-image">
-                      <%
-                        const mainImageObj = product.images && product.images.find(img => img.isMain);
-                        const mainImageUrl = mainImageObj ? mainImageObj.url : '/images/placeholder.jpg';
-                        let discountPercentage = 0;
-                        if (product.variants && product.variants.length > 0) {
-                          const variant = product.variants[0];
-                          if (variant.varientPrice && variant.salePrice && variant.varientPrice > variant.salePrice) {
-                            discountPercentage = Math.round(((variant.varientPrice - variant.salePrice) / variant.varientPrice) * 100);
-                          }
-                        }
-                      %>
-                      <a href="/products/<%= product._id %>">
-                        <img src="<%= mainImageUrl %>" alt="<%= product.name %>" class="img-fluid">
-                      </a>
-                      <% if (discountPercentage > 0) { %>
-                        <div class="product-tag sale">-<%= discountPercentage %>%</div>
-                      <% } else if (product.isNew) { %>
-                        <div class="product-tag new">New</div>
-                      <% } %>
-                      <button class="wishlist-btn" data-product-id="<%= product._id %>" data-in-wishlist="false">
-                        <i class="bi bi-heart"></i>
-                      </button>
-                    </div>
-                    <div class="product-info">
-                      <h3 class="product-title">
-                        <a href="/products/<%= product._id %>"><%= product.name %></a>
-                      </h3>
-                      <p class="product-brand"><%= product.brand || 'Brand not available' %></p>
-                      <div class="product-price">
-                        <% if (product.variants && product.variants.length > 0) { %>
-                          <span class="current-price">₹<%= product.variants[0].salePrice %></span>
-                          <% if (product.variants[0].varientPrice && product.variants[0].varientPrice > product.variants[0].salePrice) { %>
-                            <span class="original-price">₹<%= product.variants[0].varientPrice %></span>
-                          <% } %>
-                        <% } else { %>
-                          <span class="current-price">₹<%= product.price || 'Price not available' %></span>
-                        <% } %>
-                      </div>
-                      <button class="add-to-cart-btn" data-product-id="<%= product._id %>">
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              <% }); %>
-            <% } else { %>
-              <div class="col-12 text-center py-5">
-                <div class="no-products-content">
-                  <i class="bi bi-search fs-1 mb-3"></i>
-                  <h3>No products found</h3>
-                  <p>Try adjusting your search or filter criteria</p>
-                  <a href="/products" class="btn btn-dark mt-3">View All Products</a>
-                </div>
-              </div>
-            <% } %>
-          </div>
-
-          <!-- Pagination -->
-          <% if (totalPages > 1) { %>
-            <div class="pagination-container">
-              <ul class="pagination">
-                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                  <a class="page-link" href="<%= getPaginationUrl(currentPage-1) %>" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                  </a>
-                </li>
-                <% 
-                  const maxVisiblePages = 5;
-                  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                  
-                  if (endPage - startPage + 1 < maxVisiblePages) {
-                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                  }
-                %>
-
-                <% if (startPage > 1) { %>
-                  <li class="page-item">
-                    <a class="page-link" href="<%= getPaginationUrl(1) %>">1</a>
-                  </li>
-                  <% if (startPage > 2) { %>
-                    <li class="page-item disabled">
-                      <span class="page-link">...</span>
-                    </li>
-                  <% } %>
-                <% } %>
-
-                <% for (let i = startPage; i <= endPage; i++) { %>
-                  <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                    <a class="page-link" href="<%= getPaginationUrl(i) %>"><%= i %></a>
-                  </li>
-                <% } %>
-
-                <% if (endPage < totalPages) { %>
-                  <% if (endPage < totalPages - 1) { %>
-                    <li class="page-item disabled">
-                      <span class="page-link">...</span>
-                    </li>
-                  <% } %>
-                  <li class="page-item">
-                    <a class="page-link" href="<%= getPaginationUrl(totalPages) %>"><%= totalPages %></a>
-                  </li>
-                <% } %>
-
-                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                  <a class="page-link" href="<%= getPaginationUrl(currentPage+1) %>" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          <% } %>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filter Sidebar (Hidden by default) -->
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
-  
-  <!-- Filter Sidebar -->
-  <div class="sidebar filter-sidebar" id="filterSidebar">
-    <div class="sidebar-header">
-      <h5>FILTERS</h5>
-      <a href="/products" class="btn-clear-all">CLEAR ALL</a>
-      <button type="button" class="btn-close" id="closeFilter" aria-label="Close"></button>
-    </div>
-
-    <div class="sidebar-body">
-      <form id="filterForm" action="/products" method="GET">
-        <input type="hidden" name="page" value="<%= currentPage %>" id="page-input">
-        <input type="hidden" name="sort" value="<%= filters.sort %>" id="sort-input">
-        
-        <!-- Search Filter -->
-        <div class="filter-section">
-          <h6>Search Products</h6>
-          <div class="filter-search mb-3">
-            <input type="text" class="form-control" placeholder="Search products..." name="search" value="<%= filters.search %>">
-          </div>
-        </div>
-
-        <!-- Pattern Filter -->
-        <div class="filter-section">
-          <h6>Pattern</h6>
-          <div class="filter-options">
-            <% if(fabrics && fabrics.length > 0) { %>
-              <% fabrics.forEach(fabric => { %>
-                <div class="form-check">
-                  <input
-                    class="form-check-input filter-checkbox"
-                    type="radio"
-                    name="fabric"
-                    id="fabric-<%= fabric.replace(/\s+/g, '-').toLowerCase() %>"
-                    value="<%= fabric %>"
-                    <%= filters.fabric === fabric ? 'checked' : '' %>
-                  />
-                  <label class="form-check-label d-flex justify-content-between" for="fabric-<%= fabric.replace(/\s+/g, '-').toLowerCase() %>">
-                    <span><%= fabric %></span>
-                  </label>
-                </div>
-              <% }) %>
-            <% } else { %>
-              <div class="form-check">
-                <input class="form-check-input filter-checkbox" type="radio" id="solid" name="pattern" value="solid">
-                <label class="form-check-label d-flex justify-content-between" for="solid">
-                  <span>Solid</span>
-                </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input filter-checkbox" type="radio" id="striped" name="pattern" value="striped">
-                <label class="form-check-label d-flex justify-content-between" for="striped">
-                  <span>Striped</span>
-                </label>
-              </div>
-            <% } %>
-          </div>
-        </div>
-
-        <!-- Price Filter -->
-        <div class="filter-section">
-          <h6>Price</h6>
-          <div class="price-range">
-            <input type="range" class="form-range" min="<%= priceRange?.minPrice || 0 %>" max="<%= priceRange?.maxPrice || 5000 %>" step="100" id="priceRange" name="maxPrice" value="<%= filters.maxPrice || priceRange?.maxPrice || 5000 %>">
-            <div class="price-inputs">
-              <input type="number" class="form-control" placeholder="Min" min="<%= priceRange?.minPrice || 0 %>" max="<%= priceRange?.maxPrice || 5000 %>" name="minPrice" value="<%= filters.minPrice || priceRange?.minPrice || 0 %>">
-              <span>to</span>
-              <input type="number" class="form-control" placeholder="Max" min="<%= priceRange?.minPrice || 0 %>" max="<%= priceRange?.maxPrice || 5000 %>" name="maxPrice" value="<%= filters.maxPrice || priceRange?.maxPrice || 5000 %>">
-            </div>
-          </div>
-        </div>
-
-        <!-- Color Filter -->
-        <div class="filter-section">
-          <h6>Colour</h6>
-          <div class="color-options">
-            <% if(colors && colors.length > 0) { %>
-              <% colors.forEach(color => { %>
-                <div class="color-option <%= filters.color === color ? 'selected' : '' %>" style="background-color: <%= color.toLowerCase() %>" data-color="<%= color %>" data-value="<%= color %>"></div>
-              <% }) %>
-            <% } else { %>
-              <div class="color-option" style="background-color: #ffffff;" data-color="White" data-value="White"></div>
-              <div class="color-option" style="background-color: #000000;" data-color="Black" data-value="Black"></div>
-              <div class="color-option" style="background-color: #0074D9;" data-color="Blue" data-value="Blue"></div>
-              <div class="color-option" style="background-color: #2ECC40;" data-color="Green" data-value="Green"></div>
-              <div class="color-option" style="background-color: #FF4136;" data-color="Red" data-value="Red"></div>
-              <div class="color-option" style="background-color: #FFDC00;" data-color="Yellow" data-value="Yellow"></div>
-              <div class="color-option" style="background-color: #B10DC9;" data-color="Purple" data-value="Purple"></div>
-              <div class="color-option" style="background-color: #FF851B;" data-color="Orange" data-value="Orange"></div>
-            <% } %>
-            <input type="hidden" name="color" id="selectedColor" value="<%= filters.color || '' %>">
-          </div>
-        </div>
-
-        <div class="filter-actions">
-          <button type="button" class="btn btn-secondary" id="closeFilterBtn">CLOSE</button>
-          <button type="submit" class="btn btn-primary">APPLY</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Sort Sidebar -->
-  <div class="sidebar sort-sidebar" id="sortSidebar">
-    <div class="sidebar-header">
-      <h5>SORT BY</h5>
-      <button type="button" class="btn-close" id="closeSort" aria-label="Close"></button>
-    </div>
-
-    <div class="sidebar-body">
-      <div class="sort-options-list">
-        <% const buildSortUrl = (sortType) => {
-          const params = new URLSearchParams(query);
-          params.set('sort', sortType);
-          return '?' + params.toString();
-        }; %>
-
-        <a href="<%= buildSortUrl('popular') %>" class="sort-option-item <%= filters.sort === 'popular' ? 'active' : '' %>">
-          <i class="bi bi-star-fill"></i>
-          <span>Popularity</span>
-        </a>
-        <a href="<%= buildSortUrl('newest') %>" class="sort-option-item <%= filters.sort === 'newest' || !filters.sort ? 'active' : '' %>">
-          <i class="bi bi-calendar-check"></i>
-          <span>Newest First</span>
-        </a>
-        <a href="<%= buildSortUrl('price-asc') %>" class="sort-option-item <%= filters.sort === 'price-asc' ? 'active' : '' %>">
-          <i class="bi bi-sort-numeric-down"></i>
-          <span>Price: Low to High</span>
-        </a>
-        <a href="<%= buildSortUrl('price-desc') %>" class="sort-option-item <%= filters.sort === 'price-desc' ? 'active' : '' %>">
-          <i class="bi bi-sort-numeric-up"></i>
-          <span>Price: High to Low</span>
-        </a>
-        <a href="<%= buildSortUrl('rating') %>" class="sort-option-item <%= filters.sort === 'rating' ? 'active' : '' %>">
-          <i class="bi bi-star-half"></i>
-          <span>Customer Rating</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Container -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="cartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <i class="bi bi-cart-check-fill me-2 text-success"></i>
-        <strong class="me-auto">Cart</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">
-        Product added to cart successfully!
-      </div>
-    </div>
-    
-    <div id="wishlistToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <i class="bi bi-heart-fill me-2 text-danger"></i>
-        <strong class="me-auto">Wishlist</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">
-        Product added to wishlist!
-      </div>
-    </div>
-  </div>
-
-  <%- include('../partials/footer') %>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/products.js"></script>
-</body>
-</html>
+<!DOCTYPE html><html lang="en"><head>  <meta charset="UTF-8" />  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <title>Products - WEARIT</title>  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />  <link rel="stylesheet" href="/css/style.css" />  <link rel="stylesheet" href="/css/header.css" />  <link rel="stylesheet" href="/css/footer.css" />  <link rel="stylesheet" href="/css/product.css" /></head><body>  <%- include('../partials/header') %>  <div class="container-fluid px-0">    <div class="category-nav">      <div class="container-fluid px-4">        <ul class="category-tabs">          <li class="<%= !filters.category ? 'active' : '' %>"><a href="/products">ALL SHIRTS</a></li>          <% if (categories && categories.length > 0) { %>            <% categories.forEach(category => { %>              <li class="<%= filters.category === category._id.toString() ? 'active' : '' %>">                <a href="/products?category=<%= category._id %>"><%= category.name.toUpperCase() %></a>              </li>            <% }); %>          <% } else { %>            <li><a href="/products?category=custom-made">CUSTOM-MADE</a></li>            <li><a href="/products?category=ready-to-ship">READY-TO-SHIP</a></li>          <% } %>        </ul>      </div>    </div>    <div class="container-fluid px-4">      <div class="products-header">        <h1 class="products-title">          <%= filters.category && categories ? (categories.find(c => c._id.toString() === filters.category)?.name || 'All Products') : 'All Shirts' %>          <% if (products && products.length > 0) { %>            <span class="product-count"><%= totalProducts %> Products</span>          <% } %>        </h1>        <p class="products-description">          High-quality shirts for all your occasions.        </p>      </div>      <div class="products-controls">        <div class="view-options">          <button class="view-option" data-view="grid-2"><i class="bi bi-grid"></i></button>          <button class="view-option" data-view="grid-3"><i class="bi bi-grid-3x3"></i></button>          <button class="view-option active" data-view="grid-4"><i class="bi bi-grid-3x3-gap"></i></button>          <button class="view-option" data-view="list"><i class="bi bi-list"></i></button>        </div>        <div class="filter-sort-controls">          <button class="btn btn-sort" id="sortToggle">SORT</button>          <button class="btn btn-filter" id="filterToggle">FILTER</button>        </div>      </div>      <div class="row">        <div class="col-12 products-container">          <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="productsGrid">            <% if (products && products.length > 0) { %>              <% products.forEach(product => { %>                <div class="col">                  <div class="product-card">                    <div class="product-image">                      <%                        const mainImageObj = product.images && product.images.find(img => img.isMain);                        const mainImageUrl = mainImageObj ? mainImageObj.url : '/images/placeholder.jpg';                        let discountPercentage = 0;                        if (product.variants && product.variants.length > 0) {                          const variant = product.variants[0];                          if (variant.varientPrice && variant.salePrice && variant.varientPrice > variant.salePrice) {                            discountPercentage = Math.round(((variant.varientPrice - variant.salePrice) / variant.varientPrice) * 100);                          }                        }                      %>                      <a href="/products/<%= product._id %>">                        <img src="<%= mainImageUrl %>" alt="<%= product.name %>" class="img-fluid">                      </a>                      <% if (discountPercentage > 0) { %>                        <div class="product-tag sale">-<%= discountPercentage %>%</div>                      <% } else if (product.isNew) { %>                        <div class="product-tag new">New</div>                      <% } %>                      <button class="wishlist-btn" data-product-id="<%= product._id %>" data-in-wishlist="false">                        <i class="bi bi-heart"></i>                      </button>                    </div>                    <div class="product-info">                      <h3 class="product-title">                        <a href="/products/<%= product._id %>"><%= product.name %></a>                      </h3>                      <p class="product-brand"><%= product.brand || 'Brand not available' %></p>                      <div class="product-price">                        <% if (product.variants && product.variants.length > 0) { %>                          <span class="current-price">₹<%= product.variants[0].salePrice %></span>                          <% if (product.variants[0].varientPrice && product.variants[0].varientPrice > product.variants[0].salePrice) { %>                            <span class="original-price">₹<%= product.variants[0].varientPrice %></span>                          <% } %>                        <% } else { %>                          <span class="current-price">₹<%= product.price || 'Price not available' %></span>                        <% } %>                      </div>                      <button class="add-to-cart-btn" data-product-id="<%= product._id %>">                        Add to Cart                      </button>                    </div>                  </div>                </div>              <% }); %>            <% } else { %>              <div class="col-12 text-center py-5">                <div class="no-products-content">                  <i class="bi bi-search fs-1 mb-3"></i>                  <h3>No products found</h3>                  <p>Try adjusting your search or filter criteria</p>                  <a href="/products" class="btn btn-dark mt-3">View All Products</a>                </div>              </div>            <% } %>          </div>          <% if (totalPages > 1) { %>            <div class="pagination-container">              <ul class="pagination">                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">                  <a class="page-link" href="<%= getPaginationUrl(currentPage-1) %>" aria-label="Previous">                    <span aria-hidden="true">&laquo;</span>                  </a>                </li>                <%                  const maxVisiblePages = 5;                  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);                  if (endPage - startPage + 1 < maxVisiblePages) {                    startPage = Math.max(1, endPage - maxVisiblePages + 1);                  }                %>                <% if (startPage > 1) { %>                  <li class="page-item">                    <a class="page-link" href="<%= getPaginationUrl(1) %>">1</a>                  </li>                  <% if (startPage > 2) { %>                    <li class="page-item disabled">                      <span class="page-link">...</span>                    </li>                  <% } %>                <% } %>                <% for (let i = startPage; i <= endPage; i++) { %>                  <li class="page-item <%= i === currentPage ? 'active' : '' %>">                    <a class="page-link" href="<%= getPaginationUrl(i) %>"><%= i %></a>                  </li>                <% } %>                <% if (endPage < totalPages) { %>                  <% if (endPage < totalPages - 1) { %>                    <li class="page-item disabled">                      <span class="page-link">...</span>                    </li>                  <% } %>                  <li class="page-item">                    <a class="page-link" href="<%= getPaginationUrl(totalPages) %>"><%= totalPages %></a>                  </li>                <% } %>                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">                  <a class="page-link" href="<%= getPaginationUrl(currentPage+1) %>" aria-label="Next">                    <span aria-hidden="true">&raquo;</span>                  </a>                </li>              </ul>            </div>          <% } %>        </div>      </div>    </div>  </div>  <div class="sidebar-overlay" id="sidebarOverlay"></div>  <div class="sidebar filter-sidebar" id="filterSidebar">    <div class="sidebar-header">      <h5>FILTERS</h5>      <a href="/products" class="btn-clear-all">CLEAR ALL</a>      <button type="button" class="btn-close" id="closeFilter" aria-label="Close"></button>    </div>    <div class="sidebar-body">      <form id="filterForm" action="/products" method="GET">        <input type="hidden" name="page" value="<%= currentPage %>" id="page-input">        <input type="hidden" name="sort" value="<%= filters.sort %>" id="sort-input">        <div class="filter-section">          <h6>Search Products</h6>          <div class="filter-search mb-3">            <input type="text" class="form-control" placeholder="Search products..." name="search" value="<%= filters.search %>">          </div>        </div>        <div class="filter-section">          <h6>Pattern</h6>          <div class="filter-options">            <% if(fabrics && fabrics.length > 0) { %>              <% fabrics.forEach(fabric => { %>                <div class="form-check">                  <input                    class="form-check-input filter-checkbox"                    type="radio"                    name="fabric"                    id="fabric-<%= fabric.replace(/\s+/g, '-').toLowerCase() %>"                    value="<%= fabric %>"                    <%= filters.fabric === fabric ? 'checked' : '' %>                  />                  <label class="form-check-label d-flex justify-content-between" for="fabric-<%= fabric.replace(/\s+/g, '-').toLowerCase() %>">                    <span><%= fabric %></span>                  </label>                </div>              <% }) %>            <% } else { %>              <div class="form-check">                <input class="form-check-input filter-checkbox" type="radio" id="solid" name="pattern" value="solid">                <label class="form-check-label d-flex justify-content-between" for="solid">                  <span>Solid</span>                </label>              </div>              <div class="form-check">                <input class="form-check-input filter-checkbox" type="radio" id="striped" name="pattern" value="striped">                <label class="form-check-label d-flex justify-content-between" for="striped">                  <span>Striped</span>                </label>              </div>            <% } %>          </div>        </div>        <div class="filter-section">          <h6>Price</h6>          <div class="price-range">            <input type="range" class="form-range" min="<%= priceRange?.minPrice || 0 %>" max="<%= priceRange?.maxPrice || 5000 %>" step="100" id="priceRange" name="maxPrice" value="<%= filters.maxPrice || priceRange?.maxPrice || 5000 %>">            <div class="price-inputs">              <input type="number" class="form-control" placeholder="Min" min="<%= priceRange?.minPrice || 0 %>" max="<%= priceRange?.maxPrice || 5000 %>" name="minPrice" value="<%= filters.minPrice || priceRange?.minPrice || 0 %>">              <span>to</span>              <input type="number" class="form-control" placeholder="Max" min="<%= priceRange?.minPrice || 0 %>" max="<%= priceRange?.maxPrice || 5000 %>" name="maxPrice" value="<%= filters.maxPrice || priceRange?.maxPrice || 5000 %>">            </div>          </div>        </div>        <div class="filter-section">          <h6>Colour</h6>          <div class="color-options">            <% if(colors && colors.length > 0) { %>              <% colors.forEach(color => { %>                <div class="color-option <%= filters.color === color ? 'selected' : '' %>" style="background-color: <%= color.toLowerCase() %>" data-color="<%= color %>" data-value="<%= color %>"></div>              <% }) %>            <% } else { %>              <div class="color-option" style="background-color: #ffffff;" data-color="White" data-value="White"></div>              <div class="color-option" style="background-color: #000000;" data-color="Black" data-value="Black"></div>              <div class="color-option" style="background-color: #0074D9;" data-color="Blue" data-value="Blue"></div>              <div class="color-option" style="background-color: #2ECC40;" data-color="Green" data-value="Green"></div>              <div class="color-option" style="background-color: #FF4136;" data-color="Red" data-value="Red"></div>              <div class="color-option" style="background-color: #FFDC00;" data-color="Yellow" data-value="Yellow"></div>              <div class="color-option" style="background-color: #B10DC9;" data-color="Purple" data-value="Purple"></div>              <div class="color-option" style="background-color: #FF851B;" data-color="Orange" data-value="Orange"></div>            <% } %>            <input type="hidden" name="color" id="selectedColor" value="<%= filters.color || '' %>">          </div>        </div>        <div class="filter-actions">          <button type="button" class="btn btn-secondary" id="closeFilterBtn">CLOSE</button>          <button type="submit" class="btn btn-primary">APPLY</button>        </div>      </form>    </div>  </div>  <div class="sidebar sort-sidebar" id="sortSidebar">    <div class="sidebar-header">      <h5>SORT BY</h5>      <button type="button" class="btn-close" id="closeSort" aria-label="Close"></button>    </div>    <div class="sidebar-body">      <div class="sort-options-list">        <% const buildSortUrl = (sortType) => {          const params = new URLSearchParams(query);          params.set('sort', sortType);          return '?' + params.toString();        }; %>        <a href="<%= buildSortUrl('popular') %>" class="sort-option-item <%= filters.sort === 'popular' ? 'active' : '' %>">          <i class="bi bi-star-fill"></i>          <span>Popularity</span>        </a>        <a href="<%= buildSortUrl('newest') %>" class="sort-option-item <%= filters.sort === 'newest' || !filters.sort ? 'active' : '' %>">          <i class="bi bi-calendar-check"></i>          <span>Newest First</span>        </a>        <a href="<%= buildSortUrl('price-asc') %>" class="sort-option-item <%= filters.sort === 'price-asc' ? 'active' : '' %>">          <i class="bi bi-sort-numeric-down"></i>          <span>Price: Low to High</span>        </a>        <a href="<%= buildSortUrl('price-desc') %>" class="sort-option-item <%= filters.sort === 'price-desc' ? 'active' : '' %>">          <i class="bi bi-sort-numeric-up"></i>          <span>Price: High to Low</span>        </a>        <a href="<%= buildSortUrl('rating') %>" class="sort-option-item <%= filters.sort === 'rating' ? 'active' : '' %>">          <i class="bi bi-star-half"></i>          <span>Customer Rating</span>        </a>      </div>    </div>  </div>  <div class="toast-container position-fixed bottom-0 end-0 p-3">    <div id="cartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">      <div class="toast-header">        <i class="bi bi-cart-check-fill me-2 text-success"></i>        <strong class="me-auto">Cart</strong>        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>      </div>      <div class="toast-body">        Product added to cart successfully!      </div>    </div>    <div id="wishlistToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">      <div class="toast-header">        <i class="bi bi-heart-fill me-2 text-danger"></i>        <strong class="me-auto">Wishlist</strong>        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>      </div>      <div class="toast-body">        Product added to wishlist!      </div>    </div>  </div>  <%- include('../partials/footer') %>  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>  <script src="/js/products.js"></script></body></html>

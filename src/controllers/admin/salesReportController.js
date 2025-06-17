@@ -1,1092 +1,1 @@
-const Order = require("../../models/orderModel")
-const Transaction = require("../../models/transactionModel")
-const moment = require("moment")
-const PDFDocument = require("pdfkit")
-const { getDateRange, groupDataByTimePeriod, formatCurrency } = require("../../utils/reportUtils")
-
-const 
-getSalesReport = async (req, res) => {
-  try {
-    const timeFilter = req.query.timeFilter || "monthly"
-    const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null
-    const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null
-    const paymentMethod = req.query.paymentMethod || ""
-    const sortBy = req.query.sortBy || "orderDate"
-    const sortOrder = req.query.sortOrder || "desc"
-    const page = Number.parseInt(req.query.page) || 1
-    const limit = Number.parseInt(req.query.limit) || 10
-    const search = req.query.search || ""
-    const dailySalesPage = Number.parseInt(req.query.dailySalesPage) || 1
-    const dailySalesLimit = Number.parseInt(req.query.dailySalesLimit) || 10
-    const transactionPage = Number.parseInt(req.query.transactionPage) || 1
-    const transactionLimit = Number.parseInt(req.query.transactionLimit) || 10
-    let dateRange
-    if (timeFilter === "custom" && customStartDate && customEndDate) {
-      if (customStartDate > customEndDate) {
-        return res.render("admin/pages/salesReport", {
-          admin: req.session.admin,
-          error_msg: "Start date cannot be later than end date",
-          reportData: null,
-        })
-      }
-
-      const startDate = new Date(customStartDate)
-      const endDate = new Date(customEndDate)
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(23, 59, 59, 999)
-      dateRange = { startDate, endDate }
-    } else {
-      dateRange = getDateRange(timeFilter)
-    }
-
-    const query = {
-      orderDate: { $gte: dateRange.startDate, $lte: dateRange.endDate },
-    }
-    if (paymentMethod) {
-      query.paymentMethod = paymentMethod
-    }
-    if (search) {
-      query.$or = [
-        { orderID: { $regex: search, $options: "i" } },
-        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
-      ]
-    }
-    const allOrders = await Order.find(query)
-      .populate("user", "name email mobile")
-      .populate({
-        path: "products.product",
-        select: "name images categoryId",
-        populate: {
-          path: "categoryId",
-          select: "name",
-        },
-      })
-      .lean()
-    const totalOrders = await Order.countDocuments(query)
-    const totalPages = Math.ceil(totalOrders / limit)
-    const orders = await Order.find(query)
-      .populate("user", "name email mobile")
-      .populate({
-        path: "products.product",
-        select: "name images categoryId",
-        populate: {
-          path: "categoryId",
-          select: "name",
-        },
-      })
-      .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean()
-    const dailySales = groupDataByTimePeriod(allOrders, "daily")
-    const totalDailySalesPages = Math.ceil(dailySales.length / dailySalesLimit)
-    const paginatedDailySales = dailySales.slice(
-      (dailySalesPage - 1) * dailySalesLimit,
-      dailySalesPage * dailySalesLimit,
-    )
-    const transactionQuery = {
-      createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },
-    }
-    const totalTransactions = await Transaction.countDocuments(transactionQuery)
-    const totalTransactionPages = Math.ceil(totalTransactions / transactionLimit)
-    const transactions = await Transaction.find(transactionQuery)
-      .populate("user", "name email")
-      .populate("order", "orderID")
-      .sort({ createdAt: sortOrder === "asc" ? 1 : -1 })
-      .skip((transactionPage - 1) * transactionLimit)
-      .limit(transactionLimit)
-      .lean()
-
-    const totalRevenue = allOrders.reduce((sum, order) => sum + order.finalAmount, 0)
-    const totalDiscount = allOrders.reduce((sum, order) => sum + (order.discount || 0), 0)
-    const totalCouponDiscount = allOrders.reduce((sum, order) => {
-      return sum + (order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0)
-    }, 0)
-    const averageOrderValue = allOrders.length > 0 ? totalRevenue / allOrders.length : 0
-
-    const paymentMethods = {}
-    allOrders.forEach((order) => {
-      const method = order.paymentMethod
-      if (!paymentMethods[method]) {
-        paymentMethods[method] = { count: 0, amount: 0 }
-      }
-      paymentMethods[method].count += 1
-      paymentMethods[method].amount += order.finalAmount
-    })
-
-    const customerSales = {}
-    allOrders.forEach((order) => {
-      const userId = order.user ? order.user._id.toString() : "Unknown"
-      const userName = order.user ? order.user.name : "Unknown User"
-      const userEmail = order.user ? order.user.email : "Unknown"
-
-      if (!customerSales[userId]) {
-        customerSales[userId] = {
-          name: userName,
-          email: userEmail,
-          orderCount: 0,
-          totalSpent: 0,
-        }
-      }
-      customerSales[userId].orderCount += 1
-      customerSales[userId].totalSpent += order.finalAmount
-    })
-
-    const topCustomers = Object.values(customerSales)
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 5)
-
-    const availablePaymentMethods = await Order.distinct("paymentMethod")
-
-    const reportData = {
-      timeFilter,
-      startDate: dateRange.startDate,
-      endDate: dateRange.endDate,
-      totalOrders: allOrders.length,
-      totalRevenue,
-      totalDiscount,
-      totalCouponDiscount,
-      averageOrderValue,
-      paymentMethods,
-      topCustomers,
-      dailySales: paginatedDailySales,
-      allDailySales: dailySales,
-      orders,
-      allOrders, 
-      transactions,
-      pagination: {
-        page,
-        limit,
-        totalPages,
-        totalItems: totalOrders,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
-      dailySalesPagination: {
-        page: dailySalesPage,
-        limit: dailySalesLimit,
-        totalPages: totalDailySalesPages,
-        totalItems: dailySales.length,
-        hasNextPage: dailySalesPage < totalDailySalesPages,
-        hasPrevPage: dailySalesPage > 1,
-      },
-      transactionPagination: {
-        page: transactionPage,
-        limit: transactionLimit,
-        totalPages: totalTransactionPages,
-        totalItems: totalTransactions,
-        hasNextPage: transactionPage < totalTransactionPages,
-        hasPrevPage: transactionPage > 1,
-      },
-      filters: {
-        timeFilter,
-        paymentMethod,
-        sortBy,
-        sortOrder,
-        search,
-        availablePaymentMethods,
-      },
-    }
-
-    res.render("admin/pages/salesReport", {
-      admin: req.session.admin,
-      reportData,
-      moment,
-      formatCurrency,
-    })
-  } catch (error) {
-    console.error("Sales report error:", error)
-    console.error("Error stack:", error.stack)
-
-    res.render("admin/pages/salesReport", {
-      admin: req.session.admin,
-      error_msg: "Failed to generate sales report: " + error.message,
-      reportData: null,
-      moment,
-      formatCurrency,
-    })
-  }
-}
-
-const downloadPDF = async (req, res) => {
-  try {
-    const timeFilter = req.query.timeFilter || "monthly"
-    const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null
-    const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null
-    const paymentMethod = req.query.paymentMethod || ""
-    const search = req.query.search || ""
-    const sortBy = req.query.sortBy || "orderDate"
-    const sortOrder = req.query.sortOrder || "desc"
-    let dateRange
-    if (timeFilter === "custom" && customStartDate && customEndDate) {
-      if (customStartDate > customEndDate) {
-        return res.status(400).send("Invalid date range: Start date cannot be later than end date")
-      }
-
-      const startDate = new Date(customStartDate)
-      const endDate = new Date(customEndDate)
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(23, 59, 59, 999)
-      dateRange = { startDate, endDate }
-    } else {
-      dateRange = getDateRange(timeFilter)
-    }
-
-    const query = {
-      orderDate: { $gte: dateRange.startDate, $lte: dateRange.endDate },
-    }
-    if (paymentMethod) {
-      query.paymentMethod = paymentMethod
-    }
-    if (search) {
-      query.$or = [
-        { orderID: { $regex: search, $options: "i" } },
-        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
-      ]
-    }
-    if (search) {
-      query.$or = [
-        { orderID: { $regex: search, $options: "i" } },
-        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
-      ]
-    }
-    const sortObj = {}
-    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1
-
-    const orders = await Order.find(query)
-      .populate("user", "name email mobile")
-      .populate({
-        path: "products.product",
-        select: "name images categoryId brand",
-        populate: {
-          path: "categoryId",
-          select: "name",
-        },
-      })
-      .sort(sortObj)
-      .lean()
-
-    const transactions = await Transaction.find({
-      createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },
-    })
-      .populate("user", "name email")
-      .populate("order", "orderID")
-      .sort({ createdAt: -1 })
-      .lean()
-    const totalOrders = orders.length
-    const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0)
-    const totalDiscount = orders.reduce((sum, order) => sum + (order.discount || 0), 0)
-    const totalCouponDiscount = orders.reduce((sum, order) => {
-      return sum + (order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0)
-    }, 0)
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-    const salesByPeriod = groupDataByTimePeriod(orders, timeFilter)
-    const dailySales = groupDataByTimePeriod(orders, "daily")
-    const paymentMethodsBreakdown = {}
-    orders.forEach((order) => {
-      const method = order.paymentMethod
-      if (!paymentMethodsBreakdown[method]) {
-        paymentMethodsBreakdown[method] = { count: 0, amount: 0 }
-      }
-      paymentMethodsBreakdown[method].count += 1
-      paymentMethodsBreakdown[method].amount += order.finalAmount
-    })
-    const customerSales = {}
-    orders.forEach((order) => {
-      const userId = order.user ? order.user._id.toString() : "Unknown"
-      const userName = order.user ? order.user.name : "Unknown User"
-      const userEmail = order.user ? order.user.email : "Unknown"
-
-      if (!customerSales[userId]) {
-        customerSales[userId] = {
-          name: userName,
-          email: userEmail,
-          orderCount: 0,
-          totalSpent: 0,
-        }
-      }
-      customerSales[userId].orderCount += 1
-      customerSales[userId].totalSpent += order.finalAmount
-    })
-
-    const topCustomers = Object.values(customerSales)
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 10)
-    const doc = new PDFDocument({
-      margin: 30,
-      size: "A4",
-      layout: "portrait",
-      bufferPages: true,
-      autoFirstPage: true,
-      info: {
-        Title: `WEARiT Sales Report - ${timeFilter}`,
-        Author: "WEARiT Admin System",
-        Subject: "Sales Analytics Report",
-        Keywords: "sales, report, analytics, ecommerce",
-      },
-    })
-
-    res.setHeader("Content-Type", "application/pdf")
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=WEARiT-Sales-Report-${timeFilter}-${moment().format("YYYY-MM-DD")}.pdf`,
-    )
-    doc.pipe(res)
-    const pageWidth = doc.page.width - 60
-    const leftMargin = 30
-    const rightMargin = doc.page.width - 30
-    const pageHeight = doc.page.height - 60
-    const usableHeight = pageHeight - 80
-    const centerX = doc.page.width / 2
-
-    const colors = {
-      primary: "#1E40AF",
-      secondary: "#3B82F6",
-      accent: "#10B981",
-      danger: "#EF4444",
-      warning: "#F59E0B",
-      dark: "#1F2937",
-      medium: "#6B7280",
-      light: "#9CA3AF",
-      background: "#F8FAFC",
-      border: "#E5E7EB",
-    }
-
-    const addPageIfNeeded = (requiredSpace = 80) => {
-      if (doc.y + requiredSpace > usableHeight) {
-        doc.addPage()
-        return true
-      }
-      return false
-    }
-
-    const drawEnhancedDivider = (color = colors.border, thickness = 1) => {
-      doc.strokeColor(color).lineWidth(thickness)
-      doc
-        .moveTo(leftMargin, doc.y + 15)
-        .lineTo(rightMargin, doc.y + 15)
-        .stroke()
-      doc.y += 25
-    }
-
-    const formatPDFCurrency = (amount) => {
-      return `₹${(amount || 0).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`
-    }
-
-    const drawCard = (x, y, width, height, title, value, color = colors.primary) => {
-      doc.rect(x, y, width, height).fillAndStroke(colors.background, colors.border)
-
-      doc.rect(x, y, width, 25).fillAndStroke(color, color)
-
-      doc.fontSize(10).font("Helvetica-Bold").fillColor("#FFFFFF")
-      doc.text(title, x + 10, y + 8, { width: width - 20, align: "center" })
-
-      doc.fontSize(16).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text(value, x + 10, y + 35, { width: width - 20, align: "center" })
-    }
-
-    const drawTable = (headers, data, columnWidths, startY, options = {}) => {
-      const {
-        headerColor = colors.primary,
-        alternateRows = true,
-        fontSize = 9,
-        headerFontSize = 10,
-        rowHeight = 25,
-        headerHeight = 30,
-      } = options
-
-      let currentY = startY
-      const tableWidth = columnWidths.reduce((sum, width) => sum + width, 0)
-      doc.rect(leftMargin, currentY, tableWidth, headerHeight).fillAndStroke(headerColor, headerColor)
-      doc.fontSize(headerFontSize).font("Helvetica-Bold").fillColor("#FFFFFF")
-      let xPos = leftMargin + 8
-      headers.forEach((header, i) => {
-        doc.text(header, xPos, currentY + 8, {
-          width: columnWidths[i] - 16,
-          align: i === 0 ? "left" : "center",
-        })
-        xPos += columnWidths[i]
-      })
-      currentY += headerHeight
-      data.forEach((row, index) => {
-        if (currentY + rowHeight > usableHeight) {
-          doc.addPage()
-          currentY = 60
-          doc.rect(leftMargin, currentY, tableWidth, headerHeight).fillAndStroke(headerColor, headerColor)
-          doc.fontSize(headerFontSize).font("Helvetica-Bold").fillColor("#FFFFFF")
-          xPos = leftMargin + 8
-          headers.forEach((header, i) => {
-            doc.text(header, xPos, currentY + 8, {
-              width: columnWidths[i] - 16,
-              align: i === 0 ? "left" : "center",
-            })
-            xPos += columnWidths[i]
-          })
-          currentY += headerHeight
-        }
-        if (alternateRows && index % 2 === 0) {
-          doc.rect(leftMargin, currentY, tableWidth, rowHeight).fillAndStroke(colors.background, colors.background)
-        }
-        doc.fontSize(fontSize).font("Helvetica").fillColor(colors.dark)
-        xPos = leftMargin + 8
-
-        row.forEach((cellData, i) => {
-          doc.text(String(cellData), xPos, currentY + 6, {
-            width: columnWidths[i] - 16,
-            align: i === 0 ? "left" : "center",
-          })
-          xPos += columnWidths[i]
-        })
-
-        currentY += rowHeight
-      })
-
-      return currentY
-    }
-
-    doc.fontSize(28).font("Helvetica-Bold").fillColor(colors.primary)
-    doc.text("WEARiT", centerX - 50, 50, { align: "center" })
-
-    doc.fontSize(18).font("Helvetica").fillColor(colors.dark)
-    doc.text("Sales Analytics Report", leftMargin, doc.y + 10, {
-      align: "center",
-      width: pageWidth,
-    })
-
-    doc.fontSize(12).font("Helvetica").fillColor(colors.medium)
-    doc.text(
-      `Report Period: ${moment(dateRange.startDate).format("MMM DD, YYYY")} - ${moment(dateRange.endDate).format("MMM DD, YYYY")}`,
-      leftMargin,
-      doc.y + 15,
-      { align: "center", width: pageWidth },
-    )
-
-    doc.fontSize(10).fillColor(colors.light)
-    doc.text(`Generated on: ${moment().format("MMM DD, YYYY HH:mm:ss")}`, leftMargin, doc.y + 8, {
-      align: "center",
-      width: pageWidth,
-    })
-
-    doc.y += 30
-    drawEnhancedDivider(colors.primary, 2)
-    doc.fontSize(20).font("Helvetica-Bold").fillColor(colors.dark)
-    doc.text("Executive Summary", leftMargin, doc.y)
-    doc.y += 30
-
-    const cardWidth = (pageWidth - 40) / 3
-    const cardHeight = 70
-    const cardY = doc.y
-
-    drawCard(leftMargin, cardY, cardWidth, cardHeight, "Total Orders", totalOrders.toLocaleString(), colors.primary)
-    drawCard(
-      leftMargin + cardWidth + 20,
-      cardY,
-      cardWidth,
-      cardHeight,
-      "Total Revenue",
-      formatPDFCurrency(totalRevenue),
-      colors.accent,
-    )
-    drawCard(
-      leftMargin + (cardWidth + 20) * 2,
-      cardY,
-      cardWidth,
-      cardHeight,
-      "Avg Order Value",
-      formatPDFCurrency(averageOrderValue),
-      colors.secondary,
-    )
-
-    doc.y = cardY + cardHeight + 20
-
-    const cardY2 = doc.y
-    drawCard(
-      leftMargin,
-      cardY2,
-      cardWidth,
-      cardHeight,
-      "Total Discounts",
-      formatPDFCurrency(totalDiscount + totalCouponDiscount),
-      colors.warning,
-    )
-    drawCard(
-      leftMargin + cardWidth + 20,
-      cardY2,
-      cardWidth,
-      cardHeight,
-      "Net Revenue",
-      formatPDFCurrency(totalRevenue - totalDiscount - totalCouponDiscount),
-      colors.accent,
-    )
-    drawCard(
-      leftMargin + (cardWidth + 20) * 2,
-      cardY2,
-      cardWidth,
-      cardHeight,
-      "Total Transactions",
-      transactions.length.toLocaleString(),
-      colors.secondary,
-    )
-
-    doc.y = cardY2 + cardHeight + 30
-    drawEnhancedDivider()
-    if (salesByPeriod.length > 0) {
-      addPageIfNeeded(150)
-
-      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text(`${timeFilter.charAt(0).toUpperCase() + timeFilter.slice(1)} Sales Analysis`, leftMargin, doc.y)
-      doc.y += 30
-
-      const periodHeaders = ["Period", "Orders", "Revenue", "Discounts", "Net Revenue", "Growth %"]
-      const periodColumnWidths = [120, 60, 100, 100, 100, 70]
-
-      const periodData = salesByPeriod.map((period, index) => {
-        const netRevenue = period.revenue - period.discount - period.couponDiscount
-        const prevPeriod = salesByPeriod[index - 1]
-        const growth = prevPeriod
-          ? (
-              ((netRevenue - (prevPeriod.revenue - prevPeriod.discount - prevPeriod.couponDiscount)) /
-                (prevPeriod.revenue - prevPeriod.discount - prevPeriod.couponDiscount)) *
-              100
-            ).toFixed(1) + "%"
-          : "N/A"
-
-        return [
-          period.period.length > 18 ? period.period.substring(0, 15) + "..." : period.period,
-          period.count.toString(),
-          formatPDFCurrency(period.revenue),
-          formatPDFCurrency(period.discount + period.couponDiscount),
-          formatPDFCurrency(netRevenue),
-          growth,
-        ]
-      })
-
-      doc.y =
-        drawTable(periodHeaders, periodData, periodColumnWidths, doc.y, {
-          headerColor: colors.primary,
-          fontSize: 8,
-        }) + 20
-
-      drawEnhancedDivider()
-    }
-    if (dailySales.length > 0) {
-      addPageIfNeeded(150)
-
-      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text("Daily Sales Analysis", leftMargin, doc.y)
-      doc.y += 30
-
-      const dailyHeaders = ["Date", "Orders", "Revenue", "Discounts", "Net Revenue"]
-      const dailyColumnWidths = [120, 70, 110, 110, 110]
-
-      const dailyData = dailySales.map((day) => [
-        moment(day.date).format("MMM DD, YYYY"),
-        day.count.toString(),
-        formatPDFCurrency(day.revenue),
-        formatPDFCurrency(day.discount + day.couponDiscount),
-        formatPDFCurrency(day.revenue - day.discount - day.couponDiscount),
-      ])
-
-      doc.y =
-        drawTable(dailyHeaders, dailyData, dailyColumnWidths, doc.y, {
-          headerColor: colors.secondary,
-          fontSize: 8,
-        }) + 20
-
-      drawEnhancedDivider()
-    }
-    if (orders.length > 0) {
-      addPageIfNeeded(150)
-
-      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text(`Complete Orders Analysis (${orders.length} orders)`, leftMargin, doc.y)
-      doc.y += 30
-
-      const orderHeaders = ["Order ID", "Date", "Customer", "Payment", "Amount", "Status"]
-      const orderColumnWidths = [90, 80, 120, 80, 100, 80]
-
-      const orderData = orders.map((order) => [
-        order.orderID.length > 12 ? order.orderID.substring(0, 9) + "..." : order.orderID,
-        moment(order.orderDate).format("MM/DD/YY"),
-        order.user
-          ? order.user.name.length > 15
-            ? order.user.name.substring(0, 12) + "..."
-            : order.user.name
-          : "Unknown",
-        order.paymentMethod.substring(0, 10).toUpperCase(),
-        formatPDFCurrency(order.finalAmount),
-        order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1, 10),
-      ])
-
-      doc.y =
-        drawTable(orderHeaders, orderData, orderColumnWidths, doc.y, {
-          headerColor: colors.accent,
-          fontSize: 8,
-        }) + 20
-
-      drawEnhancedDivider()
-    }
-    if (transactions.length > 0) {
-      addPageIfNeeded(150)
-
-      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text(`Complete Transactions Analysis (${transactions.length} transactions)`, leftMargin, doc.y)
-      doc.y += 30
-
-      const transactionHeaders = ["Transaction ID", "Order ID", "Date", "Customer", "Method", "Amount", "Status"]
-      const transactionColumnWidths = [100, 80, 80, 100, 70, 90, 70]
-
-      const transactionData = transactions.map((transaction) => [
-        transaction.transactionId ? transaction.transactionId.substring(0, 12) + "..." : "N/A",
-        transaction.order ? transaction.order.orderID.substring(0, 10) + "..." : "N/A",
-        moment(transaction.createdAt).format("MM/DD/YY"),
-        transaction.user
-          ? transaction.user.name.length > 12
-            ? transaction.user.name.substring(0, 9) + "..."
-            : transaction.user.name
-          : "Unknown",
-        transaction.paymentMethod.substring(0, 8),
-        formatPDFCurrency(transaction.amount),
-        transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1, 8),
-      ])
-
-      doc.y =
-        drawTable(transactionHeaders, transactionData, transactionColumnWidths, doc.y, {
-          headerColor: colors.warning,
-          fontSize: 8,
-        }) + 20
-
-      drawEnhancedDivider()
-    }
-    if (Object.keys(paymentMethodsBreakdown).length > 0) {
-      addPageIfNeeded(120)
-
-      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text("Payment Method Analysis", leftMargin, doc.y)
-      doc.y += 30
-
-      const paymentHeaders = ["Payment Method", "Orders", "Total Amount", "Avg Order", "Percentage"]
-      const paymentColumnWidths = [140, 80, 120, 100, 80]
-
-      const paymentData = Object.entries(paymentMethodsBreakdown).map(([method, data]) => {
-        const percentage = ((data.amount / totalRevenue) * 100).toFixed(1)
-        const avgOrder = data.count > 0 ? data.amount / data.count : 0
-
-        return [
-          method.charAt(0).toUpperCase() + method.slice(1),
-          data.count.toLocaleString(),
-          formatPDFCurrency(data.amount),
-          formatPDFCurrency(avgOrder),
-          `${percentage}%`,
-        ]
-      })
-
-      doc.y =
-        drawTable(paymentHeaders, paymentData, paymentColumnWidths, doc.y, {
-          headerColor: colors.danger,
-          fontSize: 9,
-        }) + 20
-
-      drawEnhancedDivider()
-    }
-    if (topCustomers.length > 0) {
-      addPageIfNeeded(120)
-
-      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)
-      doc.text("Top Customers Analysis", leftMargin, doc.y)
-      doc.y += 30
-
-      const customerHeaders = ["Customer Name", "Email", "Orders", "Total Spent", "Avg Order"]
-      const customerColumnWidths = [120, 140, 70, 100, 90]
-
-      const customerData = topCustomers.map((customer) => [
-        customer.name.length > 15 ? customer.name.substring(0, 12) + "..." : customer.name,
-        customer.email.length > 20 ? customer.email.substring(0, 17) + "..." : customer.email,
-        customer.orderCount.toString(),
-        formatPDFCurrency(customer.totalSpent),
-        formatPDFCurrency(customer.totalSpent / customer.orderCount),
-      ])
-
-      doc.y =
-        drawTable(customerHeaders, customerData, customerColumnWidths, doc.y, {
-          headerColor: colors.secondary,
-          fontSize: 9,
-        }) + 20
-    }
-    const pages = doc.bufferedPageRange()
-    const totalPagesCount = pages.count
-
-    for (let i = 0; i < totalPagesCount; i++) {
-      doc.switchToPage(i)
-      const footerY = doc.page.height - 40
-      doc.rect(leftMargin, footerY - 5, pageWidth, 35).fillAndStroke(colors.background, colors.border)
-      doc.fontSize(8).font("Helvetica").fillColor(colors.medium)
-      doc.text(`Page ${i + 1} of ${totalPagesCount}`, leftMargin + 10, footerY + 5)
-      doc.text(`WEARiT Sales Report - ${timeFilter.toUpperCase()}`, centerX - 80, footerY + 5)
-      doc.text(`Generated: ${moment().format("MMM DD, YYYY HH:mm")}`, rightMargin - 120, footerY + 5)
-
-      doc.fontSize(7).fillColor(colors.light)
-      doc.text("Confidential - For Internal Use Only", leftMargin + 10, footerY + 18)
-      doc.text(
-        `Total Records: ${orders.length} Orders, ${transactions.length} Transactions`,
-        rightMargin - 200,
-        footerY + 18,
-      )
-    }
-
-    doc.end()
-  } catch (error) {
-    console.error("Admin downloadPDF error:", error)
-    res.status(500).send("Failed to generate PDF report: " + error.message)
-  }
-}
-
-const downloadExcel = async (req, res) => {
-  try {
-    const ExcelJS = require("exceljs")
-    const timeFilter = req.query.timeFilter || "monthly"
-    const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null
-    const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null
-    const paymentMethod = req.query.paymentMethod || ""
-    const search = req.query.search || ""
-    const sortBy = req.query.sortBy || "orderDate"
-    const sortOrder = req.query.sortOrder || "desc"
-    let dateRange
-    if (timeFilter === "custom" && customStartDate && customEndDate) {
-      if (customStartDate > customEndDate) {
-        return res.status(400).send("Invalid date range: Start date cannot be later than end date")
-      }
-
-      const startDate = new Date(customStartDate)
-      const endDate = new Date(customEndDate)
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(23, 59, 59, 999)
-      dateRange = { startDate, endDate }
-    } else {
-      dateRange = getDateRange(timeFilter)
-    }
-
-    const query = {
-      orderDate: { $gte: dateRange.startDate, $lte: dateRange.endDate },
-    }
-    if (paymentMethod) {
-      query.paymentMethod = paymentMethod
-    }
-    if (search) {
-      query.$or = [
-        { orderID: { $regex: search, $options: "i" } },
-        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },
-      ]
-    }
-    const sortObj = {}
-    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1
-
-    const orders = await Order.find(query)
-      .populate("user", "name email mobile")
-      .populate({
-        path: "products.product",
-        select: "name images categoryId brand",
-        populate: {
-          path: "categoryId",
-          select: "name",
-        },
-      })
-      .sort(sortObj)
-      .lean()
-
-    const transactions = await Transaction.find({
-      createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },
-    })
-      .populate("user", "name email")
-      .populate("order", "orderID")
-      .sort({ createdAt: -1 })
-      .lean()
-    const totalOrders = orders.length
-    const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0)
-    const totalDiscount = orders.reduce((sum, order) => sum + (order.discount || 0), 0)
-    const totalCouponDiscount = orders.reduce((sum, order) => {
-      return sum + (order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0)
-    }, 0)
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-    const salesByPeriod = groupDataByTimePeriod(orders, timeFilter)
-    const dailySales = groupDataByTimePeriod(orders, "daily")
-    const workbook = new ExcelJS.Workbook()
-    workbook.creator = "WEARiT Admin"
-    workbook.created = new Date()
-    const summarySheet = workbook.addWorksheet("Summary")
-    summarySheet.mergeCells("A1:E1")
-    summarySheet.getCell("A1").value = "WEARiT Sales Report"
-    summarySheet.getCell("A1").font = { size: 16, bold: true }
-    summarySheet.getCell("A1").alignment = { horizontal: "center" }
-
-    summarySheet.mergeCells("A2:E2")
-    summarySheet.getCell("A2").value = `Report Period: ${moment(dateRange.startDate).format(
-      "MMM DD, YYYY",
-    )} - ${moment(dateRange.endDate).format("MMM DD, YYYY")}`
-    summarySheet.getCell("A2").alignment = { horizontal: "center" }
-
-    summarySheet.getCell("A4").value = "Total Orders:"
-    summarySheet.getCell("B4").value = totalOrders
-    summarySheet.getCell("A5").value = "Total Revenue:"
-    summarySheet.getCell("B5").value = totalRevenue
-    summarySheet.getCell("B5").numFmt = "₹#,##0.00"
-    summarySheet.getCell("A6").value = "Total Product Discount:"
-    summarySheet.getCell("B6").value = totalDiscount
-    summarySheet.getCell("B6").numFmt = "₹#,##0.00"
-    summarySheet.getCell("A7").value = "Total Coupon Discount:"
-    summarySheet.getCell("B7").value = totalCouponDiscount
-    summarySheet.getCell("B7").numFmt = "₹#,##0.00"
-    summarySheet.getCell("A8").value = "Total Discount:"
-    summarySheet.getCell("B8").value = totalDiscount + totalCouponDiscount
-    summarySheet.getCell("B8").numFmt = "₹#,##0.00"
-    summarySheet.getCell("A9").value = "Net Revenue:"
-    summarySheet.getCell("B9").value = totalRevenue - totalDiscount - totalCouponDiscount
-    summarySheet.getCell("B9").numFmt = "₹#,##0.00"
-    summarySheet.getCell("A10").value = "Average Order Value:"
-    summarySheet.getCell("B10").value = averageOrderValue
-    summarySheet.getCell("B10").numFmt = "₹#,##0.00"
-
-    for (let i = 4; i <= 10; i++) {
-      summarySheet.getCell(`A${i}`).font = { bold: true }
-    }
-    const periodSheet = workbook.addWorksheet(`${timeFilter.charAt(0).toUpperCase() + timeFilter.slice(1)} Sales`)
-    periodSheet.columns = [
-      { header: "Period", key: "period", width: 20 },
-      { header: "Orders", key: "orders", width: 10 },
-      { header: "Revenue", key: "revenue", width: 15 },
-      { header: "Product Discount", key: "discount", width: 15 },
-      { header: "Coupon Discount", key: "couponDiscount", width: 15 },
-      { header: "Total Discount", key: "totalDiscount", width: 15 },
-      { header: "Net Revenue", key: "netRevenue", width: 15 },
-    ]
-
-    periodSheet.getRow(1).font = { bold: true }
-    periodSheet.getRow(1).alignment = { horizontal: "center" }
-
-    salesByPeriod.forEach((period) => {
-      const totalPeriodDiscount = period.discount + period.couponDiscount
-      periodSheet.addRow({
-        period: period.period,
-        orders: period.count,
-        revenue: period.revenue,
-        discount: period.discount,
-        couponDiscount: period.couponDiscount,
-        totalDiscount: totalPeriodDiscount,
-        netRevenue: period.revenue - totalPeriodDiscount,
-      })
-    })
-
-    periodSheet.getColumn("revenue").numFmt = "₹#,##0.00"
-    periodSheet.getColumn("discount").numFmt = "₹#,##0.00"
-    periodSheet.getColumn("couponDiscount").numFmt = "₹#,##0.00"
-    periodSheet.getColumn("totalDiscount").numFmt = "₹#,##0.00"
-    periodSheet.getColumn("netRevenue").numFmt = "₹#,##0.00"
-    const dailySheet = workbook.addWorksheet("Daily Sales")
-    dailySheet.columns = [
-      { header: "Date", key: "date", width: 15 },
-      { header: "Orders", key: "orders", width: 10 },
-      { header: "Revenue", key: "revenue", width: 15 },
-      { header: "Product Discount", key: "discount", width: 15 },
-      { header: "Coupon Discount", key: "couponDiscount", width: 15 },
-      { header: "Total Discount", key: "totalDiscount", width: 15 },
-      { header: "Net Revenue", key: "netRevenue", width: 15 },
-    ]
-
-    dailySheet.getRow(1).font = { bold: true }
-    dailySheet.getRow(1).alignment = { horizontal: "center" }
-
-    dailySales.forEach((day) => {
-      const totalDayDiscount = day.discount + day.couponDiscount
-      dailySheet.addRow({
-        date: moment(day.date).format("MMM DD, YYYY"),
-        orders: day.count,
-        revenue: day.revenue,
-        discount: day.discount,
-        couponDiscount: day.couponDiscount,
-        totalDiscount: totalDayDiscount,
-        netRevenue: day.revenue - totalDayDiscount,
-      })
-    })
-
-    dailySheet.getColumn("revenue").numFmt = "₹#,##0.00"
-    dailySheet.getColumn("discount").numFmt = "₹#,##0.00"
-    dailySheet.getColumn("couponDiscount").numFmt = "₹#,##0.00"
-    dailySheet.getColumn("totalDiscount").numFmt = "₹#,##0.00"
-    dailySheet.getColumn("netRevenue").numFmt = "₹#,##0.00"
-    const ordersSheet = workbook.addWorksheet("Orders")
-    ordersSheet.columns = [
-      { header: "Order ID", key: "orderId", width: 15 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Customer Name", key: "customerName", width: 20 },
-      { header: "Customer Email", key: "customerEmail", width: 25 },
-      { header: "Customer Mobile", key: "customerMobile", width: 15 },
-      { header: "Payment Method", key: "paymentMethod", width: 15 },
-      { header: "Items Count", key: "itemsCount", width: 12 },
-      { header: "Total Items", key: "totalItems", width: 12 },
-      { header: "Original Amount", key: "originalAmount", width: 15 },
-      { header: "Product Discount", key: "discount", width: 15 },
-      { header: "Coupon Code", key: "couponCode", width: 15 },
-      { header: "Coupon Discount", key: "couponDiscount", width: 15 },
-      { header: "Total Discount", key: "totalDiscount", width: 15 },
-      { header: "Final Amount", key: "finalAmount", width: 15 },
-      { header: "Order Status", key: "orderStatus", width: 15 },
-    ]
-
-    ordersSheet.getRow(1).font = { bold: true }
-    ordersSheet.getRow(1).alignment = { horizontal: "center" }
-
-    orders.forEach((order) => {
-      const totalQuantity = order.products.reduce((sum, item) => sum + item.quantity, 0)
-      const itemsCount = order.products.length
-      const totalOrderDiscount = (order.discount || 0) + (order.coupon ? order.coupon.discountAmount : 0)
-
-      ordersSheet.addRow({
-        orderId: order.orderID,
-        date: moment(order.orderDate).format("MMM DD, YYYY"),
-        customerName: order.user ? order.user.name : "Unknown",
-        customerEmail: order.user ? order.user.email : "Unknown",
-        customerMobile: order.user ? order.user.mobile : "Unknown",
-        paymentMethod: order.paymentMethod,
-        itemsCount: itemsCount,
-        totalItems: totalQuantity,
-        originalAmount: order.totalAmount,
-        discount: order.discount || 0,
-        couponCode: order.coupon ? order.coupon.code : "N/A",
-        couponDiscount: order.coupon ? order.coupon.discountAmount : 0,
-        totalDiscount: totalOrderDiscount,
-        finalAmount: order.finalAmount,
-        orderStatus: order.orderStatus,
-      })
-    })
-
-    ordersSheet.getColumn("originalAmount").numFmt = "₹#,##0.00"
-    ordersSheet.getColumn("discount").numFmt = "₹#,##0.00"
-    ordersSheet.getColumn("couponDiscount").numFmt = "₹#,##0.00"
-    ordersSheet.getColumn("totalDiscount").numFmt = "₹#,##0.00"
-    ordersSheet.getColumn("finalAmount").numFmt = "₹#,##0.00"
-    const orderItemsSheet = workbook.addWorksheet("Order Items")
-    orderItemsSheet.columns = [
-      { header: "Order ID", key: "orderId", width: 15 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Customer", key: "customer", width: 20 },
-      { header: "Product", key: "product", width: 30 },
-      { header: "Category", key: "category", width: 15 },
-      { header: "Size", key: "size", width: 10 },
-      { header: "Quantity", key: "quantity", width: 10 },
-      { header: "Unit Price", key: "unitPrice", width: 15 },
-      { header: "Sale Price", key: "salePrice", width: 15 },
-      { header: "Total", key: "total", width: 15 },
-      { header: "Status", key: "status", width: 15 },
-    ]
-
-    orderItemsSheet.getRow(1).font = { bold: true }
-    orderItemsSheet.getRow(1).alignment = { horizontal: "center" }
-
-    orders.forEach((order) => {
-      order.products.forEach((item) => {
-        orderItemsSheet.addRow({
-          orderId: order.orderID,
-          date: moment(order.orderDate).format("MMM DD, YYYY"),
-          customer: order.user ? order.user.name : "Unknown",
-          product: item.product ? item.product.name : "Unknown Product",
-          category: item.product && item.product.categoryId ? item.product.categoryId.name : "Unknown",
-          size: item.variant ? item.variant.size : "N/A",
-          quantity: item.quantity,
-          unitPrice: item.variant ? item.variant.varientPrice : 0,
-          salePrice: item.variant ? item.variant.salePrice : 0,
-          total: (item.variant ? item.variant.salePrice : 0) * item.quantity,
-          status: item.status,
-        })
-      })
-    })
-
-    orderItemsSheet.getColumn("unitPrice").numFmt = "₹#,##0.00"
-    orderItemsSheet.getColumn("salePrice").numFmt = "₹#,##0.00"
-    orderItemsSheet.getColumn("total").numFmt = "₹#,##0.00"
-    const transactionsSheet = workbook.addWorksheet("Transactions")
-    transactionsSheet.columns = [
-      { header: "Transaction ID", key: "transactionId", width: 20 },
-      { header: "Order ID", key: "orderId", width: 15 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Customer", key: "customer", width: 20 },
-      { header: "Payment Method", key: "paymentMethod", width: 15 },
-      { header: "Amount", key: "amount", width: 15 },
-      { header: "Status", key: "status", width: 15 },
-      { header: "Payment ID", key: "paymentId", width: 25 },
-    ]
-
-    transactionsSheet.getRow(1).font = { bold: true }
-    transactionsSheet.getRow(1).alignment = { horizontal: "center" }
-
-    transactions.forEach((transaction) => {
-      transactionsSheet.addRow({
-        transactionId: transaction.transactionId,
-        orderId: transaction.order ? transaction.order.orderID : "Unknown",
-        date: moment(transaction.createdAt).format("MMM DD, YYYY HH:mm:ss"),
-        customer: transaction.user ? transaction.user.name : "Unknown",
-        paymentMethod: transaction.paymentMethod,
-        amount: transaction.amount,
-        status: transaction.status,
-        paymentId: transaction.paymentDetails ? transaction.paymentDetails.paymentId : "N/A",
-      })
-    })
-
-    transactionsSheet.getColumn("amount").numFmt = "₹#,##0.00"
-    const paymentMethodsSheet = workbook.addWorksheet("Payment Methods")
-    paymentMethodsSheet.columns = [
-      { header: "Payment Method", key: "method", width: 20 },
-      { header: "Order Count", key: "count", width: 15 },
-      { header: "Total Amount", key: "amount", width: 15 },
-      { header: "Average Order", key: "average", width: 15 },
-      { header: "Percentage", key: "percentage", width: 15 },
-    ]
-
-    paymentMethodsSheet.getRow(1).font = { bold: true }
-    paymentMethodsSheet.getRow(1).alignment = { horizontal: "center" }
-
-    const paymentMethodsBreakdown = {}
-    orders.forEach((order) => {
-      const method = order.paymentMethod
-      if (!paymentMethodsBreakdown[method]) {
-        paymentMethodsBreakdown[method] = { count: 0, amount: 0 }
-      }
-      paymentMethodsBreakdown[method].count += 1
-      paymentMethodsBreakdown[method].amount += order.finalAmount
-    })
-
-    Object.entries(paymentMethodsBreakdown).forEach(([method, data]) => {
-      const percentage = totalRevenue > 0 ? (data.amount / totalRevenue) * 100 : 0
-      const average = data.count > 0 ? data.amount / data.count : 0
-
-      paymentMethodsSheet.addRow({
-        method: method.charAt(0).toUpperCase() + method.slice(1),
-        count: data.count,
-        amount: data.amount,
-        average: average,
-        percentage: `${percentage.toFixed(2)}%`,
-      })
-    })
-
-    paymentMethodsSheet.getColumn("amount").numFmt = "₹#,##0.00"
-    paymentMethodsSheet.getColumn("average").numFmt = "₹#,##0.00"
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=sales-report-${timeFilter}-${moment().format("YYYY-MM-DD")}.xlsx`,
-    )
-    await workbook.xlsx.write(res)
-    res.end()
-  } catch (error) {
-    console.error("Admin downloadExcel error:", error)
-    res.status(500).send("Failed to generate Excel report: " + error.message)
-  }
-}
-
-module.exports = {
-  getSalesReport,
-  downloadPDF,
-  downloadExcel,
-}
+const Order = require("../../models/orderModel")const Transaction = require("../../models/transactionModel")const moment = require("moment")const PDFDocument = require("pdfkit")const { getDateRange, groupDataByTimePeriod, formatCurrency } = require("../../utils/reportUtils")constgetSalesReport = async (req, res) => {  try {    const timeFilter = req.query.timeFilter || "monthly"    const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null    const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null    const paymentMethod = req.query.paymentMethod || ""    const sortBy = req.query.sortBy || "orderDate"    const sortOrder = req.query.sortOrder || "desc"    const page = Number.parseInt(req.query.page) || 1    const limit = Number.parseInt(req.query.limit) || 10    const search = req.query.search || ""    const dailySalesPage = Number.parseInt(req.query.dailySalesPage) || 1    const dailySalesLimit = Number.parseInt(req.query.dailySalesLimit) || 10    const transactionPage = Number.parseInt(req.query.transactionPage) || 1    const transactionLimit = Number.parseInt(req.query.transactionLimit) || 10    let dateRange    if (timeFilter === "custom" && customStartDate && customEndDate) {      if (customStartDate > customEndDate) {        return res.render("admin/pages/salesReport", {          admin: req.session.admin,          error_msg: "Start date cannot be later than end date",          reportData: null,        })      }      const startDate = new Date(customStartDate)      const endDate = new Date(customEndDate)      startDate.setHours(0, 0, 0, 0)      endDate.setHours(23, 59, 59, 999)      dateRange = { startDate, endDate }    } else {      dateRange = getDateRange(timeFilter)    }    const query = {      orderDate: { $gte: dateRange.startDate, $lte: dateRange.endDate },    }    if (paymentMethod) {      query.paymentMethod = paymentMethod    }    if (search) {      query.$or = [        { orderID: { $regex: search, $options: "i" } },        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },      ]    }    const allOrders = await Order.find(query)      .populate("user", "name email mobile")      .populate({        path: "products.product",        select: "name images categoryId",        populate: {          path: "categoryId",          select: "name",        },      })      .lean()    const totalOrders = await Order.countDocuments(query)    const totalPages = Math.ceil(totalOrders / limit)    const orders = await Order.find(query)      .populate("user", "name email mobile")      .populate({        path: "products.product",        select: "name images categoryId",        populate: {          path: "categoryId",          select: "name",        },      })      .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })      .skip((page - 1) * limit)      .limit(limit)      .lean()    const dailySales = groupDataByTimePeriod(allOrders, "daily")    const totalDailySalesPages = Math.ceil(dailySales.length / dailySalesLimit)    const paginatedDailySales = dailySales.slice(      (dailySalesPage - 1) * dailySalesLimit,      dailySalesPage * dailySalesLimit,    )    const transactionQuery = {      createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },    }    const totalTransactions = await Transaction.countDocuments(transactionQuery)    const totalTransactionPages = Math.ceil(totalTransactions / transactionLimit)    const transactions = await Transaction.find(transactionQuery)      .populate("user", "name email")      .populate("order", "orderID")      .sort({ createdAt: sortOrder === "asc" ? 1 : -1 })      .skip((transactionPage - 1) * transactionLimit)      .limit(transactionLimit)      .lean()    const totalRevenue = allOrders.reduce((sum, order) => sum + order.finalAmount, 0)    const totalDiscount = allOrders.reduce((sum, order) => sum + (order.discount || 0), 0)    const totalCouponDiscount = allOrders.reduce((sum, order) => {      return sum + (order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0)    }, 0)    const averageOrderValue = allOrders.length > 0 ? totalRevenue / allOrders.length : 0    const paymentMethods = {}    allOrders.forEach((order) => {      const method = order.paymentMethod      if (!paymentMethods[method]) {        paymentMethods[method] = { count: 0, amount: 0 }      }      paymentMethods[method].count += 1      paymentMethods[method].amount += order.finalAmount    })    const customerSales = {}    allOrders.forEach((order) => {      const userId = order.user ? order.user._id.toString() : "Unknown"      const userName = order.user ? order.user.name : "Unknown User"      const userEmail = order.user ? order.user.email : "Unknown"      if (!customerSales[userId]) {        customerSales[userId] = {          name: userName,          email: userEmail,          orderCount: 0,          totalSpent: 0,        }      }      customerSales[userId].orderCount += 1      customerSales[userId].totalSpent += order.finalAmount    })    const topCustomers = Object.values(customerSales)      .sort((a, b) => b.totalSpent - a.totalSpent)      .slice(0, 5)    const availablePaymentMethods = await Order.distinct("paymentMethod")    const reportData = {      timeFilter,      startDate: dateRange.startDate,      endDate: dateRange.endDate,      totalOrders: allOrders.length,      totalRevenue,      totalDiscount,      totalCouponDiscount,      averageOrderValue,      paymentMethods,      topCustomers,      dailySales: paginatedDailySales,      allDailySales: dailySales,      orders,      allOrders,      transactions,      pagination: {        page,        limit,        totalPages,        totalItems: totalOrders,        hasNextPage: page < totalPages,        hasPrevPage: page > 1,      },      dailySalesPagination: {        page: dailySalesPage,        limit: dailySalesLimit,        totalPages: totalDailySalesPages,        totalItems: dailySales.length,        hasNextPage: dailySalesPage < totalDailySalesPages,        hasPrevPage: dailySalesPage > 1,      },      transactionPagination: {        page: transactionPage,        limit: transactionLimit,        totalPages: totalTransactionPages,        totalItems: totalTransactions,        hasNextPage: transactionPage < totalTransactionPages,        hasPrevPage: transactionPage > 1,      },      filters: {        timeFilter,        paymentMethod,        sortBy,        sortOrder,        search,        availablePaymentMethods,      },    }    res.render("admin/pages/salesReport", {      admin: req.session.admin,      reportData,      moment,      formatCurrency,    })  } catch (error) {    console.error("Sales report error:", error)    console.error("Error stack:", error.stack)    res.render("admin/pages/salesReport", {      admin: req.session.admin,      error_msg: "Failed to generate sales report: " + error.message,      reportData: null,      moment,      formatCurrency,    })  }}const downloadPDF = async (req, res) => {  try {    const timeFilter = req.query.timeFilter || "monthly"    const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null    const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null    const paymentMethod = req.query.paymentMethod || ""    const search = req.query.search || ""    const sortBy = req.query.sortBy || "orderDate"    const sortOrder = req.query.sortOrder || "desc"    let dateRange    if (timeFilter === "custom" && customStartDate && customEndDate) {      if (customStartDate > customEndDate) {        return res.status(400).send("Invalid date range: Start date cannot be later than end date")      }      const startDate = new Date(customStartDate)      const endDate = new Date(customEndDate)      startDate.setHours(0, 0, 0, 0)      endDate.setHours(23, 59, 59, 999)      dateRange = { startDate, endDate }    } else {      dateRange = getDateRange(timeFilter)    }    const query = {      orderDate: { $gte: dateRange.startDate, $lte: dateRange.endDate },    }    if (paymentMethod) {      query.paymentMethod = paymentMethod    }    if (search) {      query.$or = [        { orderID: { $regex: search, $options: "i" } },        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },      ]    }    if (search) {      query.$or = [        { orderID: { $regex: search, $options: "i" } },        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },      ]    }    const sortObj = {}    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1    const orders = await Order.find(query)      .populate("user", "name email mobile")      .populate({        path: "products.product",        select: "name images categoryId brand",        populate: {          path: "categoryId",          select: "name",        },      })      .sort(sortObj)      .lean()    const transactions = await Transaction.find({      createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },    })      .populate("user", "name email")      .populate("order", "orderID")      .sort({ createdAt: -1 })      .lean()    const totalOrders = orders.length    const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0)    const totalDiscount = orders.reduce((sum, order) => sum + (order.discount || 0), 0)    const totalCouponDiscount = orders.reduce((sum, order) => {      return sum + (order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0)    }, 0)    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0    const salesByPeriod = groupDataByTimePeriod(orders, timeFilter)    const dailySales = groupDataByTimePeriod(orders, "daily")    const paymentMethodsBreakdown = {}    orders.forEach((order) => {      const method = order.paymentMethod      if (!paymentMethodsBreakdown[method]) {        paymentMethodsBreakdown[method] = { count: 0, amount: 0 }      }      paymentMethodsBreakdown[method].count += 1      paymentMethodsBreakdown[method].amount += order.finalAmount    })    const customerSales = {}    orders.forEach((order) => {      const userId = order.user ? order.user._id.toString() : "Unknown"      const userName = order.user ? order.user.name : "Unknown User"      const userEmail = order.user ? order.user.email : "Unknown"      if (!customerSales[userId]) {        customerSales[userId] = {          name: userName,          email: userEmail,          orderCount: 0,          totalSpent: 0,        }      }      customerSales[userId].orderCount += 1      customerSales[userId].totalSpent += order.finalAmount    })    const topCustomers = Object.values(customerSales)      .sort((a, b) => b.totalSpent - a.totalSpent)      .slice(0, 10)    const doc = new PDFDocument({      margin: 30,      size: "A4",      layout: "portrait",      bufferPages: true,      autoFirstPage: true,      info: {        Title: `WEARiT Sales Report - ${timeFilter}`,        Author: "WEARiT Admin System",        Subject: "Sales Analytics Report",        Keywords: "sales, report, analytics, ecommerce",      },    })    res.setHeader("Content-Type", "application/pdf")    res.setHeader(      "Content-Disposition",      `attachment; filename=WEARiT-Sales-Report-${timeFilter}-${moment().format("YYYY-MM-DD")}.pdf`,    )    doc.pipe(res)    const pageWidth = doc.page.width - 60    const leftMargin = 30    const rightMargin = doc.page.width - 30    const pageHeight = doc.page.height - 60    const usableHeight = pageHeight - 80    const centerX = doc.page.width / 2    const colors = {      primary: "#1E40AF",      secondary: "#3B82F6",      accent: "#10B981",      danger: "#EF4444",      warning: "#F59E0B",      dark: "#1F2937",      medium: "#6B7280",      light: "#9CA3AF",      background: "#F8FAFC",      border: "#E5E7EB",    }    const addPageIfNeeded = (requiredSpace = 80) => {      if (doc.y + requiredSpace > usableHeight) {        doc.addPage()        return true      }      return false    }    const drawEnhancedDivider = (color = colors.border, thickness = 1) => {      doc.strokeColor(color).lineWidth(thickness)      doc        .moveTo(leftMargin, doc.y + 15)        .lineTo(rightMargin, doc.y + 15)        .stroke()      doc.y += 25    }    const formatPDFCurrency = (amount) => {      return `₹${(amount || 0).toLocaleString("en-IN", {        minimumFractionDigits: 2,        maximumFractionDigits: 2,      })}`    }    const drawCard = (x, y, width, height, title, value, color = colors.primary) => {      doc.rect(x, y, width, height).fillAndStroke(colors.background, colors.border)      doc.rect(x, y, width, 25).fillAndStroke(color, color)      doc.fontSize(10).font("Helvetica-Bold").fillColor("#FFFFFF")      doc.text(title, x + 10, y + 8, { width: width - 20, align: "center" })      doc.fontSize(16).font("Helvetica-Bold").fillColor(colors.dark)      doc.text(value, x + 10, y + 35, { width: width - 20, align: "center" })    }    const drawTable = (headers, data, columnWidths, startY, options = {}) => {      const {        headerColor = colors.primary,        alternateRows = true,        fontSize = 9,        headerFontSize = 10,        rowHeight = 25,        headerHeight = 30,      } = options      let currentY = startY      const tableWidth = columnWidths.reduce((sum, width) => sum + width, 0)      doc.rect(leftMargin, currentY, tableWidth, headerHeight).fillAndStroke(headerColor, headerColor)      doc.fontSize(headerFontSize).font("Helvetica-Bold").fillColor("#FFFFFF")      let xPos = leftMargin + 8      headers.forEach((header, i) => {        doc.text(header, xPos, currentY + 8, {          width: columnWidths[i] - 16,          align: i === 0 ? "left" : "center",        })        xPos += columnWidths[i]      })      currentY += headerHeight      data.forEach((row, index) => {        if (currentY + rowHeight > usableHeight) {          doc.addPage()          currentY = 60          doc.rect(leftMargin, currentY, tableWidth, headerHeight).fillAndStroke(headerColor, headerColor)          doc.fontSize(headerFontSize).font("Helvetica-Bold").fillColor("#FFFFFF")          xPos = leftMargin + 8          headers.forEach((header, i) => {            doc.text(header, xPos, currentY + 8, {              width: columnWidths[i] - 16,              align: i === 0 ? "left" : "center",            })            xPos += columnWidths[i]          })          currentY += headerHeight        }        if (alternateRows && index % 2 === 0) {          doc.rect(leftMargin, currentY, tableWidth, rowHeight).fillAndStroke(colors.background, colors.background)        }        doc.fontSize(fontSize).font("Helvetica").fillColor(colors.dark)        xPos = leftMargin + 8        row.forEach((cellData, i) => {          doc.text(String(cellData), xPos, currentY + 6, {            width: columnWidths[i] - 16,            align: i === 0 ? "left" : "center",          })          xPos += columnWidths[i]        })        currentY += rowHeight      })      return currentY    }    doc.fontSize(28).font("Helvetica-Bold").fillColor(colors.primary)    doc.text("WEARiT", centerX - 50, 50, { align: "center" })    doc.fontSize(18).font("Helvetica").fillColor(colors.dark)    doc.text("Sales Analytics Report", leftMargin, doc.y + 10, {      align: "center",      width: pageWidth,    })    doc.fontSize(12).font("Helvetica").fillColor(colors.medium)    doc.text(      `Report Period: ${moment(dateRange.startDate).format("MMM DD, YYYY")} - ${moment(dateRange.endDate).format("MMM DD, YYYY")}`,      leftMargin,      doc.y + 15,      { align: "center", width: pageWidth },    )    doc.fontSize(10).fillColor(colors.light)    doc.text(`Generated on: ${moment().format("MMM DD, YYYY HH:mm:ss")}`, leftMargin, doc.y + 8, {      align: "center",      width: pageWidth,    })    doc.y += 30    drawEnhancedDivider(colors.primary, 2)    doc.fontSize(20).font("Helvetica-Bold").fillColor(colors.dark)    doc.text("Executive Summary", leftMargin, doc.y)    doc.y += 30    const cardWidth = (pageWidth - 40) / 3    const cardHeight = 70    const cardY = doc.y    drawCard(leftMargin, cardY, cardWidth, cardHeight, "Total Orders", totalOrders.toLocaleString(), colors.primary)    drawCard(      leftMargin + cardWidth + 20,      cardY,      cardWidth,      cardHeight,      "Total Revenue",      formatPDFCurrency(totalRevenue),      colors.accent,    )    drawCard(      leftMargin + (cardWidth + 20) * 2,      cardY,      cardWidth,      cardHeight,      "Avg Order Value",      formatPDFCurrency(averageOrderValue),      colors.secondary,    )    doc.y = cardY + cardHeight + 20    const cardY2 = doc.y    drawCard(      leftMargin,      cardY2,      cardWidth,      cardHeight,      "Total Discounts",      formatPDFCurrency(totalDiscount + totalCouponDiscount),      colors.warning,    )    drawCard(      leftMargin + cardWidth + 20,      cardY2,      cardWidth,      cardHeight,      "Net Revenue",      formatPDFCurrency(totalRevenue - totalDiscount - totalCouponDiscount),      colors.accent,    )    drawCard(      leftMargin + (cardWidth + 20) * 2,      cardY2,      cardWidth,      cardHeight,      "Total Transactions",      transactions.length.toLocaleString(),      colors.secondary,    )    doc.y = cardY2 + cardHeight + 30    drawEnhancedDivider()    if (salesByPeriod.length > 0) {      addPageIfNeeded(150)      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)      doc.text(`${timeFilter.charAt(0).toUpperCase() + timeFilter.slice(1)} Sales Analysis`, leftMargin, doc.y)      doc.y += 30      const periodHeaders = ["Period", "Orders", "Revenue", "Discounts", "Net Revenue", "Growth %"]      const periodColumnWidths = [120, 60, 100, 100, 100, 70]      const periodData = salesByPeriod.map((period, index) => {        const netRevenue = period.revenue - period.discount - period.couponDiscount        const prevPeriod = salesByPeriod[index - 1]        const growth = prevPeriod          ? (              ((netRevenue - (prevPeriod.revenue - prevPeriod.discount - prevPeriod.couponDiscount)) /                (prevPeriod.revenue - prevPeriod.discount - prevPeriod.couponDiscount)) *              100            ).toFixed(1) + "%"          : "N/A"        return [          period.period.length > 18 ? period.period.substring(0, 15) + "..." : period.period,          period.count.toString(),          formatPDFCurrency(period.revenue),          formatPDFCurrency(period.discount + period.couponDiscount),          formatPDFCurrency(netRevenue),          growth,        ]      })      doc.y =        drawTable(periodHeaders, periodData, periodColumnWidths, doc.y, {          headerColor: colors.primary,          fontSize: 8,        }) + 20      drawEnhancedDivider()    }    if (dailySales.length > 0) {      addPageIfNeeded(150)      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)      doc.text("Daily Sales Analysis", leftMargin, doc.y)      doc.y += 30      const dailyHeaders = ["Date", "Orders", "Revenue", "Discounts", "Net Revenue"]      const dailyColumnWidths = [120, 70, 110, 110, 110]      const dailyData = dailySales.map((day) => [        moment(day.date).format("MMM DD, YYYY"),        day.count.toString(),        formatPDFCurrency(day.revenue),        formatPDFCurrency(day.discount + day.couponDiscount),        formatPDFCurrency(day.revenue - day.discount - day.couponDiscount),      ])      doc.y =        drawTable(dailyHeaders, dailyData, dailyColumnWidths, doc.y, {          headerColor: colors.secondary,          fontSize: 8,        }) + 20      drawEnhancedDivider()    }    if (orders.length > 0) {      addPageIfNeeded(150)      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)      doc.text(`Complete Orders Analysis (${orders.length} orders)`, leftMargin, doc.y)      doc.y += 30      const orderHeaders = ["Order ID", "Date", "Customer", "Payment", "Amount", "Status"]      const orderColumnWidths = [90, 80, 120, 80, 100, 80]      const orderData = orders.map((order) => [        order.orderID.length > 12 ? order.orderID.substring(0, 9) + "..." : order.orderID,        moment(order.orderDate).format("MM/DD/YY"),        order.user          ? order.user.name.length > 15            ? order.user.name.substring(0, 12) + "..."            : order.user.name          : "Unknown",        order.paymentMethod.substring(0, 10).toUpperCase(),        formatPDFCurrency(order.finalAmount),        order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1, 10),      ])      doc.y =        drawTable(orderHeaders, orderData, orderColumnWidths, doc.y, {          headerColor: colors.accent,          fontSize: 8,        }) + 20      drawEnhancedDivider()    }    if (transactions.length > 0) {      addPageIfNeeded(150)      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)      doc.text(`Complete Transactions Analysis (${transactions.length} transactions)`, leftMargin, doc.y)      doc.y += 30      const transactionHeaders = ["Transaction ID", "Order ID", "Date", "Customer", "Method", "Amount", "Status"]      const transactionColumnWidths = [100, 80, 80, 100, 70, 90, 70]      const transactionData = transactions.map((transaction) => [        transaction.transactionId ? transaction.transactionId.substring(0, 12) + "..." : "N/A",        transaction.order ? transaction.order.orderID.substring(0, 10) + "..." : "N/A",        moment(transaction.createdAt).format("MM/DD/YY"),        transaction.user          ? transaction.user.name.length > 12            ? transaction.user.name.substring(0, 9) + "..."            : transaction.user.name          : "Unknown",        transaction.paymentMethod.substring(0, 8),        formatPDFCurrency(transaction.amount),        transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1, 8),      ])      doc.y =        drawTable(transactionHeaders, transactionData, transactionColumnWidths, doc.y, {          headerColor: colors.warning,          fontSize: 8,        }) + 20      drawEnhancedDivider()    }    if (Object.keys(paymentMethodsBreakdown).length > 0) {      addPageIfNeeded(120)      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)      doc.text("Payment Method Analysis", leftMargin, doc.y)      doc.y += 30      const paymentHeaders = ["Payment Method", "Orders", "Total Amount", "Avg Order", "Percentage"]      const paymentColumnWidths = [140, 80, 120, 100, 80]      const paymentData = Object.entries(paymentMethodsBreakdown).map(([method, data]) => {        const percentage = ((data.amount / totalRevenue) * 100).toFixed(1)        const avgOrder = data.count > 0 ? data.amount / data.count : 0        return [          method.charAt(0).toUpperCase() + method.slice(1),          data.count.toLocaleString(),          formatPDFCurrency(data.amount),          formatPDFCurrency(avgOrder),          `${percentage}%`,        ]      })      doc.y =        drawTable(paymentHeaders, paymentData, paymentColumnWidths, doc.y, {          headerColor: colors.danger,          fontSize: 9,        }) + 20      drawEnhancedDivider()    }    if (topCustomers.length > 0) {      addPageIfNeeded(120)      doc.fontSize(18).font("Helvetica-Bold").fillColor(colors.dark)      doc.text("Top Customers Analysis", leftMargin, doc.y)      doc.y += 30      const customerHeaders = ["Customer Name", "Email", "Orders", "Total Spent", "Avg Order"]      const customerColumnWidths = [120, 140, 70, 100, 90]      const customerData = topCustomers.map((customer) => [        customer.name.length > 15 ? customer.name.substring(0, 12) + "..." : customer.name,        customer.email.length > 20 ? customer.email.substring(0, 17) + "..." : customer.email,        customer.orderCount.toString(),        formatPDFCurrency(customer.totalSpent),        formatPDFCurrency(customer.totalSpent / customer.orderCount),      ])      doc.y =        drawTable(customerHeaders, customerData, customerColumnWidths, doc.y, {          headerColor: colors.secondary,          fontSize: 9,        }) + 20    }    const pages = doc.bufferedPageRange()    const totalPagesCount = pages.count    for (let i = 0; i < totalPagesCount; i++) {      doc.switchToPage(i)      const footerY = doc.page.height - 40      doc.rect(leftMargin, footerY - 5, pageWidth, 35).fillAndStroke(colors.background, colors.border)      doc.fontSize(8).font("Helvetica").fillColor(colors.medium)      doc.text(`Page ${i + 1} of ${totalPagesCount}`, leftMargin + 10, footerY + 5)      doc.text(`WEARiT Sales Report - ${timeFilter.toUpperCase()}`, centerX - 80, footerY + 5)      doc.text(`Generated: ${moment().format("MMM DD, YYYY HH:mm")}`, rightMargin - 120, footerY + 5)      doc.fontSize(7).fillColor(colors.light)      doc.text("Confidential - For Internal Use Only", leftMargin + 10, footerY + 18)      doc.text(        `Total Records: ${orders.length} Orders, ${transactions.length} Transactions`,        rightMargin - 200,        footerY + 18,      )    }    doc.end()  } catch (error) {    console.error("Admin downloadPDF error:", error)    res.status(500).send("Failed to generate PDF report: " + error.message)  }}const downloadExcel = async (req, res) => {  try {    const ExcelJS = require("exceljs")    const timeFilter = req.query.timeFilter || "monthly"    const customStartDate = req.query.startDate ? new Date(req.query.startDate) : null    const customEndDate = req.query.endDate ? new Date(req.query.endDate) : null    const paymentMethod = req.query.paymentMethod || ""    const search = req.query.search || ""    const sortBy = req.query.sortBy || "orderDate"    const sortOrder = req.query.sortOrder || "desc"    let dateRange    if (timeFilter === "custom" && customStartDate && customEndDate) {      if (customStartDate > customEndDate) {        return res.status(400).send("Invalid date range: Start date cannot be later than end date")      }      const startDate = new Date(customStartDate)      const endDate = new Date(customEndDate)      startDate.setHours(0, 0, 0, 0)      endDate.setHours(23, 59, 59, 999)      dateRange = { startDate, endDate }    } else {      dateRange = getDateRange(timeFilter)    }    const query = {      orderDate: { $gte: dateRange.startDate, $lte: dateRange.endDate },    }    if (paymentMethod) {      query.paymentMethod = paymentMethod    }    if (search) {      query.$or = [        { orderID: { $regex: search, $options: "i" } },        { "paymentDetails.transactionId": { $regex: search, $options: "i" } },      ]    }    const sortObj = {}    sortObj[sortBy] = sortOrder === "asc" ? 1 : -1    const orders = await Order.find(query)      .populate("user", "name email mobile")      .populate({        path: "products.product",        select: "name images categoryId brand",        populate: {          path: "categoryId",          select: "name",        },      })      .sort(sortObj)      .lean()    const transactions = await Transaction.find({      createdAt: { $gte: dateRange.startDate, $lte: dateRange.endDate },    })      .populate("user", "name email")      .populate("order", "orderID")      .sort({ createdAt: -1 })      .lean()    const totalOrders = orders.length    const totalRevenue = orders.reduce((sum, order) => sum + order.finalAmount, 0)    const totalDiscount = orders.reduce((sum, order) => sum + (order.discount || 0), 0)    const totalCouponDiscount = orders.reduce((sum, order) => {      return sum + (order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0)    }, 0)    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0    const salesByPeriod = groupDataByTimePeriod(orders, timeFilter)    const dailySales = groupDataByTimePeriod(orders, "daily")    const workbook = new ExcelJS.Workbook()    workbook.creator = "WEARiT Admin"    workbook.created = new Date()    const summarySheet = workbook.addWorksheet("Summary")    summarySheet.mergeCells("A1:E1")    summarySheet.getCell("A1").value = "WEARiT Sales Report"    summarySheet.getCell("A1").font = { size: 16, bold: true }    summarySheet.getCell("A1").alignment = { horizontal: "center" }    summarySheet.mergeCells("A2:E2")    summarySheet.getCell("A2").value = `Report Period: ${moment(dateRange.startDate).format(      "MMM DD, YYYY",    )} - ${moment(dateRange.endDate).format("MMM DD, YYYY")}`    summarySheet.getCell("A2").alignment = { horizontal: "center" }    summarySheet.getCell("A4").value = "Total Orders:"    summarySheet.getCell("B4").value = totalOrders    summarySheet.getCell("A5").value = "Total Revenue:"    summarySheet.getCell("B5").value = totalRevenue    summarySheet.getCell("B5").numFmt = "₹#,##0.00"    summarySheet.getCell("A6").value = "Total Product Discount:"    summarySheet.getCell("B6").value = totalDiscount    summarySheet.getCell("B6").numFmt = "₹#,##0.00"    summarySheet.getCell("A7").value = "Total Coupon Discount:"    summarySheet.getCell("B7").value = totalCouponDiscount    summarySheet.getCell("B7").numFmt = "₹#,##0.00"    summarySheet.getCell("A8").value = "Total Discount:"    summarySheet.getCell("B8").value = totalDiscount + totalCouponDiscount    summarySheet.getCell("B8").numFmt = "₹#,##0.00"    summarySheet.getCell("A9").value = "Net Revenue:"    summarySheet.getCell("B9").value = totalRevenue - totalDiscount - totalCouponDiscount    summarySheet.getCell("B9").numFmt = "₹#,##0.00"    summarySheet.getCell("A10").value = "Average Order Value:"    summarySheet.getCell("B10").value = averageOrderValue    summarySheet.getCell("B10").numFmt = "₹#,##0.00"    for (let i = 4; i <= 10; i++) {      summarySheet.getCell(`A${i}`).font = { bold: true }    }    const periodSheet = workbook.addWorksheet(`${timeFilter.charAt(0).toUpperCase() + timeFilter.slice(1)} Sales`)    periodSheet.columns = [      { header: "Period", key: "period", width: 20 },      { header: "Orders", key: "orders", width: 10 },      { header: "Revenue", key: "revenue", width: 15 },      { header: "Product Discount", key: "discount", width: 15 },      { header: "Coupon Discount", key: "couponDiscount", width: 15 },      { header: "Total Discount", key: "totalDiscount", width: 15 },      { header: "Net Revenue", key: "netRevenue", width: 15 },    ]    periodSheet.getRow(1).font = { bold: true }    periodSheet.getRow(1).alignment = { horizontal: "center" }    salesByPeriod.forEach((period) => {      const totalPeriodDiscount = period.discount + period.couponDiscount      periodSheet.addRow({        period: period.period,        orders: period.count,        revenue: period.revenue,        discount: period.discount,        couponDiscount: period.couponDiscount,        totalDiscount: totalPeriodDiscount,        netRevenue: period.revenue - totalPeriodDiscount,      })    })    periodSheet.getColumn("revenue").numFmt = "₹#,##0.00"    periodSheet.getColumn("discount").numFmt = "₹#,##0.00"    periodSheet.getColumn("couponDiscount").numFmt = "₹#,##0.00"    periodSheet.getColumn("totalDiscount").numFmt = "₹#,##0.00"    periodSheet.getColumn("netRevenue").numFmt = "₹#,##0.00"    const dailySheet = workbook.addWorksheet("Daily Sales")    dailySheet.columns = [      { header: "Date", key: "date", width: 15 },      { header: "Orders", key: "orders", width: 10 },      { header: "Revenue", key: "revenue", width: 15 },      { header: "Product Discount", key: "discount", width: 15 },      { header: "Coupon Discount", key: "couponDiscount", width: 15 },      { header: "Total Discount", key: "totalDiscount", width: 15 },      { header: "Net Revenue", key: "netRevenue", width: 15 },    ]    dailySheet.getRow(1).font = { bold: true }    dailySheet.getRow(1).alignment = { horizontal: "center" }    dailySales.forEach((day) => {      const totalDayDiscount = day.discount + day.couponDiscount      dailySheet.addRow({        date: moment(day.date).format("MMM DD, YYYY"),        orders: day.count,        revenue: day.revenue,        discount: day.discount,        couponDiscount: day.couponDiscount,        totalDiscount: totalDayDiscount,        netRevenue: day.revenue - totalDayDiscount,      })    })    dailySheet.getColumn("revenue").numFmt = "₹#,##0.00"    dailySheet.getColumn("discount").numFmt = "₹#,##0.00"    dailySheet.getColumn("couponDiscount").numFmt = "₹#,##0.00"    dailySheet.getColumn("totalDiscount").numFmt = "₹#,##0.00"    dailySheet.getColumn("netRevenue").numFmt = "₹#,##0.00"    const ordersSheet = workbook.addWorksheet("Orders")    ordersSheet.columns = [      { header: "Order ID", key: "orderId", width: 15 },      { header: "Date", key: "date", width: 15 },      { header: "Customer Name", key: "customerName", width: 20 },      { header: "Customer Email", key: "customerEmail", width: 25 },      { header: "Customer Mobile", key: "customerMobile", width: 15 },      { header: "Payment Method", key: "paymentMethod", width: 15 },      { header: "Items Count", key: "itemsCount", width: 12 },      { header: "Total Items", key: "totalItems", width: 12 },      { header: "Original Amount", key: "originalAmount", width: 15 },      { header: "Product Discount", key: "discount", width: 15 },      { header: "Coupon Code", key: "couponCode", width: 15 },      { header: "Coupon Discount", key: "couponDiscount", width: 15 },      { header: "Total Discount", key: "totalDiscount", width: 15 },      { header: "Final Amount", key: "finalAmount", width: 15 },      { header: "Order Status", key: "orderStatus", width: 15 },    ]    ordersSheet.getRow(1).font = { bold: true }    ordersSheet.getRow(1).alignment = { horizontal: "center" }    orders.forEach((order) => {      const totalQuantity = order.products.reduce((sum, item) => sum + item.quantity, 0)      const itemsCount = order.products.length      const totalOrderDiscount = (order.discount || 0) + (order.coupon ? order.coupon.discountAmount : 0)      ordersSheet.addRow({        orderId: order.orderID,        date: moment(order.orderDate).format("MMM DD, YYYY"),        customerName: order.user ? order.user.name : "Unknown",        customerEmail: order.user ? order.user.email : "Unknown",        customerMobile: order.user ? order.user.mobile : "Unknown",        paymentMethod: order.paymentMethod,        itemsCount: itemsCount,        totalItems: totalQuantity,        originalAmount: order.totalAmount,        discount: order.discount || 0,        couponCode: order.coupon ? order.coupon.code : "N/A",        couponDiscount: order.coupon ? order.coupon.discountAmount : 0,        totalDiscount: totalOrderDiscount,        finalAmount: order.finalAmount,        orderStatus: order.orderStatus,      })    })    ordersSheet.getColumn("originalAmount").numFmt = "₹#,##0.00"    ordersSheet.getColumn("discount").numFmt = "₹#,##0.00"    ordersSheet.getColumn("couponDiscount").numFmt = "₹#,##0.00"    ordersSheet.getColumn("totalDiscount").numFmt = "₹#,##0.00"    ordersSheet.getColumn("finalAmount").numFmt = "₹#,##0.00"    const orderItemsSheet = workbook.addWorksheet("Order Items")    orderItemsSheet.columns = [      { header: "Order ID", key: "orderId", width: 15 },      { header: "Date", key: "date", width: 15 },      { header: "Customer", key: "customer", width: 20 },      { header: "Product", key: "product", width: 30 },      { header: "Category", key: "category", width: 15 },      { header: "Size", key: "size", width: 10 },      { header: "Quantity", key: "quantity", width: 10 },      { header: "Unit Price", key: "unitPrice", width: 15 },      { header: "Sale Price", key: "salePrice", width: 15 },      { header: "Total", key: "total", width: 15 },      { header: "Status", key: "status", width: 15 },    ]    orderItemsSheet.getRow(1).font = { bold: true }    orderItemsSheet.getRow(1).alignment = { horizontal: "center" }    orders.forEach((order) => {      order.products.forEach((item) => {        orderItemsSheet.addRow({          orderId: order.orderID,          date: moment(order.orderDate).format("MMM DD, YYYY"),          customer: order.user ? order.user.name : "Unknown",          product: item.product ? item.product.name : "Unknown Product",          category: item.product && item.product.categoryId ? item.product.categoryId.name : "Unknown",          size: item.variant ? item.variant.size : "N/A",          quantity: item.quantity,          unitPrice: item.variant ? item.variant.varientPrice : 0,          salePrice: item.variant ? item.variant.salePrice : 0,          total: (item.variant ? item.variant.salePrice : 0) * item.quantity,          status: item.status,        })      })    })    orderItemsSheet.getColumn("unitPrice").numFmt = "₹#,##0.00"    orderItemsSheet.getColumn("salePrice").numFmt = "₹#,##0.00"    orderItemsSheet.getColumn("total").numFmt = "₹#,##0.00"    const transactionsSheet = workbook.addWorksheet("Transactions")    transactionsSheet.columns = [      { header: "Transaction ID", key: "transactionId", width: 20 },      { header: "Order ID", key: "orderId", width: 15 },      { header: "Date", key: "date", width: 15 },      { header: "Customer", key: "customer", width: 20 },      { header: "Payment Method", key: "paymentMethod", width: 15 },      { header: "Amount", key: "amount", width: 15 },      { header: "Status", key: "status", width: 15 },      { header: "Payment ID", key: "paymentId", width: 25 },    ]    transactionsSheet.getRow(1).font = { bold: true }    transactionsSheet.getRow(1).alignment = { horizontal: "center" }    transactions.forEach((transaction) => {      transactionsSheet.addRow({        transactionId: transaction.transactionId,        orderId: transaction.order ? transaction.order.orderID : "Unknown",        date: moment(transaction.createdAt).format("MMM DD, YYYY HH:mm:ss"),        customer: transaction.user ? transaction.user.name : "Unknown",        paymentMethod: transaction.paymentMethod,        amount: transaction.amount,        status: transaction.status,        paymentId: transaction.paymentDetails ? transaction.paymentDetails.paymentId : "N/A",      })    })    transactionsSheet.getColumn("amount").numFmt = "₹#,##0.00"    const paymentMethodsSheet = workbook.addWorksheet("Payment Methods")    paymentMethodsSheet.columns = [      { header: "Payment Method", key: "method", width: 20 },      { header: "Order Count", key: "count", width: 15 },      { header: "Total Amount", key: "amount", width: 15 },      { header: "Average Order", key: "average", width: 15 },      { header: "Percentage", key: "percentage", width: 15 },    ]    paymentMethodsSheet.getRow(1).font = { bold: true }    paymentMethodsSheet.getRow(1).alignment = { horizontal: "center" }    const paymentMethodsBreakdown = {}    orders.forEach((order) => {      const method = order.paymentMethod      if (!paymentMethodsBreakdown[method]) {        paymentMethodsBreakdown[method] = { count: 0, amount: 0 }      }      paymentMethodsBreakdown[method].count += 1      paymentMethodsBreakdown[method].amount += order.finalAmount    })    Object.entries(paymentMethodsBreakdown).forEach(([method, data]) => {      const percentage = totalRevenue > 0 ? (data.amount / totalRevenue) * 100 : 0      const average = data.count > 0 ? data.amount / data.count : 0      paymentMethodsSheet.addRow({        method: method.charAt(0).toUpperCase() + method.slice(1),        count: data.count,        amount: data.amount,        average: average,        percentage: `${percentage.toFixed(2)}%`,      })    })    paymentMethodsSheet.getColumn("amount").numFmt = "₹#,##0.00"    paymentMethodsSheet.getColumn("average").numFmt = "₹#,##0.00"    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")    res.setHeader(      "Content-Disposition",      `attachment; filename=sales-report-${timeFilter}-${moment().format("YYYY-MM-DD")}.xlsx`,    )    await workbook.xlsx.write(res)    res.end()  } catch (error) {    console.error("Admin downloadExcel error:", error)    res.status(500).send("Failed to generate Excel report: " + error.message)  }}module.exports = {  getSalesReport,  downloadPDF,  downloadExcel,}

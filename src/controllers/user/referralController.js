@@ -1,76 +1,1 @@
-const User = require("../../models/userModel")
-const { generateReferralCode } = require("../../utils/referralCodeGenerator")
-
-const loadReferralPage = async (req, res) => {
-  try {
-    if (!req.user) {
-      req.flash("error_msg", "Please login to access your referral code")
-      return res.redirect("/login")
-    }
-    const user = await User.findById(req.user._id)
-    if (!user.referralCode) {
-      user.referralCode = await generateReferralCode()
-      await user.save()
-    }
-    const referralCount = await User.countDocuments({ referredBy: user._id })
-    const cartCount = req.session.cart ? req.session.cart.products.length : 0
-
-    res.render("pages/referral", {
-      user: req.user,
-      referralCode: user.referralCode,
-      referralCount,
-      cartCount,
-      activePage: "referral",
-    })
-  } catch (error) {
-    req.flash("error_msg", "Failed to load referral page")
-    res.redirect("/profile")
-  }
-}
-
-const loadReferralCodeEntry = async (req, res) => {
-  try {
-    if (req.user) {
-      return res.redirect("/referral")
-    }
-    const referralCode = req.query.code || ""
-
-    res.render("pages/referral-entry", {
-      referralCode,
-      user: null,
-    })
-  } catch (error) {
-    res.redirect("/signup")
-  }
-}
-const validateReferralCode = async (req, res) => {
-  try {
-    const { code } = req.body
-
-    if (!code) {
-      return res.status(400).json({ valid: false, message: "No referral code provided" })
-    }
-
-    const referrer = await User.findOne({ referralCode: code })
-
-    if (!referrer) {
-      return res.status(404).json({ valid: false, message: "Invalid referral code" })
-    }
-    req.session.validReferralCode = code
-    req.session.referrerId = referrer._id
-
-    return res.status(200).json({
-      valid: true,
-      message: "Valid referral code",
-      redirectUrl: `/signup?ref=${code}`,
-    })
-  } catch (error) {
-    return res.status(500).json({ valid: false, message: "Server error" })
-  }
-}
-
-module.exports = {
-  loadReferralPage,
-  loadReferralCodeEntry,
-  validateReferralCode,
-}
+const User = require("../../models/userModel")const { generateReferralCode } = require("../../utils/referralCodeGenerator")const loadReferralPage = async (req, res) => {  try {    if (!req.user) {      req.flash("error_msg", "Please login to access your referral code")      return res.redirect("/login")    }    const user = await User.findById(req.user._id)    if (!user.referralCode) {      user.referralCode = await generateReferralCode()      await user.save()    }    const referralCount = await User.countDocuments({ referredBy: user._id })    const cartCount = req.session.cart ? req.session.cart.products.length : 0    res.render("pages/referral", {      user: req.user,      referralCode: user.referralCode,      referralCount,      cartCount,      activePage: "referral",    })  } catch (error) {    req.flash("error_msg", "Failed to load referral page")    res.redirect("/profile")  }}const loadReferralCodeEntry = async (req, res) => {  try {    if (req.user) {      return res.redirect("/referral")    }    const referralCode = req.query.code || ""    res.render("pages/referral-entry", {      referralCode,      user: null,    })  } catch (error) {    res.redirect("/signup")  }}const validateReferralCode = async (req, res) => {  try {    const { code } = req.body    if (!code) {      return res.status(400).json({ valid: false, message: "No referral code provided" })    }    const referrer = await User.findOne({ referralCode: code })    if (!referrer) {      return res.status(404).json({ valid: false, message: "Invalid referral code" })    }    req.session.validReferralCode = code    req.session.referrerId = referrer._id    return res.status(200).json({      valid: true,      message: "Valid referral code",      redirectUrl: `/signup?ref=${code}`,    })  } catch (error) {    return res.status(500).json({ valid: false, message: "Server error" })  }}module.exports = {  loadReferralPage,  loadReferralCodeEntry,  validateReferralCode,}

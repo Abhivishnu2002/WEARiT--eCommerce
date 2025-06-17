@@ -1,280 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payment - WEARIT</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/header.css" />
-  <link rel="stylesheet" href="/css/footer.css" />
-  <link rel="stylesheet" href="/css/order-flow.css" />
-</head>
-<body>
-  <%- include('../partials/header') %>
-  
-  <div class="order-flow-container">
-    <!-- Page Title -->
-    <div class="checkout-title-container text-center">
-      <h1 class="checkout-title">Checkout</h1>
-      <p class="checkout-subtitle">Complete your purchase by selecting a payment method</p>
-    </div>
-    
-    <div class="row">
-      <!-- Payment Options (Left Column) -->
-      <div class="col-lg-7 mb-4 mb-lg-0">
-        <div class="order-flow-card">
-          <div class="order-flow-header">
-            <div class="status-icon payment">
-              <i class="bi bi-credit-card"></i>
-            </div>
-            <h2 class="order-flow-title">Select Payment Method</h2>
-            <p class="order-flow-subtitle">Choose your preferred payment option</p>
-          </div>
-
-          <!-- Display flash messages -->
-          <% if (typeof messages !== 'undefined' && messages.error_msg && messages.error_msg.length > 0) { %>
-            <div class="alert alert-danger">
-              <i class="bi bi-exclamation-circle me-2"></i>
-              <%= messages.error_msg[0] %>
-            </div>
-          <% } %>
-
-          <div class="payment-methods">
-            <form id="order-form" action="/checkout/place-order" method="POST">
-              <input type="hidden" name="addressId" value="<%= addressId %>">
-              <!-- This hidden input will hold the selected payment method -->
-              <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod" value="">
-              <input type="hidden" id="hiddenOrderId" name="orderId" value="<%= typeof orderId !== 'undefined' ? orderId : '' %>">
-              
-              <div class="payment-method-selection">
-                <!-- COD Payment Method -->
-                <% if (totals.canUseCOD) { %>
-                <div class="payment-method-card mb-3" data-method="COD">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" checked>
-                    <label class="form-check-label" for="paymentMethodCOD">
-                      <div class="d-flex align-items-center">
-                        <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>
-                        <div>
-                          <span class="d-block fw-bold">Cash on Delivery</span>
-                          <small class="text-muted">Pay when you receive your order (Available for orders under ₹1000)</small>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                <% } else { %>
-                <div class="payment-method-card mb-3 disabled" data-method="COD">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" disabled>
-                    <label class="form-check-label text-muted" for="paymentMethodCOD">
-                      <div class="d-flex align-items-center">
-                        <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>
-                        <div>
-                          <span class="d-block fw-bold">Cash on Delivery</span>
-                          <small class="text-danger">Not available for orders ₹1000 and above</small>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                <% } %>
-
-                <!-- Razorpay Payment Method -->
-                <div class="payment-method-card mb-3" data-method="razorpay">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodRazorpay" value="razorpay" <%= !totals.canUseCOD ? 'checked' : '' %>>
-                    <label class="form-check-label" for="paymentMethodRazorpay">
-                      <div class="d-flex align-items-center">
-                        <i class="fa-solid fa-credit-card me-3 fs-4 text-primary"></i>
-                        <div>
-                          <span class="d-block fw-bold">Credit/Debit Card, UPI, Net Banking</span>
-                          <small class="text-muted">Pay securely with Razorpay - All major cards, UPI, and net banking accepted</small>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- PayPal Payment Method -->
-                <div class="payment-method-card mb-3" data-method="paypal">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal">
-                    <label class="form-check-label" for="paymentMethodPaypal">
-                      <div class="d-flex align-items-center">
-                        <i class="fa-brands fa-paypal me-3 fs-4 text-primary"></i>
-                        <div>
-                          <span class="d-block fw-bold">PayPal</span>
-                          <small class="text-muted">Pay securely with PayPal</small>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
-                <!-- Wallet Payment Method -->
-                <% if (user && user.wallet && user.wallet.balance > 0) { %>
-                <div class="payment-method-card mb-3" data-method="wallet">
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodWallet" value="wallet" 
-                      <%= user.wallet.balance < totals.finalAmount ? 'disabled' : '' %>>
-                    <label class="form-check-label <%= user.wallet.balance < totals.finalAmount ? 'text-muted' : '' %>" for="paymentMethodWallet">
-                      <div class="d-flex align-items-center">
-                        <i class="fa-solid fa-wallet me-3 fs-4"></i>
-                        <div>
-                          <span class="d-block fw-bold">Wallet Balance</span>
-                          <small class="<%= user.wallet.balance < totals.finalAmount ? 'text-danger' : 'text-success' %>">
-                            Available: ₹<%= user.wallet.balance.toFixed(2) %>
-                            <% if (user.wallet.balance < totals.finalAmount) { %>
-                              (Insufficient balance)
-                            <% } %>
-                          </small>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                <% } %>
-              </div>
-
-              <!-- PayPal Button Container -->
-              <div id="paypal-button-container" class="mt-4 d-none"></div>
-              <div id="paypal-error" class="alert alert-danger mt-3 d-none"></div>
-
-              <!-- Razorpay Button Container -->
-              <div id="razorpay-button-container" class="mt-4 d-none">
-                <button type="button" id="razorpay-pay-btn" class="btn btn-primary w-100">
-                  <i class="fa-solid fa-credit-card me-2"></i> Pay with Razorpay
-                </button>
-              </div>
-              <div id="razorpay-error" class="alert alert-danger mt-3 d-none"></div>
-
-              <div class="action-buttons">
-                <a href="/checkout" class="btn btn-outline-primary">
-                  <i class="bi bi-arrow-left me-2"></i> Back
-                </a>
-                <button type="submit" id="place-order-btn" class="btn btn-primary">
-                  <i class="bi bi-check-circle me-2"></i> Place Order
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Order Summary (Right Column) -->
-      <div class="col-lg-5">
-        <div class="order-summary h-100">
-          <div class="order-summary-header">
-            <h5 class="order-summary-title">ORDER SUMMARY</h5>
-          </div>
-          <div class="order-summary-content">
-            <% if (cart && cart.products) { %> 
-              <% cart.products.forEach(item => { %>
-                <div class="order-item">
-                  <% const variant = item.product.variants.find(v=> v.size === item.size); 
-                     const mainImage = item.product.images.find(img => img.isMain) || item.product.images[0]; %>
-                  <div class="order-item-image">
-                    <img src="<%= mainImage ? mainImage.thumbnail : '/images/placeholder.jpg' %>" alt="<%= item.product.name %>" />
-                  </div>
-                  <div class="order-item-details">
-                    <div class="order-item-title">
-                      <%= item.product.name %>
-                    </div>
-                    <div class="order-item-meta">
-                      Qty: <%= item.quantity %> | Size: <%= item.size %>
-                    </div>
-                  </div>
-                  <div class="order-item-price">
-                    <% if (variant) { %> 
-                      <% if (variant.varientPrice !== variant.salePrice){ %>
-                        <div class="price-original">
-                          ₹<%= variant.varientPrice %>
-                        </div>
-                        <div class="price-final">
-                          ₹<%= variant.salePrice %>
-                        </div>
-                      <% } else { %>
-                        <div class="price-final">
-                          ₹<%= variant.salePrice %>
-                        </div>
-                      <% } %> 
-                    <% } %>
-                  </div>
-                </div>
-              <% }); %>
-
-              <div class="order-summary-row">
-                <span>Subtotal:</span>
-                <span id="subtotal-value">₹<%= totals.subtotal.toFixed(2) %></span>
-              </div>
-
-              <div class="order-summary-row">
-                <span>Discount:</span>
-                <span class="discount-text" id="discount-value">-₹<%= totals.discount.toFixed(2) %></span>
-              </div>
-
-              <% if (couponDiscount && couponDiscount > 0) { %>
-              <div class="order-summary-row">
-                <span>Coupon Discount:</span>
-                <span class="discount-text" id="coupon-discount-value">-₹<%= couponDiscount.toFixed(2) %></span>
-              </div>
-              <% } %>
-
-              <div class="order-summary-row">
-                <span>Shipping:</span>
-                <% if (totals.shipping === 0) { %>
-                  <span class="discount-text" id="shipping-value">Free</span>
-                <% } else { %>
-                  <span id="shipping-value">₹<%= totals.shipping.toFixed(2) %></span>
-                <% } %>
-              </div>
-
-              <div class="order-summary-row total">
-                <span>Total:</span>
-                <span id="finalAmount">₹<%= totals.finalAmount %></span>
-              </div>
-
-              <!-- COD Availability Notice -->
-              <% if (!totals.canUseCOD) { %>
-              <div class="alert alert-info mt-3">
-                <i class="fas fa-info-circle me-2"></i>
-                <small>Cash on Delivery is only available for orders under ₹1000. Please choose an online payment method.</small>
-              </div>
-              <% } %>
-            <% } %>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background-color: rgba(0,0,0,0.7); z-index: 1050;">
-    <div class="position-absolute top-50 start-50 translate-middle text-white text-center">
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2" id="loading-message">Processing your order...</p>
-      <p class="small text-white-50">Please do not close this window</p>
-    </div>
-  </div>
-
-  <%- include('../partials/footer') %>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <!-- PayPal SDK -->
-  <script src="https://www.paypal.com/sdk/js?client-id=<%= process.env.PAYPAL_CLIENT_ID %>&currency=USD"></script>
-
-  <!-- Razorpay SDK -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-  <script src="/js/payment.js"></script>
-</body>
-</html>
+<!DOCTYPE html><html lang="en"><head>  <meta charset="UTF-8" />  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <title>Payment - WEARIT</title>  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />  <link rel="stylesheet" href="/css/style.css" />  <link rel="stylesheet" href="/css/header.css" />  <link rel="stylesheet" href="/css/footer.css" />  <link rel="stylesheet" href="/css/order-flow.css" /></head><body>  <%- include('../partials/header') %>  <div class="order-flow-container">    <div class="checkout-title-container text-center">      <h1 class="checkout-title">Checkout</h1>      <p class="checkout-subtitle">Complete your purchase by selecting a payment method</p>    </div>    <div class="row">      <div class="col-lg-7 mb-4 mb-lg-0">        <div class="order-flow-card">          <div class="order-flow-header">            <div class="status-icon payment">              <i class="bi bi-credit-card"></i>            </div>            <h2 class="order-flow-title">Select Payment Method</h2>            <p class="order-flow-subtitle">Choose your preferred payment option</p>          </div>          <% if (typeof messages !== 'undefined' && messages.error_msg && messages.error_msg.length > 0) { %>            <div class="alert alert-danger">              <i class="bi bi-exclamation-circle me-2"></i>              <%= messages.error_msg[0] %>            </div>          <% } %>          <div class="payment-methods">            <form id="order-form" action="/checkout/place-order" method="POST">              <input type="hidden" name="addressId" value="<%= addressId %>">              <input type="hidden" id="selectedPaymentMethod" name="selectedPaymentMethod" value="">              <input type="hidden" id="hiddenOrderId" name="orderId" value="<%= typeof orderId !== 'undefined' ? orderId : '' %>">              <div class="payment-method-selection">                <% if (totals.canUseCOD) { %>                <div class="payment-method-card mb-3" data-method="COD">                  <div class="form-check">                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" checked>                    <label class="form-check-label" for="paymentMethodCOD">                      <div class="d-flex align-items-center">                        <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>                        <div>                          <span class="d-block fw-bold">Cash on Delivery</span>                          <small class="text-muted">Pay when you receive your order (Available for orders under ₹1000)</small>                        </div>                      </div>                    </label>                  </div>                </div>                <% } else { %>                <div class="payment-method-card mb-3 disabled" data-method="COD">                  <div class="form-check">                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodCOD" value="COD" disabled>                    <label class="form-check-label text-muted" for="paymentMethodCOD">                      <div class="d-flex align-items-center">                        <i class="fa-solid fa-money-bill-wave me-3 fs-4"></i>                        <div>                          <span class="d-block fw-bold">Cash on Delivery</span>                          <small class="text-danger">Not available for orders ₹1000 and above</small>                        </div>                      </div>                    </label>                  </div>                </div>                <% } %>                <div class="payment-method-card mb-3" data-method="razorpay">                  <div class="form-check">                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodRazorpay" value="razorpay" <%= !totals.canUseCOD ? 'checked' : '' %>>                    <label class="form-check-label" for="paymentMethodRazorpay">                      <div class="d-flex align-items-center">                        <i class="fa-solid fa-credit-card me-3 fs-4 text-primary"></i>                        <div>                          <span class="d-block fw-bold">Credit/Debit Card, UPI, Net Banking</span>                          <small class="text-muted">Pay securely with Razorpay - All major cards, UPI, and net banking accepted</small>                        </div>                      </div>                    </label>                  </div>                </div>                <div class="payment-method-card mb-3" data-method="paypal">                  <div class="form-check">                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodPaypal" value="paypal">                    <label class="form-check-label" for="paymentMethodPaypal">                      <div class="d-flex align-items-center">                        <i class="fa-brands fa-paypal me-3 fs-4 text-primary"></i>                        <div>                          <span class="d-block fw-bold">PayPal</span>                          <small class="text-muted">Pay securely with PayPal</small>                        </div>                      </div>                    </label>                  </div>                </div>                <% if (user && user.wallet && user.wallet.balance > 0) { %>                <div class="payment-method-card mb-3" data-method="wallet">                  <div class="form-check">                    <input class="form-check-input" type="radio" name="paymentMethod" id="paymentMethodWallet" value="wallet"                      <%= user.wallet.balance < totals.finalAmount ? 'disabled' : '' %>>                    <label class="form-check-label <%= user.wallet.balance < totals.finalAmount ? 'text-muted' : '' %>" for="paymentMethodWallet">                      <div class="d-flex align-items-center">                        <i class="fa-solid fa-wallet me-3 fs-4"></i>                        <div>                          <span class="d-block fw-bold">Wallet Balance</span>                          <small class="<%= user.wallet.balance < totals.finalAmount ? 'text-danger' : 'text-success' %>">                            Available: ₹<%= user.wallet.balance.toFixed(2) %>                            <% if (user.wallet.balance < totals.finalAmount) { %>                              (Insufficient balance)                            <% } %>                          </small>                        </div>                      </div>                    </label>                  </div>                </div>                <% } %>              </div>              <div id="paypal-button-container" class="mt-4 d-none"></div>              <div id="paypal-error" class="alert alert-danger mt-3 d-none"></div>              <div id="razorpay-button-container" class="mt-4 d-none">                <button type="button" id="razorpay-pay-btn" class="btn btn-primary w-100">                  <i class="fa-solid fa-credit-card me-2"></i> Pay with Razorpay                </button>              </div>              <div id="razorpay-error" class="alert alert-danger mt-3 d-none"></div>              <div class="action-buttons">                <a href="/checkout" class="btn btn-outline-primary">                  <i class="bi bi-arrow-left me-2"></i> Back                </a>                <button type="submit" id="place-order-btn" class="btn btn-primary">                  <i class="bi bi-check-circle me-2"></i> Place Order                </button>              </div>            </form>          </div>        </div>      </div>      <div class="col-lg-5">        <div class="order-summary h-100">          <div class="order-summary-header">            <h5 class="order-summary-title">ORDER SUMMARY</h5>          </div>          <div class="order-summary-content">            <% if (cart && cart.products) { %>              <% cart.products.forEach(item => { %>                <div class="order-item">                  <% const variant = item.product.variants.find(v=> v.size === item.size);                     const mainImage = item.product.images.find(img => img.isMain) || item.product.images[0]; %>                  <div class="order-item-image">                    <img src="<%= mainImage ? mainImage.thumbnail : '/images/placeholder.jpg' %>" alt="<%= item.product.name %>" />                  </div>                  <div class="order-item-details">                    <div class="order-item-title">                      <%= item.product.name %>                    </div>                    <div class="order-item-meta">                      Qty: <%= item.quantity %> | Size: <%= item.size %>                    </div>                  </div>                  <div class="order-item-price">                    <% if (variant) { %>                      <% if (variant.varientPrice !== variant.salePrice){ %>                        <div class="price-original">                          ₹<%= variant.varientPrice %>                        </div>                        <div class="price-final">                          ₹<%= variant.salePrice %>                        </div>                      <% } else { %>                        <div class="price-final">                          ₹<%= variant.salePrice %>                        </div>                      <% } %>                    <% } %>                  </div>                </div>              <% }); %>              <div class="order-summary-row">                <span>Subtotal:</span>                <span id="subtotal-value">₹<%= totals.subtotal.toFixed(2) %></span>              </div>              <div class="order-summary-row">                <span>Discount:</span>                <span class="discount-text" id="discount-value">-₹<%= totals.discount.toFixed(2) %></span>              </div>              <% if (couponDiscount && couponDiscount > 0) { %>              <div class="order-summary-row">                <span>Coupon Discount:</span>                <span class="discount-text" id="coupon-discount-value">-₹<%= couponDiscount.toFixed(2) %></span>              </div>              <% } %>              <div class="order-summary-row">                <span>Shipping:</span>                <% if (totals.shipping === 0) { %>                  <span class="discount-text" id="shipping-value">Free</span>                <% } else { %>                  <span id="shipping-value">₹<%= totals.shipping.toFixed(2) %></span>                <% } %>              </div>              <div class="order-summary-row total">                <span>Total:</span>                <span id="finalAmount">₹<%= totals.finalAmount %></span>              </div>              <% if (!totals.canUseCOD) { %>              <div class="alert alert-info mt-3">                <i class="fas fa-info-circle me-2"></i>                <small>Cash on Delivery is only available for orders under ₹1000. Please choose an online payment method.</small>              </div>              <% } %>            <% } %>          </div>        </div>      </div>    </div>  </div>  <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background-color: rgba(0,0,0,0.7); z-index: 1050;">    <div class="position-absolute top-50 start-50 translate-middle text-white text-center">      <div class="spinner-border" role="status">        <span class="visually-hidden">Loading...</span>      </div>      <p class="mt-2" id="loading-message">Processing your order...</p>      <p class="small text-white-50">Please do not close this window</p>    </div>  </div>  <%- include('../partials/footer') %>  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  <script src="https://www.paypal.com/sdk/js?client-id=<%= process.env.PAYPAL_CLIENT_ID %>&currency=USD"></script>  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>  <script src="/js/payment.js"></script></body></html>

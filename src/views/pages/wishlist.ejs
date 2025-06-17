@@ -1,203 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>WEARiT - Wishlist</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <link rel="stylesheet" href="/css/user-sidebar.css" />
-        <link rel="stylesheet" href="/css/wishlist.css" />
-    </head>
-    <body>
-        <%- include('../partials/header') %>
-
-        <!-- Breadcrumb -->
-        <%- include('../partials/breadcrumb', {
-            breadcrumbs: [
-                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
-                { name: 'My Wishlist', icon: 'fa-solid fa-heart' }
-            ]
-        }) %>
-
-        <div class="container-fluid wishlist-container">
-            <div class="row">
-                <div class="col-lg-3 col-md-4">
-                    <%- include('../partials/navbar', { activePage: 'wishlist',
-                    wishlistCount: wishlist.products.length, user: user }) %>
-                </div>
-                <div class="col-lg-9 col-md-8">
-                    <div class="wishlist-content">
-                        <div class="wishlist-header">
-                            <h2 class="wishlist-title">
-                                Wishlist (<%= wishlist.products.length %>)
-                            </h2>
-                            <div class="wishlist-actions">
-                                <% if (wishlist.products.length > 0) { %>
-                                <button
-                                    class="btn btn-outline-dark move-to-bag"
-                                    id="moveAllToCart"
-                                >
-                                    Move All To Bag
-                                </button>
-                                <button
-                                    class="btn btn-danger empty-wishlist"
-                                    id="emptyWishlist"
-                                >
-                                    Empty my Wishlist
-                                </button>
-                                <% } %>
-                            </div>
-                        </div>
-
-                        <div class="row wishlist-items">
-                            <% if (wishlist.products.length === 0) { %>
-                            <div class="col-12 text-center py-5">
-                                <div class="empty-wishlist-message">
-                                    <i
-                                        class="fa-regular fa-heart fa-3x mb-3"
-                                    ></i>
-                                    <h3>Your wishlist is empty</h3>
-                                    <p>
-                                        Add items you love to your wishlist.
-                                        Review them anytime and easily move them
-                                        to the bag.
-                                    </p>
-                                    <a
-                                        href="/products"
-                                        class="btn btn-dark mt-3"
-                                        >Continue Shopping</a
-                                    >
-                                </div>
-                            </div>
-                            <% } else { %> <%
-                            wishlist.products.forEach(product=> { %>
-                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
-                                <div
-                                    class="wishlist-item"
-                                    data-product-id="<%= product._id %>"
-                                    data-stock-status="<%= product.stockInfo.stockStatus %>"
-                                >
-                                    <div class="product-image">
-                                        <% const mainImage =
-                                        product.images.find(img => img.isMain)
-                                        || product.images[0]; %>
-                                        <a href="/products/<%= product._id %>">
-                                            <img
-                                                src="<%= mainImage ? mainImage.url : '/images/placeholder.png' %>"
-                                                alt="<%= product.name %>"
-                                            />
-                                        </a>
-                                    </div>
-                                    
-                                    <!-- Stock Status Badge -->
-                                    <div class="stock-status-badge mb-2">
-                                        <% if (product.stockInfo.hasStock) { %>
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-check-circle me-1"></i>
-                                                In Stock (<%= product.stockInfo.totalStock %> available)
-                                            </span>
-                                        <% } else { %>
-                                            <span class="badge bg-danger">
-                                                <i class="fas fa-times-circle me-1"></i>
-                                                Out of Stock
-                                            </span>
-                                        <% } %>
-                                    </div>
-
-                                    <h4 class="product-title">
-                                        <a href="/products/<%= product._id %>"
-                                            ><%= product.name %></a
-                                        >
-                                    </h4>
-                                    
-                                    <div class="product-price">
-                                        <% if (product.variants &&
-                                        product.variants.length > 0) { %>
-                                        <span class="price"
-                                            >₹<%=
-                                            product.variants[0].salePrice.toLocaleString('en-IN')
-                                            %></span
-                                        >
-                                        <% if (product.variants[0].varientPrice
-                                        > product.variants[0].salePrice) { %>
-                                        <span class="discount"
-                                            ><%= Math.round((1 -
-                                            product.variants[0].salePrice /
-                                            product.variants[0].varientPrice) *
-                                            100) %>% off</span
-                                        >
-                                        <% } %> <% } %>
-                                    </div>
-
-                                    <!-- Size Selection for In-Stock Items -->
-                                    <% if (product.stockInfo.hasStock && product.stockInfo.availableVariants.length > 0) { %>
-                                    <div class="size-selection mb-3">
-                                        <label class="form-label small">Available Sizes:</label>
-                                        <select class="form-select form-select-sm size-selector" data-product-id="<%= product._id %>">
-                                            <% product.stockInfo.availableVariants.forEach((variant, index) => { %>
-                                                <option value="<%= variant.size %>" <%= index === 0 ? 'selected' : '' %>>
-                                                    <%= variant.size %> (<%= variant.stock %> left)
-                                                </option>
-                                            <% }); %>
-                                        </select>
-                                    </div>
-                                    <% } %>
-
-                                    <!-- Conditional Add to Cart Button -->
-                                    <% if (product.stockInfo.hasStock) { %>
-                                        <button
-                                            class="btn btn-dark add-to-cart-btn"
-                                            data-product-id="<%= product._id %>"
-                                            data-size="<%= product.stockInfo.availableVariants.length > 0 ? product.stockInfo.availableVariants[0].size : '' %>"
-                                        >
-                                            <i class="fas fa-shopping-cart me-2"></i>
-                                            Add To Cart
-                                        </button>
-                                    <% } else { %>
-                                        <button
-                                            class="btn btn-secondary out-of-stock-btn"
-                                            disabled
-                                            data-product-id="<%= product._id %>"
-                                        >
-                                            <i class="fas fa-times me-2"></i>
-                                            Out of Stock
-                                        </button>
-                                    <% } %>
-
-                                    <button
-                                        class="btn btn-danger remove-btn"
-                                        data-product-id="<%= product._id %>"
-                                    >
-                                        <i class="fas fa-trash me-2"></i>
-                                        Remove from wishlist
-                                    </button>
-
-                                    <!-- Stock Alert for Out of Stock Items -->
-                                    <% if (!product.stockInfo.hasStock) { %>
-                                    <div class="stock-alert mt-2">
-                                        <small class="text-muted">
-                                            <i class="fas fa-bell me-1"></i>
-                                            We'll notify you when this item is back in stock
-                                        </small>
-                                    </div>
-                                    <% } %>
-                                </div>
-                            </div>
-                            <% }); %> <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <%- include('../partials/footer') %>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="/js/wishlist.js"></script>
-    </body>
-</html>
+<!DOCTYPE html><html lang="en">    <head>        <meta charset="UTF-8" />        <meta name="viewport" content="width=device-width, initial-scale=1.0" />        <title>WEARiT - Wishlist</title>        <link            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"            rel="stylesheet"        />        <link            rel="stylesheet"            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"        />        <link rel="stylesheet" href="/css/user-sidebar.css" />        <link rel="stylesheet" href="/css/wishlist.css" />    </head>    <body>        <%- include('../partials/header') %>        <%- include('../partials/breadcrumb', {            breadcrumbs: [                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },                { name: 'My Wishlist', icon: 'fa-solid fa-heart' }            ]        }) %>        <div class="container-fluid wishlist-container">            <div class="row">                <div class="col-lg-3 col-md-4">                    <%- include('../partials/navbar', { activePage: 'wishlist',                    wishlistCount: wishlist.products.length, user: user }) %>                </div>                <div class="col-lg-9 col-md-8">                    <div class="wishlist-content">                        <div class="wishlist-header">                            <h2 class="wishlist-title">                                Wishlist (<%= wishlist.products.length %>)                            </h2>                            <div class="wishlist-actions">                                <% if (wishlist.products.length > 0) { %>                                <button                                    class="btn btn-outline-dark move-to-bag"                                    id="moveAllToCart"                                >                                    Move All To Bag                                </button>                                <button                                    class="btn btn-danger empty-wishlist"                                    id="emptyWishlist"                                >                                    Empty my Wishlist                                </button>                                <% } %>                            </div>                        </div>                        <div class="row wishlist-items">                            <% if (wishlist.products.length === 0) { %>                            <div class="col-12 text-center py-5">                                <div class="empty-wishlist-message">                                    <i                                        class="fa-regular fa-heart fa-3x mb-3"                                    ></i>                                    <h3>Your wishlist is empty</h3>                                    <p>                                        Add items you love to your wishlist.                                        Review them anytime and easily move them                                        to the bag.                                    </p>                                    <a                                        href="/products"                                        class="btn btn-dark mt-3"                                        >Continue Shopping</a                                    >                                </div>                            </div>                            <% } else { %> <%                            wishlist.products.forEach(product=> { %>                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">                                <div                                    class="wishlist-item"                                    data-product-id="<%= product._id %>"                                    data-stock-status="<%= product.stockInfo.stockStatus %>"                                >                                    <div class="product-image">                                        <% const mainImage =                                        product.images.find(img => img.isMain)                                        || product.images[0]; %>                                        <a href="/products/<%= product._id %>">                                            <img                                                src="<%= mainImage ? mainImage.url : '/images/placeholder.png' %>"                                                alt="<%= product.name %>"                                            />                                        </a>                                    </div>                                    <div class="stock-status-badge mb-2">                                        <% if (product.stockInfo.hasStock) { %>                                            <span class="badge bg-success">                                                <i class="fas fa-check-circle me-1"></i>                                                In Stock (<%= product.stockInfo.totalStock %> available)                                            </span>                                        <% } else { %>                                            <span class="badge bg-danger">                                                <i class="fas fa-times-circle me-1"></i>                                                Out of Stock                                            </span>                                        <% } %>                                    </div>                                    <h4 class="product-title">                                        <a href="/products/<%= product._id %>"                                            ><%= product.name %></a                                        >                                    </h4>                                    <div class="product-price">                                        <% if (product.variants &&                                        product.variants.length > 0) { %>                                        <span class="price"                                            >₹<%=                                            product.variants[0].salePrice.toLocaleString('en-IN')                                            %></span                                        >                                        <% if (product.variants[0].varientPrice                                        > product.variants[0].salePrice) { %>                                        <span class="discount"                                            ><%= Math.round((1 -                                            product.variants[0].salePrice /                                            product.variants[0].varientPrice) *                                            100) %>% off</span                                        >                                        <% } %> <% } %>                                    </div>                                    <% if (product.stockInfo.hasStock && product.stockInfo.availableVariants.length > 0) { %>                                    <div class="size-selection mb-3">                                        <label class="form-label small">Available Sizes:</label>                                        <select class="form-select form-select-sm size-selector" data-product-id="<%= product._id %>">                                            <% product.stockInfo.availableVariants.forEach((variant, index) => { %>                                                <option value="<%= variant.size %>" <%= index === 0 ? 'selected' : '' %>>                                                    <%= variant.size %> (<%= variant.stock %> left)                                                </option>                                            <% }); %>                                        </select>                                    </div>                                    <% } %>                                    <% if (product.stockInfo.hasStock) { %>                                        <button                                            class="btn btn-dark add-to-cart-btn"                                            data-product-id="<%= product._id %>"                                            data-size="<%= product.stockInfo.availableVariants.length > 0 ? product.stockInfo.availableVariants[0].size : '' %>"                                        >                                            <i class="fas fa-shopping-cart me-2"></i>                                            Add To Cart                                        </button>                                    <% } else { %>                                        <button                                            class="btn btn-secondary out-of-stock-btn"                                            disabled                                            data-product-id="<%= product._id %>"                                        >                                            <i class="fas fa-times me-2"></i>                                            Out of Stock                                        </button>                                    <% } %>                                    <button                                        class="btn btn-danger remove-btn"                                        data-product-id="<%= product._id %>"                                    >                                        <i class="fas fa-trash me-2"></i>                                        Remove from wishlist                                    </button>                                    <% if (!product.stockInfo.hasStock) { %>                                    <div class="stock-alert mt-2">                                        <small class="text-muted">                                            <i class="fas fa-bell me-1"></i>                                            We'll notify you when this item is back in stock                                        </small>                                    </div>                                    <% } %>                                </div>                            </div>                            <% }); %> <% } %>                        </div>                    </div>                </div>            </div>        </div>        <%- include('../partials/footer') %>        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>        <script src="/js/wishlist.js"></script>    </body></html>

@@ -1,14 +1,1 @@
-const walletController = require("../controllers/user/walletController")
-
-async function processRefundToWallet(userId, amount, orderId, orderID, description = null) {
-  try {
-    const result = await walletController.processRefund(userId, amount, orderId, orderID, description)
-    return result
-  } catch (error) {
-    throw error
-  }
-}
-
-module.exports = {
-  processRefundToWallet,
-}
+const walletController = require("../controllers/user/walletController")async function processRefundToWallet(userId, amount, orderId, orderID, description = null) {  try {    const result = await walletController.processRefund(userId, amount, orderId, orderID, description)    return result  } catch (error) {    throw error  }}module.exports = {  processRefundToWallet,}

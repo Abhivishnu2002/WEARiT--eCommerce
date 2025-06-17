@@ -1,17 +1,1 @@
-const loadContact = (req, res) => {
-    res.render("pages/contact");
-};
-
-const loadAbout = (req, res) => {
-    res.render("pages/about");
-};
-
-const loadError = (req, res) => {
-    res.render("errors/404");
-};
-
-module.exports = {
-    loadContact,
-    loadAbout,
-    loadError
-}
+const loadContact = (req, res) => {    res.render("pages/contact");};const loadAbout = (req, res) => {    res.render("pages/about");};const loadError = (req, res) => {    res.render("errors/404");};module.exports = {    loadContact,    loadAbout,    loadError}

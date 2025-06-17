@@ -1,216 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>WEARiT - Edit Address</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <link rel="stylesheet" href="/css/navbar.css" />
-        <link rel="stylesheet" href="/css/address.css" />
-        <link rel="stylesheet" href="/css/address-form.css" />
-    </head>
-    <body class="address-page">
-        <%- include('../partials/header') %>
-        <main class="main-content">
-            <div class="container-fluid address-container">
-                <div class="row">
-                <div class="col-lg-3 col-md-4">
-                    <%- include('../partials/navbar', { activePage: 'address',
-                    user: user }) %>
-                </div>
-                <div class="col-lg-9 col-md-8">
-                    <div class="address-content">
-                        <div class="address-header">
-                            <h2 class="address-title">Edit Address</h2>
-                            <div class="address-actions">
-                                <a
-                                    href="<%= returnTo === 'checkout' ? '/checkout' : '/profile/addresses' %>"
-                                    class="btn btn-outline-dark"
-                                >
-                                    <i class="fas fa-arrow-left me-2"></i> Back
-                                    to <%= returnTo === 'checkout' ? 'Checkout' : 'Addresses' %>
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="address-form-container">
-                            <form
-                                id="addressForm"
-                                action="/profile/addresses/edit/<%= address._id %><%= returnTo === 'checkout' ? '?returnTo=checkout' : '' %>"
-                                method="POST"
-                                class="address-form"
-                                novalidate
-                            >
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="name" class="form-label required">Full Name</label>
-                                        <input
-                                            type="text"
-                                            class="form-control <%= locals.errors && errors.name ? 'is-invalid' : '' %>"
-                                            id="name"
-                                            name="name"
-                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.name || '') : (address.name || '') %>"
-                                            required
-                                        />
-                                        <div class="invalid-feedback" id="name-error">
-                                            <% if (locals.errors && errors.name) { %>
-                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.name %>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="mobile" class="form-label required">Mobile Number</label>
-                                        <input
-                                            type="tel"
-                                            class="form-control <%= locals.errors && errors.mobile ? 'is-invalid' : '' %>"
-                                            id="mobile"
-                                            name="mobile"
-                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.mobile || '') : (address.mobile || '') %>"
-                                            pattern="[0-9]{10}"
-                                            title="Please enter a valid 10-digit mobile number"
-                                            required
-                                        />
-                                        <div class="invalid-feedback" id="mobile-error">
-                                            <% if (locals.errors && errors.mobile) { %>
-                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.mobile %>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="address" class="form-label required">Address (House No, Building, Street, Area)</label>
-                                    <textarea
-                                        class="form-control <%= locals.errors && errors.address ? 'is-invalid' : '' %>"
-                                        id="address"
-                                        name="address"
-                                        rows="3"
-                                        placeholder="Enter your complete address"
-                                        required
-                                    ><%= locals.formData && Object.keys(formData).length > 0 ? (formData.address || '') : (address.address || '') %></textarea>
-                                    <div class="invalid-feedback" id="address-error">
-                                        <% if (locals.errors && errors.address) { %>
-                                            <i class="fas fa-exclamation-circle me-1"></i><%= errors.address %>
-                                        <% } %>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="city" class="form-label required">City</label>
-                                        <input
-                                            type="text"
-                                            class="form-control <%= locals.errors && errors.city ? 'is-invalid' : '' %>"
-                                            id="city"
-                                            name="city"
-                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.city || '') : (address.city || '') %>"
-                                            required
-                                        />
-                                        <div class="invalid-feedback" id="city-error">
-                                            <% if (locals.errors && errors.city) { %>
-                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.city %>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="state" class="form-label required">State</label>
-                                        <% 
-                                        const currentState = (locals.formData && Object.keys(formData).length > 0) ? formData.state : address.state;
-                                        const states = ['Kerala', 'Tamil Nadu', 'Karnataka', 'Andhra Pradesh', 'Telangana', 'Maharashtra', 'Gujarat', 'Rajasthan', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Madhya Pradesh', 'Bihar', 'West Bengal', 'Odisha', 'Jharkhand', 'Assam', 'Himachal Pradesh', 'Uttarakhand', 'Goa', 'Delhi'];
-                                        %>
-                                        <select
-                                            class="form-select <%= locals.errors && errors.state ? 'is-invalid' : '' %>"
-                                            id="state"
-                                            name="state"
-                                            required
-                                        >
-                                            <option value="">Select State</option>
-                                            <% states.forEach(state => { %>
-                                                <option value="<%= state %>" <%= currentState === state ? 'selected' : '' %>><%= state %></option>
-                                            <% }); %>
-                                        </select>
-                                        <div class="invalid-feedback" id="state-error">
-                                            <% if (locals.errors && errors.state) { %>
-                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.state %>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="pincode" class="form-label required">PIN Code</label>
-                                        <input
-                                            type="text"
-                                            class="form-control <%= locals.errors && errors.pincode ? 'is-invalid' : '' %>"
-                                            id="pincode"
-                                            name="pincode"
-                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.pincode || '') : (address.pincode || '') %>"
-                                            pattern="[0-9]{6}"
-                                            title="Please enter a valid 6-digit pincode"
-                                            maxlength="6"
-                                            required
-                                        />
-                                        <div class="invalid-feedback" id="pincode-error">
-                                            <% if (locals.errors && errors.pincode) { %>
-                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.pincode %>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                        type="checkbox" id="isDefault"
-                                        name="isDefault" value="true" <%=
-                                        ((locals.formData && Object.keys(formData).length > 0) ? formData.isDefault : address.isDefault) ? 'checked' : '' %>>
-                                        <label
-                                            class="form-check-label"
-                                            for="isDefault"
-                                        >
-                                            Set as default address
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <% if (locals.errors && errors.general) { %>
-                                    <div class="alert alert-danger" role="alert">
-                                        <i class="fas fa-exclamation-triangle me-2"></i>
-                                        <%= errors.general %>
-                                    </div>
-                                <% } %>
-
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-dark btn-lg" id="submitBtn">
-                                        <span class="btn-text">
-                                            <i class="fas fa-save me-2"></i>Update Address
-                                        </span>
-                                        <span class="btn-loading d-none">
-                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            Updating...
-                                        </span>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <% if(typeof messages !== 'undefined') { %> <% if(messages.success_msg)
-        { %>
-        <div class="alert-float alert-success"><%= messages.success_msg %></div>
-        <% } %> <% if(messages.error_msg) { %>
-        <div class="alert-float alert-danger"><%= messages.error_msg %></div>
-        <% } %> <% } %> <%- include('../partials/footer') %>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="/js/address-form.js"></script>
-    </body>
-</html>
+<!DOCTYPE html><html lang="en">    <head>        <meta charset="UTF-8" />        <meta name="viewport" content="width=device-width, initial-scale=1.0" />        <title>WEARiT - Edit Address</title>        <link            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"            rel="stylesheet"        />        <link            rel="stylesheet"            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"        />        <link rel="stylesheet" href="/css/navbar.css" />        <link rel="stylesheet" href="/css/address.css" />        <link rel="stylesheet" href="/css/address-form.css" />    </head>    <body class="address-page">        <%- include('../partials/header') %>        <main class="main-content">            <div class="container-fluid address-container">                <div class="row">                <div class="col-lg-3 col-md-4">                    <%- include('../partials/navbar', { activePage: 'address',                    user: user }) %>                </div>                <div class="col-lg-9 col-md-8">                    <div class="address-content">                        <div class="address-header">                            <h2 class="address-title">Edit Address</h2>                            <div class="address-actions">                                <a                                    href="<%= returnTo === 'checkout' ? '/checkout' : '/profile/addresses' %>"                                    class="btn btn-outline-dark"                                >                                    <i class="fas fa-arrow-left me-2"></i> Back                                    to <%= returnTo === 'checkout' ? 'Checkout' : 'Addresses' %>                                </a>                            </div>                        </div>                        <div class="address-form-container">                            <form                                id="addressForm"                                action="/profile/addresses/edit/<%= address._id %><%= returnTo === 'checkout' ? '?returnTo=checkout' : '' %>"                                method="POST"                                class="address-form"                                novalidate                            >                                <div class="row">                                    <div class="col-md-6 mb-3">                                        <label for="name" class="form-label required">Full Name</label>                                        <input                                            type="text"                                            class="form-control <%= locals.errors && errors.name ? 'is-invalid' : '' %>"                                            id="name"                                            name="name"                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.name || '') : (address.name || '') %>"                                            required                                        />                                        <div class="invalid-feedback" id="name-error">                                            <% if (locals.errors && errors.name) { %>                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.name %>                                            <% } %>                                        </div>                                    </div>                                    <div class="col-md-6 mb-3">                                        <label for="mobile" class="form-label required">Mobile Number</label>                                        <input                                            type="tel"                                            class="form-control <%= locals.errors && errors.mobile ? 'is-invalid' : '' %>"                                            id="mobile"                                            name="mobile"                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.mobile || '') : (address.mobile || '') %>"                                            pattern="[0-9]{10}"                                            title="Please enter a valid 10-digit mobile number"                                            required                                        />                                        <div class="invalid-feedback" id="mobile-error">                                            <% if (locals.errors && errors.mobile) { %>                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.mobile %>                                            <% } %>                                        </div>                                    </div>                                </div>                                <div class="mb-3">                                    <label for="address" class="form-label required">Address (House No, Building, Street, Area)</label>                                    <textarea                                        class="form-control <%= locals.errors && errors.address ? 'is-invalid' : '' %>"                                        id="address"                                        name="address"                                        rows="3"                                        placeholder="Enter your complete address"                                        required                                    ><%= locals.formData && Object.keys(formData).length > 0 ? (formData.address || '') : (address.address || '') %></textarea>                                    <div class="invalid-feedback" id="address-error">                                        <% if (locals.errors && errors.address) { %>                                            <i class="fas fa-exclamation-circle me-1"></i><%= errors.address %>                                        <% } %>                                    </div>                                </div>                                <div class="row">                                    <div class="col-md-4 mb-3">                                        <label for="city" class="form-label required">City</label>                                        <input                                            type="text"                                            class="form-control <%= locals.errors && errors.city ? 'is-invalid' : '' %>"                                            id="city"                                            name="city"                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.city || '') : (address.city || '') %>"                                            required                                        />                                        <div class="invalid-feedback" id="city-error">                                            <% if (locals.errors && errors.city) { %>                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.city %>                                            <% } %>                                        </div>                                    </div>                                    <div class="col-md-4 mb-3">                                        <label for="state" class="form-label required">State</label>                                        <%                                        const currentState = (locals.formData && Object.keys(formData).length > 0) ? formData.state : address.state;                                        const states = ['Kerala', 'Tamil Nadu', 'Karnataka', 'Andhra Pradesh', 'Telangana', 'Maharashtra', 'Gujarat', 'Rajasthan', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Madhya Pradesh', 'Bihar', 'West Bengal', 'Odisha', 'Jharkhand', 'Assam', 'Himachal Pradesh', 'Uttarakhand', 'Goa', 'Delhi'];                                        %>                                        <select                                            class="form-select <%= locals.errors && errors.state ? 'is-invalid' : '' %>"                                            id="state"                                            name="state"                                            required                                        >                                            <option value="">Select State</option>                                            <% states.forEach(state => { %>                                                <option value="<%= state %>" <%= currentState === state ? 'selected' : '' %>><%= state %></option>                                            <% }); %>                                        </select>                                        <div class="invalid-feedback" id="state-error">                                            <% if (locals.errors && errors.state) { %>                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.state %>                                            <% } %>                                        </div>                                    </div>                                    <div class="col-md-4 mb-3">                                        <label for="pincode" class="form-label required">PIN Code</label>                                        <input                                            type="text"                                            class="form-control <%= locals.errors && errors.pincode ? 'is-invalid' : '' %>"                                            id="pincode"                                            name="pincode"                                            value="<%= locals.formData && Object.keys(formData).length > 0 ? (formData.pincode || '') : (address.pincode || '') %>"                                            pattern="[0-9]{6}"                                            title="Please enter a valid 6-digit pincode"                                            maxlength="6"                                            required                                        />                                        <div class="invalid-feedback" id="pincode-error">                                            <% if (locals.errors && errors.pincode) { %>                                                <i class="fas fa-exclamation-circle me-1"></i><%= errors.pincode %>                                            <% } %>                                        </div>                                    </div>                                </div>                                <div class="mb-4">                                    <div class="form-check">                                        <input class="form-check-input"                                        type="checkbox" id="isDefault"                                        name="isDefault" value="true" <%=                                        ((locals.formData && Object.keys(formData).length > 0) ? formData.isDefault : address.isDefault) ? 'checked' : '' %>>                                        <label                                            class="form-check-label"                                            for="isDefault"                                        >                                            Set as default address                                        </label>                                    </div>                                </div>                                <% if (locals.errors && errors.general) { %>                                    <div class="alert alert-danger" role="alert">                                        <i class="fas fa-exclamation-triangle me-2"></i>                                        <%= errors.general %>                                    </div>                                <% } %>                                <div class="d-grid">                                    <button type="submit" class="btn btn-dark btn-lg" id="submitBtn">                                        <span class="btn-text">                                            <i class="fas fa-save me-2"></i>Update Address                                        </span>                                        <span class="btn-loading d-none">                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>                                            Updating...                                        </span>                                    </button>                                </div>                            </form>                        </div>                    </div>                </div>            </div>        </main>        <% if(typeof messages !== 'undefined') { %> <% if(messages.success_msg)        { %>        <div class="alert-float alert-success"><%= messages.success_msg %></div>        <% } %> <% if(messages.error_msg) { %>        <div class="alert-float alert-danger"><%= messages.error_msg %></div>        <% } %> <% } %> <%- include('../partials/footer') %>        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>        <script src="/js/address-form.js"></script>    </body></html>

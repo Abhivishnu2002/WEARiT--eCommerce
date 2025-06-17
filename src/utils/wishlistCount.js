@@ -1,11 +1,1 @@
-async function getWishlistCount(userId) {
-  try {
-    const Wishlist = require("../models/wishlistModel")
-    const wishlist = await Wishlist.findOne({ user: userId })
-    return wishlist ? wishlist.products.length : 0
-  } catch (error) {
-    return 0
-  }
-}
-
-module.exports = getWishlistCount
+async function getWishlistCount(userId) {  try {    const Wishlist = require("../models/wishlistModel")    const wishlist = await Wishlist.findOne({ user: userId })    return wishlist ? wishlist.products.length : 0  } catch (error) {    return 0  }}module.exports = getWishlistCount

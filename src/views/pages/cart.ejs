@@ -1,245 +1,1 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>WEARiT - Shopping Cart</title>
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-        />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
-        <link rel="stylesheet" href="/css/cart.css" />
-    </head>
-    <body>
-        <%- include('../partials/header') %>
-
-        <!-- Breadcrumb -->
-        <%- include('../partials/breadcrumb', {
-            breadcrumbs: [
-                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },
-                { name: 'Shopping Cart', icon: 'fa-solid fa-shopping-cart' }
-            ]
-        }) %>
-
-        <div class="container-fluid cart-container">
-            <div class="row">
-                <div class="col-lg-3 col-md-4">
-                    <%- include('../partials/navbar', { activePage: 'cart',
-                    cartCount: cart.products.length, user: user }) %>
-                </div>
-
-                <div class="col-lg-9 col-md-8">
-                    <div class="cart-content">
-                        <div class="cart-header">
-                            <h1 class="cart-title">CART</h1>
-                            <% if (cart.products && cart.products.length > 0) {
-                            %>
-                            <button
-                                class="btn empty-cart-btn"
-                                id="emptyCartBtn"
-                            >
-                                Empty my Cart
-                            </button>
-                            <% } %>
-                        </div>
-
-                        <!-- Cart Items -->
-                        <div class="cart-items">
-                            <% if (!cart.products || cart.products.length === 0)
-                            { %>
-                            <div class="empty-cart-message text-center py-5">
-                                <i
-                                    class="fa-solid fa-shopping-cart fa-3x mb-3"
-                                ></i>
-                                <h3>Your cart is empty</h3>
-                                <p>
-                                    Looks like you haven't added anything to
-                                    your cart yet.
-                                </p>
-                                <a href="/products" class="btn btn-dark mt-3"
-                                    >Continue Shopping</a
-                                >
-                            </div>
-                            <% } else { %> <% cart.products.forEach(item => { %>
-                            <% const product = item.product; const variant =
-                            product.variants.find(v => v.size === item.size) ||
-                            product.variants[0]; const mainImage =
-                            product.images.find(img => img.isMain) ||
-                            product.images[0]; const originalPrice =
-                            variant.varientPrice; const salePrice =
-                            variant.salePrice; const discount = originalPrice -
-                            salePrice; const itemTotal = salePrice *
-                            item.quantity; %>
-                            <div
-                                class="cart-item"
-                                data-product-id="<%= product._id %>"
-                                data-size="<%= item.size %>"
-                            >
-                                <div class="row align-items-center">
-                                    <div class="col-md-2 col-sm-3 col-4">
-                                        <div class="product-image">
-                                            <a
-                                                href="/products/<%= product._id %>"
-                                            >
-                                                <img
-                                                    src="<%= mainImage ? mainImage.url : '/images/placeholder.png' %>"
-                                                    alt="<%= product.name %>"
-                                                />
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-5 col-sm-9 col-8">
-                                        <h3 class="product-title">
-                                            <a
-                                                href="/products/<%= product._id %>"
-                                                ><%= product.name %></a
-                                            >
-                                        </h3>
-                                        <div class="product-details">
-                                            <span class="product-size"
-                                                >Size: <%= item.size %></span
-                                            >
-                                        </div>
-                                        <div
-                                            class="product-price-mobile d-block d-md-none"
-                                        >
-                                            <div class="price-label">Price</div>
-                                            <div class="price-amount">
-                                                ₹<%=
-                                                salePrice.toLocaleString('en-IN')
-                                                %>
-                                            </div>
-                                            <% if (discount > 0) { %>
-                                            <div class="original-price">
-                                                ₹<%=
-                                                originalPrice.toLocaleString('en-IN')
-                                                %>
-                                            </div>
-                                            <div class="save-amount">
-                                                Save ₹<%=
-                                                discount.toLocaleString('en-IN')
-                                                %>
-                                            </div>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="col-md-2 col-sm-4 col-6 d-none d-md-block"
-                                    >
-                                        <div class="price-section">
-                                            <div class="price-label">Price</div>
-                                            <div class="price-amount">
-                                                ₹<%=
-                                                salePrice.toLocaleString('en-IN')
-                                                %>
-                                            </div>
-                                            <% if (discount > 0) { %>
-                                            <div class="original-price">
-                                                ₹<%=
-                                                originalPrice.toLocaleString('en-IN')
-                                                %>
-                                            </div>
-                                            <div class="save-amount">
-                                                Save ₹<%=
-                                                discount.toLocaleString('en-IN')
-                                                %>
-                                            </div>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2 col-sm-4 col-6">
-                                        <div class="quantity-section">
-                                            <div class="quantity-selector">
-                                                <button
-                                                    class="quantity-btn minus-btn"
-                                                    data-action="decrement"
-                                                >
-                                                    −
-                                                </button>
-                                                <input
-                                                    type="text"
-                                                    class="quantity-input"
-                                                    value="<%= item.quantity %>"
-                                                    readonly
-                                                />
-                                                <button
-                                                    class="quantity-btn plus-btn"
-                                                    data-action="increment"
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-1 col-sm-4 col-6">
-                                        <button class="btn remove-btn">
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <% }); %> <% } %>
-                        </div>
-
-                        <% if (cart.products && cart.products.length > 0) { %>
-                        <!-- Cart Summary -->
-                        <div class="cart-summary">
-                            <div class="row">
-                                <div class="col-md-6 col-sm-6 col-6">
-                                    <div class="subtotal-label">SUBTOTAL</div>
-                                </div>
-                                <div class="col-md-6 col-sm-6 col-6">
-                                    <div class="subtotal-amount">
-                                        <% if (totals.discount > 0) { %>
-                                        <div class="save-amount">
-                                            Save ₹<%=
-                                            totals.discount.toLocaleString('en-IN')
-                                            %>
-                                        </div>
-                                        <div class="original-subtotal">
-                                            INR <%=
-                                            totals.subtotal.toLocaleString('en-IN')
-                                            %>
-                                        </div>
-                                        <% } %>
-                                        <div class="final-subtotal">
-                                            INR <%=
-                                            totals.total.toLocaleString('en-IN')
-                                            %>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="shipping-note">
-                            Shipping, taxes, and discount codes calculated at
-                            checkout.
-                        </div>
-
-                        <div class="cart-actions">
-                            <a href="/checkout" class="btn checkout-btn">
-                                Proceed to checkout
-                            </a>
-                            <a
-                                href="/products"
-                                class="btn continue-shopping-btn"
-                            >
-                                Continue Shopping
-                            </a>
-                        </div>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <%- include('../partials/footer') %>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="/js/cart.js"></script>
-    </body>
-</html>
+<!DOCTYPE html><html lang="en">    <head>        <meta charset="UTF-8" />        <meta name="viewport" content="width=device-width, initial-scale=1.0" />        <title>WEARiT - Shopping Cart</title>        <link            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"            rel="stylesheet"        />        <link            rel="stylesheet"            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"        />        <link rel="stylesheet" href="/css/cart.css" />    </head>    <body>        <%- include('../partials/header') %>        <%- include('../partials/breadcrumb', {            breadcrumbs: [                { name: 'My Account', url: '/profile', icon: 'fa-solid fa-user' },                { name: 'Shopping Cart', icon: 'fa-solid fa-shopping-cart' }            ]        }) %>        <div class="container-fluid cart-container">            <div class="row">                <div class="col-lg-3 col-md-4">                    <%- include('../partials/navbar', { activePage: 'cart',                    cartCount: cart.products.length, user: user }) %>                </div>                <div class="col-lg-9 col-md-8">                    <div class="cart-content">                        <div class="cart-header">                            <h1 class="cart-title">CART</h1>                            <% if (cart.products && cart.products.length > 0) {                            %>                            <button                                class="btn empty-cart-btn"                                id="emptyCartBtn"                            >                                Empty my Cart                            </button>                            <% } %>                        </div>                        <div class="cart-items">                            <% if (!cart.products || cart.products.length === 0)                            { %>                            <div class="empty-cart-message text-center py-5">                                <i                                    class="fa-solid fa-shopping-cart fa-3x mb-3"                                ></i>                                <h3>Your cart is empty</h3>                                <p>                                    Looks like you haven't added anything to                                    your cart yet.                                </p>                                <a href="/products" class="btn btn-dark mt-3"                                    >Continue Shopping</a                                >                            </div>                            <% } else { %> <% cart.products.forEach(item => { %>                            <% const product = item.product; const variant =                            product.variants.find(v => v.size === item.size) ||                            product.variants[0]; const mainImage =                            product.images.find(img => img.isMain) ||                            product.images[0]; const originalPrice =                            variant.varientPrice; const salePrice =                            variant.salePrice; const discount = originalPrice -                            salePrice; const itemTotal = salePrice *                            item.quantity; %>                            <div                                class="cart-item"                                data-product-id="<%= product._id %>"                                data-size="<%= item.size %>"                            >                                <div class="row align-items-center">                                    <div class="col-md-2 col-sm-3 col-4">                                        <div class="product-image">                                            <a                                                href="/products/<%= product._id %>"                                            >                                                <img                                                    src="<%= mainImage ? mainImage.url : '/images/placeholder.png' %>"                                                    alt="<%= product.name %>"                                                />                                            </a>                                        </div>                                    </div>                                    <div class="col-md-5 col-sm-9 col-8">                                        <h3 class="product-title">                                            <a                                                href="/products/<%= product._id %>"                                                ><%= product.name %></a                                            >                                        </h3>                                        <div class="product-details">                                            <span class="product-size"                                                >Size: <%= item.size %></span                                            >                                        </div>                                        <div                                            class="product-price-mobile d-block d-md-none"                                        >                                            <div class="price-label">Price</div>                                            <div class="price-amount">                                                ₹<%=                                                salePrice.toLocaleString('en-IN')                                                %>                                            </div>                                            <% if (discount > 0) { %>                                            <div class="original-price">                                                ₹<%=                                                originalPrice.toLocaleString('en-IN')                                                %>                                            </div>                                            <div class="save-amount">                                                Save ₹<%=                                                discount.toLocaleString('en-IN')                                                %>                                            </div>                                            <% } %>                                        </div>                                    </div>                                    <div                                        class="col-md-2 col-sm-4 col-6 d-none d-md-block"                                    >                                        <div class="price-section">                                            <div class="price-label">Price</div>                                            <div class="price-amount">                                                ₹<%=                                                salePrice.toLocaleString('en-IN')                                                %>                                            </div>                                            <% if (discount > 0) { %>                                            <div class="original-price">                                                ₹<%=                                                originalPrice.toLocaleString('en-IN')                                                %>                                            </div>                                            <div class="save-amount">                                                Save ₹<%=                                                discount.toLocaleString('en-IN')                                                %>                                            </div>                                            <% } %>                                        </div>                                    </div>                                    <div class="col-md-2 col-sm-4 col-6">                                        <div class="quantity-section">                                            <div class="quantity-selector">                                                <button                                                    class="quantity-btn minus-btn"                                                    data-action="decrement"                                                >                                                    −                                                </button>                                                <input                                                    type="text"                                                    class="quantity-input"                                                    value="<%= item.quantity %>"                                                    readonly                                                />                                                <button                                                    class="quantity-btn plus-btn"                                                    data-action="increment"                                                >                                                    +                                                </button>                                            </div>                                        </div>                                    </div>                                    <div class="col-md-1 col-sm-4 col-6">                                        <button class="btn remove-btn">                                            Remove                                        </button>                                    </div>                                </div>                            </div>                            <% }); %> <% } %>                        </div>                        <% if (cart.products && cart.products.length > 0) { %>                        <div class="cart-summary">                            <div class="row">                                <div class="col-md-6 col-sm-6 col-6">                                    <div class="subtotal-label">SUBTOTAL</div>                                </div>                                <div class="col-md-6 col-sm-6 col-6">                                    <div class="subtotal-amount">                                        <% if (totals.discount > 0) { %>                                        <div class="save-amount">                                            Save ₹<%=                                            totals.discount.toLocaleString('en-IN')                                            %>                                        </div>                                        <div class="original-subtotal">                                            INR <%=                                            totals.subtotal.toLocaleString('en-IN')                                            %>                                        </div>                                        <% } %>                                        <div class="final-subtotal">                                            INR <%=                                            totals.total.toLocaleString('en-IN')                                            %>                                        </div>                                    </div>                                </div>                            </div>                        </div>                        <div class="shipping-note">                            Shipping, taxes, and discount codes calculated at                            checkout.                        </div>                        <div class="cart-actions">                            <a href="/checkout" class="btn checkout-btn">                                Proceed to checkout                            </a>                            <a                                href="/products"                                class="btn continue-shopping-btn"                            >                                Continue Shopping                            </a>                        </div>                        <% } %>                    </div>                </div>            </div>        </div>        <%- include('../partials/footer') %>        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>        <script src="/js/cart.js"></script>    </body></html>

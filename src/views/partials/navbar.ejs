@@ -1,158 +1,1 @@
-<link rel="stylesheet" href="/css/navbar.css" />
-
-<!-- Mobile Navigation Bar (visible only on mobile, positioned below header) -->
-<div class="user-mobile-nav d-lg-none">
-    <div class="mobile-nav-content">
-        <div class="mobile-user-info">
-            <div class="mobile-user-avatar">
-                <span><%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %></span>
-            </div>
-            <span class="mobile-user-name"><%= user.name || 'User' %></span>
-        </div>
-        <button class="mobile-menu-toggle" id="userMobileMenuToggle">
-            <i class="fa-solid fa-bars"></i>
-        </button>
-    </div>
-</div>
-
-<!-- Sidebar Overlay -->
-<div class="user-sidebar-overlay" id="userSidebarOverlay"></div>
-
-<!-- User Sidebar -->
-<div class="user-sidebar" id="userSidebar">
-    <!-- Mobile Close Button -->
-    <button class="mobile-close-btn d-lg-none" id="userSidebarClose">
-        <i class="fa-solid fa-times"></i>
-    </button>
-
-    <div class="user-profile-card">
-        <div class="user-avatar">
-            <span><%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %></span>
-        </div>
-        <h3 class="user-name"><%= user.name || 'User' %></h3>
-
-        <div class="sidebar-menu">
-            <a
-                href="/profile"
-                class="menu-item <%= activePage === 'profile' ? 'active' : '' %>"
-            >
-                <i class="fa-regular fa-user"></i>
-                <span>My Profile</span>
-            </a>
-            <a
-                href="/profile/addresses"
-                class="menu-item <%= activePage === 'addresses' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-location-dot"></i>
-                <span>My Address</span>
-            </a>
-            <a
-                href="/orders"
-                class="menu-item <%= activePage === 'orders' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-bag-shopping"></i>
-                <span>My Order</span>
-            </a>
-            <a
-                href="/wishlist"
-                class="menu-item <%= activePage === 'wishlist' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-heart"></i>
-                <span
-                    >My Wishlist <% if (typeof wishlistCount !== 'undefined') {
-                    %>(<%= wishlistCount %>)<% } %></span
-                >
-            </a>
-            <a
-                href="/cart"
-                class="menu-item <%= activePage === 'cart' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-shopping-cart"></i>
-                <span
-                    >My cart <% if (typeof cartCount !== 'undefined') { %>(<%=
-                    cartCount %>)<% } %></span
-                >
-            </a>
-            <a
-                href="/wallet"
-                class="menu-item <%= activePage === 'wallet' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-wallet"></i>
-                <span>My Wallet</span>
-            </a>
-            <a
-                href="/coupons"
-                class="menu-item <%= activePage === 'coupons' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-ticket"></i>
-                <span>My Coupon</span>
-            </a>
-            <a
-                href="/profile/change-password"
-                class="menu-item <%= activePage === 'change-password' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-lock"></i>
-                <span>Change password</span>
-            </a>
-            <a href="/logout" class="menu-item">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Log out</span>
-            </a>
-            <a
-                href="/referral"
-                class="menu-item <%= activePage === 'referral' ? 'active' : '' %>"
-            >
-                <i class="fa-solid fa-users"></i>
-                <span>Referral Code</span>
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- JavaScript for mobile functionality -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const mobileMenuToggle = document.getElementById('userMobileMenuToggle');
-    const sidebarOverlay = document.getElementById('userSidebarOverlay');
-    const userSidebar = document.getElementById('userSidebar');
-    const sidebarClose = document.getElementById('userSidebarClose');
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            const headerDropdowns = document.querySelectorAll('.user-dropdown.show');
-            headerDropdowns.forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-
-            userSidebar.classList.add('show');
-            sidebarOverlay.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        });
-    }
-    function closeMobileMenu() {
-        userSidebar.classList.remove('show');
-        sidebarOverlay.classList.remove('show');
-        document.body.style.overflow = '';
-    }
-
-    if (sidebarClose) {
-        sidebarClose.addEventListener('click', closeMobileMenu);
-    }
-
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeMobileMenu);
-    }
-    const menuItems = document.querySelectorAll('.menu-item');
-    menuItems.forEach(item => {
-        item.addEventListener('click', function() {
-            if (window.innerWidth < 992) {
-                closeMobileMenu();
-            }
-        });
-    });
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 992) {
-            closeMobileMenu();
-        }
-    });
-});
-</script>
+<link rel="stylesheet" href="/css/navbar.css" /><div class="user-mobile-nav d-lg-none">    <div class="mobile-nav-content">        <div class="mobile-user-info">            <div class="mobile-user-avatar">                <span><%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %></span>            </div>            <span class="mobile-user-name"><%= user.name || 'User' %></span>        </div>        <button class="mobile-menu-toggle" id="userMobileMenuToggle">            <i class="fa-solid fa-bars"></i>        </button>    </div></div><div class="user-sidebar-overlay" id="userSidebarOverlay"></div><div class="user-sidebar" id="userSidebar">    <button class="mobile-close-btn d-lg-none" id="userSidebarClose">        <i class="fa-solid fa-times"></i>    </button>    <div class="user-profile-card">        <div class="user-avatar">            <span><%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %></span>        </div>        <h3 class="user-name"><%= user.name || 'User' %></h3>        <div class="sidebar-menu">            <a                href="/profile"                class="menu-item <%= activePage === 'profile' ? 'active' : '' %>"            >                <i class="fa-regular fa-user"></i>                <span>My Profile</span>            </a>            <a                href="/profile/addresses"                class="menu-item <%= activePage === 'addresses' ? 'active' : '' %>"            >                <i class="fa-solid fa-location-dot"></i>                <span>My Address</span>            </a>            <a                href="/orders"                class="menu-item <%= activePage === 'orders' ? 'active' : '' %>"            >                <i class="fa-solid fa-bag-shopping"></i>                <span>My Order</span>            </a>            <a                href="/wishlist"                class="menu-item <%= activePage === 'wishlist' ? 'active' : '' %>"            >                <i class="fa-solid fa-heart"></i>                <span                    >My Wishlist <% if (typeof wishlistCount !== 'undefined') {                    %>(<%= wishlistCount %>)<% } %></span                >            </a>            <a                href="/cart"                class="menu-item <%= activePage === 'cart' ? 'active' : '' %>"            >                <i class="fa-solid fa-shopping-cart"></i>                <span                    >My cart <% if (typeof cartCount !== 'undefined') { %>(<%=                    cartCount %>)<% } %></span                >            </a>            <a                href="/wallet"                class="menu-item <%= activePage === 'wallet' ? 'active' : '' %>"            >                <i class="fa-solid fa-wallet"></i>                <span>My Wallet</span>            </a>            <a                href="/coupons"                class="menu-item <%= activePage === 'coupons' ? 'active' : '' %>"            >                <i class="fa-solid fa-ticket"></i>                <span>My Coupon</span>            </a>            <a                href="/profile/change-password"                class="menu-item <%= activePage === 'change-password' ? 'active' : '' %>"            >                <i class="fa-solid fa-lock"></i>                <span>Change password</span>            </a>            <a href="/logout" class="menu-item">                <i class="fa-solid fa-right-from-bracket"></i>                <span>Log out</span>            </a>            <a                href="/referral"                class="menu-item <%= activePage === 'referral' ? 'active' : '' %>"            >                <i class="fa-solid fa-users"></i>                <span>Referral Code</span>            </a>        </div>    </div></div><script>document.addEventListener('DOMContentLoaded', function() {    const mobileMenuToggle = document.getElementById('userMobileMenuToggle');    const sidebarOverlay = document.getElementById('userSidebarOverlay');    const userSidebar = document.getElementById('userSidebar');    const sidebarClose = document.getElementById('userSidebarClose');    if (mobileMenuToggle) {        mobileMenuToggle.addEventListener('click', function() {            const headerDropdowns = document.querySelectorAll('.user-dropdown.show');            headerDropdowns.forEach(dropdown => {                dropdown.classList.remove('show');            });            userSidebar.classList.add('show');            sidebarOverlay.classList.add('show');            document.body.style.overflow = 'hidden';        });    }    function closeMobileMenu() {        userSidebar.classList.remove('show');        sidebarOverlay.classList.remove('show');        document.body.style.overflow = '';    }    if (sidebarClose) {        sidebarClose.addEventListener('click', closeMobileMenu);    }    if (sidebarOverlay) {        sidebarOverlay.addEventListener('click', closeMobileMenu);    }    const menuItems = document.querySelectorAll('.menu-item');    menuItems.forEach(item => {        item.addEventListener('click', function() {            if (window.innerWidth < 992) {                closeMobileMenu();            }        });    });    window.addEventListener('resize', function() {        if (window.innerWidth >= 992) {            closeMobileMenu();        }    });});</script>

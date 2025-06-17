@@ -1,120 +1,1 @@
-const showToast = (() => {
-  let toastContainer = document.getElementById("toast-container")
-
-  if (!toastContainer) {
-    toastContainer = document.createElement("div")
-    toastContainer.id = "toast-container"
-    document.body.appendChild(toastContainer)
-
-    toastContainer.style.position = "fixed"
-    toastContainer.style.top = "20px"
-    toastContainer.style.right = "20px"
-    toastContainer.style.zIndex = "9999"
-    toastContainer.style.display = "flex"
-    toastContainer.style.flexDirection = "column"
-    toastContainer.style.gap = "10px"
-  }
-
-  return (message, type = "info", duration = 3000) => {
-    const toast = document.createElement("div")
-    toast.className = `toast toast-${type}`
-    toast.innerHTML = `
-      <div class="toast-content">
-        <i class="bi ${getIconClass(type)}"></i>
-        <span>${message}</span>
-      </div>
-      <button class="toast-close"><i class="bi bi-x"></i></button>
-    `
-    toast.style.backgroundColor = getBackgroundColor(type)
-    toast.style.color = getTextColor(type)
-    toast.style.padding = "12px 16px"
-    toast.style.borderRadius = "6px"
-    toast.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)"
-    toast.style.display = "flex"
-    toast.style.justifyContent = "space-between"
-    toast.style.alignItems = "center"
-    toast.style.minWidth = "300px"
-    toast.style.maxWidth = "400px"
-    toast.style.opacity = "0"
-    toast.style.transform = "translateX(100%)"
-    toast.style.transition = "all 0.3s ease"
-    const content = toast.querySelector(".toast-content")
-    content.style.display = "flex"
-    content.style.alignItems = "center"
-    content.style.gap = "10px"
-    const closeBtn = toast.querySelector(".toast-close")
-    closeBtn.style.background = "none"
-    closeBtn.style.border = "none"
-    closeBtn.style.color = "inherit"
-    closeBtn.style.cursor = "pointer"
-    closeBtn.style.fontSize = "18px"
-    closeBtn.style.opacity = "0.7"
-    closeBtn.style.padding = "0"
-    toastContainer.appendChild(toast)
-
-    setTimeout(() => {
-      toast.style.opacity = "1"
-      toast.style.transform = "translateX(0)"
-    }, 10)
-
-    closeBtn.addEventListener("click", () => {
-      closeToast(toast)
-    })
-
-    const timeoutId = setTimeout(() => {
-      closeToast(toast)
-    }, duration)
-
-    toast.dataset.timeoutId = timeoutId
-
-    function closeToast(toast) {
-      clearTimeout(Number.parseInt(toast.dataset.timeoutId))
-      toast.style.opacity = "0"
-      toast.style.transform = "translateX(100%)"
-      setTimeout(() => {
-        toast.remove()
-      }, 300)
-    }
-  }
-
-  function getIconClass(type) {
-    switch (type) {
-      case "success":
-        return "bi-check-circle-fill"
-      case "error":
-        return "bi-exclamation-circle-fill"
-      case "warning":
-        return "bi-exclamation-triangle-fill"
-      default:
-        return "bi-info-circle-fill"
-    }
-  }
-
-  function getBackgroundColor(type) {
-    switch (type) {
-      case "success":
-        return "#e8f5e9"
-      case "error":
-        return "#ffebee"
-      case "warning":
-        return "#fff8e1"
-      default:
-        return "#e3f2fd"
-    }
-  }
-
-  function getTextColor(type) {
-    switch (type) {
-      case "success":
-        return "#00ed42"
-      case "error":
-        return "#f44336"
-      case "warning":
-        return "#ff9800"
-      default:
-        return "#2196f3"
-    }
-  }
-})()
-
-window.showNotification = showToast
+const showToast = (() => {  let toastContainer = document.getElementById("toast-container")  if (!toastContainer) {    toastContainer = document.createElement("div")    toastContainer.id = "toast-container"    document.body.appendChild(toastContainer)    toastContainer.style.position = "fixed"    toastContainer.style.top = "20px"    toastContainer.style.right = "20px"    toastContainer.style.zIndex = "9999"    toastContainer.style.display = "flex"    toastContainer.style.flexDirection = "column"    toastContainer.style.gap = "10px"  }  return (message, type = "info", duration = 3000) => {    const toast = document.createElement("div")    toast.className = `toast toast-${type}`    toast.innerHTML = `      <div class="toast-content">        <i class="bi ${getIconClass(type)}"></i>        <span>${message}</span>      </div>      <button class="toast-close"><i class="bi bi-x"></i></button>    `    toast.style.backgroundColor = getBackgroundColor(type)    toast.style.color = getTextColor(type)    toast.style.padding = "12px 16px"    toast.style.borderRadius = "6px"    toast.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)"    toast.style.display = "flex"    toast.style.justifyContent = "space-between"    toast.style.alignItems = "center"    toast.style.minWidth = "300px"    toast.style.maxWidth = "400px"    toast.style.opacity = "0"    toast.style.transform = "translateX(100%)"    toast.style.transition = "all 0.3s ease"    const content = toast.querySelector(".toast-content")    content.style.display = "flex"    content.style.alignItems = "center"    content.style.gap = "10px"    const closeBtn = toast.querySelector(".toast-close")    closeBtn.style.background = "none"    closeBtn.style.border = "none"    closeBtn.style.color = "inherit"    closeBtn.style.cursor = "pointer"    closeBtn.style.fontSize = "18px"    closeBtn.style.opacity = "0.7"    closeBtn.style.padding = "0"    toastContainer.appendChild(toast)    setTimeout(() => {      toast.style.opacity = "1"      toast.style.transform = "translateX(0)"    }, 10)    closeBtn.addEventListener("click", () => {      closeToast(toast)    })    const timeoutId = setTimeout(() => {      closeToast(toast)    }, duration)    toast.dataset.timeoutId = timeoutId    function closeToast(toast) {      clearTimeout(Number.parseInt(toast.dataset.timeoutId))      toast.style.opacity = "0"      toast.style.transform = "translateX(100%)"      setTimeout(() => {        toast.remove()      }, 300)    }  }  function getIconClass(type) {    switch (type) {      case "success":        return "bi-check-circle-fill"      case "error":        return "bi-exclamation-circle-fill"      case "warning":        return "bi-exclamation-triangle-fill"      default:        return "bi-info-circle-fill"    }  }  function getBackgroundColor(type) {    switch (type) {      case "success":        return "#e8f5e9"      case "error":        return "#ffebee"      case "warning":        return "#fff8e1"      default:        return "#e3f2fd"    }  }  function getTextColor(type) {    switch (type) {      case "success":        return "#00ed42"      case "error":        return "#f44336"      case "warning":        return "#ff9800"      default:        return "#2196f3"    }  }})()window.showNotification = showToast
