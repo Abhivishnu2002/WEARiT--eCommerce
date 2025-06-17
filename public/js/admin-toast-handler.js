@@ -1,67 +1,1 @@
-document.addEventListener("DOMContentLoaded", () => {
-  function showSuccessToast(message) {
-    if (typeof toastr !== "undefined") {
-      toastr.success(message)
-    }
-  }
-  function showErrorToast(message) {
-    if (typeof toastr !== "undefined") {
-      toastr.error(message)
-    }
-  }
-  function showWarningToast(message) {
-    if (typeof toastr !== "undefined") {
-      toastr.warning(message)
-    }
-  }
-  function showInfoToast(message) {
-    if (typeof toastr !== "undefined") {
-      toastr.info(message)
-    }
-  }
-  function createToastContainer() {
-  }
-  function processFlashMessages() {
-    const successMessages = document.querySelectorAll(".alert-success")
-    successMessages.forEach((alert) => {
-      const message = alert.textContent.replace(/×/g, "").trim()
-      if (message) {
-        showSuccessToast(message)
-      }
-      alert.style.display = "none"
-    })
-    const errorMessages = document.querySelectorAll(".alert-danger")
-    errorMessages.forEach((alert) => {
-      const message = alert.textContent.replace(/×/g, "").trim()
-      if (message) {
-        showErrorToast(message)
-      }
-      alert.style.display = "none"
-    })
-    const warningMessages = document.querySelectorAll(".alert-warning")
-    warningMessages.forEach((alert) => {
-      const message = alert.textContent.replace(/×/g, "").trim()
-      if (message) {
-        showWarningToast(message)
-      }
-      alert.style.display = "none"
-    })
-    const infoMessages = document.querySelectorAll(".alert-info")
-    infoMessages.forEach((alert) => {
-      const message = alert.textContent.replace(/×/g, "").trim()
-      if (message) {
-        showInfoToast(message)
-      }
-      alert.style.display = "none"
-    })
-  }
-  if (typeof createToastContainer === "function") {
-    createToastContainer()
-    processFlashMessages()
-  }
-  if (typeof $ !== "undefined") {
-    $(document).ajaxError((event, jqXHR, settings, thrownError) => {
-      showErrorToast(`Request failed: ${thrownError || jqXHR.statusText}`)
-    })
-  }
-})
+document.addEventListener("DOMContentLoaded", () => {  function showSuccessToast(message) {    if (typeof toastr !== "undefined") {      toastr.success(message)    }  }  function showErrorToast(message) {    if (typeof toastr !== "undefined") {      toastr.error(message)    }  }  function showWarningToast(message) {    if (typeof toastr !== "undefined") {      toastr.warning(message)    }  }  function showInfoToast(message) {    if (typeof toastr !== "undefined") {      toastr.info(message)    }  }  function createToastContainer() {  }  function processFlashMessages() {    const successMessages = document.querySelectorAll(".alert-success")    successMessages.forEach((alert) => {      const message = alert.textContent.replace(/×/g, "").trim()      if (message) {        showSuccessToast(message)      }      alert.style.display = "none"    })    const errorMessages = document.querySelectorAll(".alert-danger")    errorMessages.forEach((alert) => {      const message = alert.textContent.replace(/×/g, "").trim()      if (message) {        showErrorToast(message)      }      alert.style.display = "none"    })    const warningMessages = document.querySelectorAll(".alert-warning")    warningMessages.forEach((alert) => {      const message = alert.textContent.replace(/×/g, "").trim()      if (message) {        showWarningToast(message)      }      alert.style.display = "none"    })    const infoMessages = document.querySelectorAll(".alert-info")    infoMessages.forEach((alert) => {      const message = alert.textContent.replace(/×/g, "").trim()      if (message) {        showInfoToast(message)      }      alert.style.display = "none"    })  }  if (typeof createToastContainer === "function") {    createToastContainer()    processFlashMessages()  }  if (typeof $ !== "undefined") {    $(document).ajaxError((event, jqXHR, settings, thrownError) => {      showErrorToast(`Request failed: ${thrownError || jqXHR.statusText}`)    })  }})

@@ -1,161 +1,1 @@
-document.addEventListener("DOMContentLoaded", function () {
-    if (typeof success_msg !== 'undefined' && success_msg.length > 0) { 
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: success_msg,
-            confirmButtonColor: '#0d6efd'
-        });
-    } 
-
-    if (typeof error_msg !== 'undefined' && error_msg.length > 0) { 
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error_msg,
-            confirmButtonColor: '#0d6efd'
-        });
-    }
-    const statusToggles = document.querySelectorAll('.status-toggle');
-    statusToggles.forEach(toggle => {
-        toggle.addEventListener('change', function() {
-            const productId = this.dataset.productId;
-            
-            Swal.fire({
-                title: this.checked ? 'List Product?' : 'Unlist Product?',
-                text: this.checked ? 'This product will be visible to customers' : 'This product will be hidden from customers',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#0d6efd',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: this.checked ? 'Yes, list it!' : 'Yes, unlist it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/admin/toggle-product-listing/${productId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: data.message,
-                                confirmButtonColor: '#0d6efd'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data.message,
-                                confirmButtonColor: '#0d6efd'
-                            });
-                            this.checked = !this.checked;
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred. Please try again.',
-                            confirmButtonColor: '#0d6efd'
-                        });
-                        this.checked = !this.checked;
-                    });
-                } else {
-                    this.checked = !this.checked;
-                }
-            });
-        });
-    });
-
-    const deleteButtons = document.querySelectorAll('.delete-btn');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const productName = this.dataset.productName;
-            
-            Swal.fire({
-                title: 'Are you sure?',
-                text: `You are about to delete "${productName}". This action cannot be undone!`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/admin/deleteproduct/${productId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: data.message,
-                                confirmButtonColor: '#0d6efd'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data.message,
-                                confirmButtonColor: '#0d6efd'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred. Please try again.',
-                            confirmButtonColor: '#0d6efd'
-                        });
-                    });
-                }
-            });
-        });
-    });
-    const addOfferButtons = document.querySelectorAll('.add-offer-btn');
-    const addOfferModal = new bootstrap.Modal(document.getElementById('addOfferModal'));
-    
-    addOfferButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const productName = this.dataset.productName;
-            
-            document.getElementById('offerProductId').value = productId;
-            document.getElementById('offerProductName').value = productName;
-            
-            addOfferModal.show();
-        });
-    });
-    const addOfferForm = document.getElementById('addOfferForm');
-    if (addOfferForm) {
-        addOfferForm.addEventListener('submit', function(e) {
-            const offerPercentage = document.getElementById('offerPercentage').value;
-            
-            if (!offerPercentage || offerPercentage < 1 || offerPercentage > 99) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    text: 'Offer percentage must be between 1 and 99',
-                    confirmButtonColor: '#0d6efd'
-                });
-            }
-        });
-    }
-});
+document.addEventListener("DOMContentLoaded", function () {    if (typeof success_msg !== 'undefined' && success_msg.length > 0) {         Swal.fire({            icon: 'success',            title: 'Success',            text: success_msg,            confirmButtonColor: '#0d6efd'        });    }     if (typeof error_msg !== 'undefined' && error_msg.length > 0) {         Swal.fire({            icon: 'error',            title: 'Error',            text: error_msg,            confirmButtonColor: '#0d6efd'        });    }    const statusToggles = document.querySelectorAll('.status-toggle');    statusToggles.forEach(toggle => {        toggle.addEventListener('change', function() {            const productId = this.dataset.productId;            Swal.fire({                title: this.checked ? 'List Product?' : 'Unlist Product?',                text: this.checked ? 'This product will be visible to customers' : 'This product will be hidden from customers',                icon: 'warning',                showCancelButton: true,                confirmButtonColor: '#0d6efd',                cancelButtonColor: '#6c757d',                confirmButtonText: this.checked ? 'Yes, list it!' : 'Yes, unlist it!'            }).then((result) => {                if (result.isConfirmed) {                    fetch(`/admin/toggle-product-listing/${productId}`, {                        method: 'PUT',                        headers: {                            'Content-Type': 'application/json'                        }                    })                    .then(response => response.json())                    .then(data => {                        if (data.success) {                            Swal.fire({                                icon: 'success',                                title: 'Success',                                text: data.message,                                confirmButtonColor: '#0d6efd'                            }).then(() => {                                location.reload();                            });                        } else {                            Swal.fire({                                icon: 'error',                                title: 'Error',                                text: data.message,                                confirmButtonColor: '#0d6efd'                            });                            this.checked = !this.checked;                        }                    })                    .catch(error => {                        Swal.fire({                            icon: 'error',                            title: 'Error',                            text: 'An error occurred. Please try again.',                            confirmButtonColor: '#0d6efd'                        });                        this.checked = !this.checked;                    });                } else {                    this.checked = !this.checked;                }            });        });    });    const deleteButtons = document.querySelectorAll('.delete-btn');    deleteButtons.forEach(button => {        button.addEventListener('click', function() {            const productId = this.dataset.productId;            const productName = this.dataset.productName;            Swal.fire({                title: 'Are you sure?',                text: `You are about to delete "${productName}". This action cannot be undone!`,                icon: 'warning',                showCancelButton: true,                confirmButtonColor: '#dc3545',                cancelButtonColor: '#6c757d',                confirmButtonText: 'Yes, delete it!'            }).then((result) => {                if (result.isConfirmed) {                    fetch(`/admin/deleteproduct/${productId}`, {                        method: 'DELETE',                        headers: {                            'Content-Type': 'application/json'                        }                    })                    .then(response => response.json())                    .then(data => {                        if (data.success) {                            Swal.fire({                                icon: 'success',                                title: 'Deleted!',                                text: data.message,                                confirmButtonColor: '#0d6efd'                            }).then(() => {                                location.reload();                            });                        } else {                            Swal.fire({                                icon: 'error',                                title: 'Error',                                text: data.message,                                confirmButtonColor: '#0d6efd'                            });                        }                    })                    .catch(error => {                        Swal.fire({                            icon: 'error',                            title: 'Error',                            text: 'An error occurred. Please try again.',                            confirmButtonColor: '#0d6efd'                        });                    });                }            });        });    });    const addOfferButtons = document.querySelectorAll('.add-offer-btn');    const addOfferModal = new bootstrap.Modal(document.getElementById('addOfferModal'));    addOfferButtons.forEach(button => {        button.addEventListener('click', function() {            const productId = this.dataset.productId;            const productName = this.dataset.productName;            document.getElementById('offerProductId').value = productId;            document.getElementById('offerProductName').value = productName;            addOfferModal.show();        });    });    const addOfferForm = document.getElementById('addOfferForm');    if (addOfferForm) {        addOfferForm.addEventListener('submit', function(e) {            const offerPercentage = document.getElementById('offerPercentage').value;            if (!offerPercentage || offerPercentage < 1 || offerPercentage > 99) {                e.preventDefault();                Swal.fire({                    icon: 'error',                    title: 'Validation Error',                    text: 'Offer percentage must be between 1 and 99',                    confirmButtonColor: '#0d6efd'                });            }        });    }});

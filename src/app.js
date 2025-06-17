@@ -30,6 +30,20 @@ app.use(express.json());
 
 app.use(express.urlencoded({extended: true}));
 
+// Debug middleware to log requests
+app.use((req, res, next) => {
+    if (req.path === '/checkout/place-order') {
+        console.error('=== PLACE ORDER REQUEST DEBUG ===');
+        console.error('Method:', req.method);
+        console.error('Content-Type:', req.get('content-type'));
+        console.error('Body:', req.body);
+        console.error('Raw body type:', typeof req.body);
+        console.error('Body keys:', req.body ? Object.keys(req.body) : 'No body');
+        console.error('=== END DEBUG ===');
+    }
+    next();
+});
+
 app.use(nocache());
 
 app.use(session({
@@ -59,13 +73,15 @@ app.use(getCartWishlistCounts);
 
 app.use('/', userRoutes);
 app.use("/admin", adminRoutes);
-app.use('/api', apiRoutes);
+app.use('/api', apiRoutes);
+
 app.use((req, res, next)=>{
     res.status(404).render('errors/404', {
         message: 'Page not found',
         url: req.originalUrl
     });
-});
+});
+
 app.use((err, req, res, next)=>{
     console.error('Application error:', err);
     res.status(500).render('errors/500', {

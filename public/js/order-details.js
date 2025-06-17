@@ -903,6 +903,11 @@ document.addEventListener("DOMContentLoaded", () => {
       handler: async (response) => {
         try {
           showToast("Verifying your payment...", "info")
+          console.log("Razorpay retry payment success, verifying:", {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            orderId: orderId
+          })
 
           const verifyResponse = await fetch('/payment/razorpay/verify', {
             method: 'POST',
@@ -920,19 +925,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (!verifyResponse.ok) {
             const errorText = await verifyResponse.text()
+            console.error("Razorpay retry verification HTTP error:", verifyResponse.status, errorText)
             throw new Error(`HTTP ${verifyResponse.status}: ${errorText}`)
           }
 
           const verifyData = await verifyResponse.json()
+          console.log("Razorpay retry verification response:", verifyData)
+
           if (verifyData.success) {
+            console.log("Razorpay retry verification successful, redirecting to success")
             showToast("Payment successful! Redirecting...", "success")
             setTimeout(() => {
               window.location.href = verifyData.redirectUrl || `/order-success/${orderId}`
             }, 1500)
           } else {
+            console.log("Razorpay retry verification failed:", verifyData)
             throw new Error(verifyData.message || 'Payment verification failed')
           }
         } catch (error) {
+          console.error("Razorpay retry verification error:", error)
           showToast(error.message || "Payment verification failed. Please contact support.", "error")
           setTimeout(() => {
             window.location.href = `/order-failure/${orderId}`

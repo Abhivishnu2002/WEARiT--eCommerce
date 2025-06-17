@@ -50,7 +50,8 @@ const loadCheckout = async (req, res) => {
     const unavailableProducts = []
 
     for (const item of cart.products) {
-      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
+      const freshProduct = await Product.findById(item.product._id).populate("categoryId")
+
       if (!freshProduct || !freshProduct.isActive) {
         unavailableProducts.push({
           productName: item.product.name,
@@ -58,7 +59,8 @@ const loadCheckout = async (req, res) => {
           reason: "Product is no longer available",
         })
         continue
-      }
+      }
+
       if (!freshProduct.categoryId || !freshProduct.categoryId.isListed) {
         unavailableProducts.push({
           productName: freshProduct.name,
@@ -66,7 +68,8 @@ const loadCheckout = async (req, res) => {
           reason: "Product category is no longer available",
         })
         continue
-      }
+      }
+
       const variant = freshProduct.variants.find((v) => v.size === item.size)
       if (!variant) {
         stockIssues.push({
@@ -94,10 +97,12 @@ const loadCheckout = async (req, res) => {
           availableStock: variant.varientquatity,
         })
         continue
-      }
+      }
+
       item.product = freshProduct
       validProducts.push(item)
-    }
+    }
+
     if (unavailableProducts.length > 0) {
       let errorMessage = "Some products in your cart are no longer available: "
       errorMessage += unavailableProducts.map(item => `${item.productName} (${item.size})`).join(", ")
@@ -269,17 +274,66 @@ const loadPayment = async (req, res) => {
 
 const placeOrder = async (req, res) => {
   try {
-    let { addressId, paymentMethod } = req.body
+    console.error("PlaceOrder request body:", req.body)
+    console.error("PlaceOrder request headers:", req.headers)
+    console.error("PlaceOrder content-type:", req.get('content-type'))
+
+    // Check if req.body is undefined or empty
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.error("Request body is empty or undefined")
+
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request data"
+        })
+      }
+
+      req.flash("error_msg", "Invalid request data")
+      return res.redirect("/checkout")
+    }
+
+    // Handle both regular form submission and JSON submission
+    let addressId = req.body.addressId
+    let paymentMethod = req.body.paymentMethod || req.body.selectedPaymentMethod
+
+    // Handle array values (in case of multiple form fields with same name)
+    if (Array.isArray(addressId)) {
+      addressId = addressId[0]
+    }
     if (Array.isArray(paymentMethod)) {
       paymentMethod = paymentMethod[0]
     }
 
+    console.error("Extracted values:", { addressId, paymentMethod })
+
     if (!addressId) {
+      console.error("Missing addressId in placeOrder")
+
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.status(400).json({
+          success: false,
+          message: "Please select a delivery address"
+        })
+      }
+
       req.flash("error_msg", "Please select a delivery address")
       return res.redirect("/checkout")
     }
 
     if (!paymentMethod) {
+      console.error("Missing paymentMethod in placeOrder")
+
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.status(400).json({
+          success: false,
+          message: "Please select a payment method"
+        })
+      }
+
       req.flash("error_msg", "Please select a payment method")
       return res.redirect("/payment?addressId=" + addressId)
     }
@@ -417,6 +471,15 @@ const placeOrder = async (req, res) => {
       req.session.couponDiscount = 0
 
       await Cart.findOneAndUpdate({ user: req.user._id }, { $set: { products: [] } })
+
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.json({
+          success: true,
+          redirect: `/order-success/${order._id}`
+        })
+      }
+
       return res.redirect(`/order-success/${order._id}`)
     } else if (paymentMethod === "wallet") {
       const user = await User.findById(req.user._id)
@@ -424,6 +487,15 @@ const placeOrder = async (req, res) => {
       if (!user.wallet || user.wallet.balance < finalAmount) {
         order.paymentStatus = "failed"
         await order.save()
+
+        // Handle as JSON response if it's an AJAX request
+        if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+          return res.status(400).json({
+            success: false,
+            message: "Insufficient wallet balance",
+            redirect: `/order-failure/${order._id}`
+          })
+        }
 
         req.flash("error_msg", "Insufficient wallet balance")
         return res.redirect(`/order-failure/${order._id}`)
@@ -488,14 +560,53 @@ const placeOrder = async (req, res) => {
       req.session.couponDiscount = 0
 
       await Cart.findOneAndUpdate({ user: req.user._id }, { $set: { products: [] } })
+
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.json({
+          success: true,
+          redirect: `/order-success/${order._id}`
+        })
+      }
+
       return res.redirect(`/order-success/${order._id}`)
     } else if (paymentMethod === "paypal" || paymentMethod === "razorpay") {
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.json({
+          success: true,
+          redirect: `/payment?orderId=${order._id}`
+        })
+      }
+
       return res.redirect(`/payment?orderId=${order._id}`)
     } else {
+      // Handle as JSON response if it's an AJAX request
+      if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.json({
+          success: true,
+          redirect: `/payment?orderId=${order._id}`
+        })
+      }
+
       return res.redirect(`/payment?orderId=${order._id}`)
     }
   } catch (error) {
-    console.error("User placeOrder error:", error)
+    console.error("User placeOrder error:", {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+      user: req.user._id
+    })
+
+    // Handle as JSON response if it's an AJAX request
+    if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to place order: " + error.message
+      })
+    }
+
     req.flash("error_msg", "Failed to place order: " + error.message)
     res.redirect("/checkout")
   }

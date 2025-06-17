@@ -1,85 +1,1 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const adminSidebar = document.getElementById('adminSidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            adminSidebar.classList.toggle('collapsed');
-
-            const icon = this.querySelector('i');
-            if (adminSidebar.classList.contains('collapsed')) {
-                icon.classList.remove('fa-chevron-left');
-                icon.classList.add('fa-chevron-right');
-            } else {
-                icon.classList.remove('fa-chevron-right');
-                icon.classList.add('fa-chevron-left');
-            }
-
-            localStorage.setItem('sidebarCollapsed', adminSidebar.classList.contains('collapsed'));
-        });
-    }
-
-    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (sidebarCollapsed) {
-        adminSidebar.classList.add('collapsed');
-        if (sidebarToggle) {
-            const icon = sidebarToggle.querySelector('i');
-            icon.classList.remove('fa-chevron-left');
-            icon.classList.add('fa-chevron-right');
-        }
-    }
-    
-    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
-    const closeSidebar = document.getElementById('closeSidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    
-    if (mobileSidebarToggle) {
-        mobileSidebarToggle.addEventListener('click', function() {
-            adminSidebar.classList.add('show');
-            sidebarOverlay.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        });
-    }
-    
-    if (closeSidebar) {
-        closeSidebar.addEventListener('click', function() {
-            adminSidebar.classList.remove('show');
-            sidebarOverlay.classList.remove('show');
-            document.body.style.overflow = '';
-        });
-    }
-    
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', function() {
-            adminSidebar.classList.remove('show');
-            sidebarOverlay.classList.remove('show');
-            document.body.style.overflow = '';
-        });
-    }
-
-    const userDropdownToggle = document.getElementById('userDropdownToggle');
-    const userDropdownMenu = document.getElementById('userDropdownMenu');
-    
-    if (userDropdownToggle && userDropdownMenu) {
-        userDropdownToggle.addEventListener('click', function() {
-            userDropdownMenu.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!userDropdownToggle.contains(event.target) && !userDropdownMenu.contains(event.target)) {
-                userDropdownMenu.classList.remove('show');
-            }
-        });
-    }
-
-    const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth < 992) {
-                adminSidebar.classList.remove('show');
-                sidebarOverlay.classList.remove('show');
-                document.body.style.overflow = '';
-            }
-        });
-    });
-});
+document.addEventListener('DOMContentLoaded', function() {    const adminSidebar = document.getElementById('adminSidebar');    const sidebarToggle = document.getElementById('sidebarToggle');    if (sidebarToggle) {        sidebarToggle.addEventListener('click', function() {            adminSidebar.classList.toggle('collapsed');            const icon = this.querySelector('i');            if (adminSidebar.classList.contains('collapsed')) {                icon.classList.remove('fa-chevron-left');                icon.classList.add('fa-chevron-right');            } else {                icon.classList.remove('fa-chevron-right');                icon.classList.add('fa-chevron-left');            }            localStorage.setItem('sidebarCollapsed', adminSidebar.classList.contains('collapsed'));        });    }    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';    if (sidebarCollapsed) {        adminSidebar.classList.add('collapsed');        if (sidebarToggle) {            const icon = sidebarToggle.querySelector('i');            icon.classList.remove('fa-chevron-left');            icon.classList.add('fa-chevron-right');        }    }    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');    const closeSidebar = document.getElementById('closeSidebar');    const sidebarOverlay = document.getElementById('sidebarOverlay');    if (mobileSidebarToggle) {        mobileSidebarToggle.addEventListener('click', function() {            adminSidebar.classList.add('show');            sidebarOverlay.classList.add('show');            document.body.style.overflow = 'hidden';        });    }    if (closeSidebar) {        closeSidebar.addEventListener('click', function() {            adminSidebar.classList.remove('show');            sidebarOverlay.classList.remove('show');            document.body.style.overflow = '';        });    }    if (sidebarOverlay) {        sidebarOverlay.addEventListener('click', function() {            adminSidebar.classList.remove('show');            sidebarOverlay.classList.remove('show');            document.body.style.overflow = '';        });    }    const userDropdownToggle = document.getElementById('userDropdownToggle');    const userDropdownMenu = document.getElementById('userDropdownMenu');    if (userDropdownToggle && userDropdownMenu) {        userDropdownToggle.addEventListener('click', function() {            userDropdownMenu.classList.toggle('show');        });        document.addEventListener('click', function(event) {            if (!userDropdownToggle.contains(event.target) && !userDropdownMenu.contains(event.target)) {                userDropdownMenu.classList.remove('show');            }        });    }    const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');    navLinks.forEach(link => {        link.addEventListener('click', function() {            if (window.innerWidth < 992) {                adminSidebar.classList.remove('show');                sidebarOverlay.classList.remove('show');                document.body.style.overflow = '';            }        });    });});

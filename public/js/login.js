@@ -1,478 +1,1 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm")
-  const emailInput = document.getElementById("email")
-  const passwordInput = document.getElementById("password")
-  const togglePassword = document.getElementById("togglePassword")
-  const loginBtn = document.getElementById("loginBtn")
-  const btnText = loginBtn.querySelector(".btn-text")
-  const btnSpinner = loginBtn.querySelector(".btn-spinner")
-  const emailValid = document.getElementById("emailValid")
-  const emailInvalid = document.getElementById("emailInvalid")
-  const emailError = document.getElementById("emailError")
-  const passwordError = document.getElementById("passwordError")
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-  const passwordMinLength = 6
-  let isEmailValid = false
-  let isPasswordValid = false
-  let hasUserInteracted = false
-  let formSubmitted = false
-  function validateEmail() {
-    const email = emailInput.value.trim()
-
-    if (!email) {
-      if (formSubmitted || (hasUserInteracted && email.length > 0)) {
-        showFieldError(emailInput, emailError, "Email address is required")
-        updateValidationIcon("email", false)
-      }
-      isEmailValid = false
-      return false
-    }
-
-    if (!emailPattern.test(email)) {
-      if (formSubmitted || (hasUserInteracted && email.length > 0)) {
-        showFieldError(emailInput, emailError, "Please enter a valid email address")
-        updateValidationIcon("email", false)
-      }
-      isEmailValid = false
-      return false
-    }
-
-    hideFieldError(emailInput, emailError)
-    updateValidationIcon("email", true)
-    isEmailValid = true
-    return true
-  }
-
-  function validatePassword() {
-    const password = passwordInput.value
-
-    if (!password) {
-      if (formSubmitted || (hasUserInteracted && password.length > 0)) {
-        showFieldError(passwordInput, passwordError, "Password is required")
-      }
-      isPasswordValid = false
-      return false
-    }
-
-    if (password.length < passwordMinLength) {
-      if (formSubmitted || (hasUserInteracted && password.length > 0)) {
-        showFieldError(passwordInput, passwordError, `Password must be at least ${passwordMinLength} characters long`)
-      }
-      isPasswordValid = false
-      return false
-    }
-
-    hideFieldError(passwordInput, passwordError)
-    isPasswordValid = true
-    return true
-  }
-
-  function showFieldError(input, errorContainer, message) {
-    input.classList.add("is-invalid")
-    input.classList.remove("is-valid")
-    const inputGroup = input.closest('.input-group')
-    if (inputGroup) {
-      inputGroup.style.borderColor = '#ef4444'
-      inputGroup.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)'
-    }
-
-    errorContainer.textContent = message
-    errorContainer.style.display = "block"
-    errorContainer.classList.add("show")
-    errorContainer.style.opacity = '0'
-    errorContainer.style.transform = 'translateY(-10px)'
-    setTimeout(() => {
-      errorContainer.style.transition = 'all 0.3s ease'
-      errorContainer.style.opacity = '1'
-      errorContainer.style.transform = 'translateY(0)'
-    }, 10)
-    input.style.animation = "modernShake 0.4s ease-in-out"
-    setTimeout(() => {
-      input.style.animation = ""
-    }, 400)
-  }
-
-  function hideFieldError(input, errorContainer) {
-    input.classList.remove("is-invalid")
-    input.classList.add("is-valid")
-    const inputGroup = input.closest('.input-group')
-    if (inputGroup) {
-      inputGroup.style.borderColor = '#198754'
-      inputGroup.style.boxShadow = '0 0 0 3px rgba(25, 135, 84, 0.1)'
-      setTimeout(() => {
-        inputGroup.style.borderColor = ''
-        inputGroup.style.boxShadow = ''
-      }, 2000)
-    }
-    errorContainer.style.transition = 'all 0.3s ease'
-    errorContainer.style.opacity = '0'
-    errorContainer.style.transform = 'translateY(-10px)'
-
-    setTimeout(() => {
-      errorContainer.textContent = ""
-      errorContainer.style.display = "none"
-      errorContainer.classList.remove("show")
-      errorContainer.style.transition = ''
-    }, 300)
-  }
-  function updateValidationIcon(field, isValid) {
-    if (field === "email" && emailValid && emailInvalid) {
-      if (isValid) {
-        emailValid.classList.remove("d-none")
-        emailInvalid.classList.add("d-none")
-        emailValid.style.animation = "bounceIn 0.5s ease"
-        setTimeout(() => {
-          emailValid.style.animation = ""
-        }, 500)
-      } else {
-        emailValid.classList.add("d-none")
-        emailInvalid.classList.remove("d-none")
-        emailInvalid.style.animation = "bounceIn 0.5s ease"
-        setTimeout(() => {
-          emailInvalid.style.animation = ""
-        }, 500)
-      }
-    }
-  }
-  function markUserInteraction() {
-    hasUserInteracted = true
-  }
-  emailInput.addEventListener("input", function () {
-    if (this.value.trim()) {
-      markUserInteraction()
-      validateEmail()
-    } else {
-      this.classList.remove("is-valid", "is-invalid")
-      if (emailError) {
-        emailError.style.display = "none"
-        emailError.classList.remove("show")
-      }
-      if (emailValid && emailInvalid) {
-        emailValid.classList.add("d-none")
-        emailInvalid.classList.add("d-none")
-      }
-      isEmailValid = false
-    }
-    updateSubmitButton()
-  })
-
-  emailInput.addEventListener("blur", () => {
-    if (this.value.trim()) {
-      markUserInteraction()
-      validateEmail()
-    }
-  })
-
-  passwordInput.addEventListener("input", function () {
-    if (this.value) {
-      markUserInteraction()
-      validatePassword()
-    } else {
-      this.classList.remove("is-valid", "is-invalid")
-      if (passwordError) {
-        passwordError.style.display = "none"
-        passwordError.classList.remove("show")
-      }
-      isPasswordValid = false
-    }
-    updateSubmitButton()
-  })
-
-  passwordInput.addEventListener("blur", () => {
-    if (this.value) {
-      markUserInteraction()
-      validatePassword()
-    }
-  })
-  if (togglePassword) {
-    togglePassword.addEventListener("click", function () {
-      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password"
-      passwordInput.setAttribute("type", type)
-
-      const icon = this.querySelector("i")
-      if (icon) {
-        if (type === "password") {
-          icon.classList.remove("bi-eye")
-          icon.classList.add("bi-eye-slash")
-        } else {
-          icon.classList.remove("bi-eye-slash")
-          icon.classList.add("bi-eye")
-        }
-      }
-    })
-  }
-  function updateSubmitButton() {
-    if (loginBtn) {
-      if (isEmailValid && isPasswordValid) {
-        loginBtn.disabled = false
-        loginBtn.classList.remove("opacity-50")
-      } else {
-        loginBtn.disabled = true
-        loginBtn.classList.add("opacity-50")
-      }
-    }
-  }
-  if (loginForm) {
-    loginForm.addEventListener("submit", function (e) {
-      e.preventDefault()
-      formSubmitted = true
-      markUserInteraction()
-      const emailIsValid = validateEmail()
-      const passwordIsValid = validatePassword()
-
-      if (!emailIsValid || !passwordIsValid) {
-        if (window.Swal) {
-          window.Swal.fire({
-            icon: "error",
-            title: "Validation Error",
-            text: "Please fix the errors in the form before submitting.",
-            confirmButtonColor: "#ef4444",
-            customClass: {
-              popup: "animated shake",
-            },
-          })
-        }
-        return
-      }
-
-      showLoadingState()
-      const formData = new FormData(this)
-      fetch("/login", {
-        method: "POST",
-        body: formData,
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      })
-        .then((response) => {
-          if (response.redirected) {
-            if (window.Swal) {
-              window.Swal.fire({
-                icon: "success",
-                title: "Login Successful!",
-                text: "Welcome back! Redirecting...",
-                timer: 1500,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                customClass: {
-                  popup: "animated fadeInUp",
-                },
-              }).then(() => {
-                window.location.href = response.url
-              })
-            } else {
-              window.location.href = response.url
-            }
-          } else {
-            return response.text()
-          }
-        })
-        .then((html) => {
-          if (html) {
-            const parser = new DOMParser()
-            const doc = parser.parseFromString(html, "text/html")
-            const errorAlert = doc.querySelector(".alert-danger")
-
-            if (errorAlert) {
-              const errorMessage = errorAlert.textContent.trim()
-              hideLoadingState()
-
-              if (window.Swal) {
-                window.Swal.fire({
-                  icon: "error",
-                  title: "Login Failed",
-                  text: errorMessage,
-                  confirmButtonColor: "#ef4444",
-                  customClass: {
-                    popup: "animated shake",
-                  },
-                })
-              } else {
-                alert(errorMessage)
-              }
-            } else {
-              hideLoadingState()
-              this.submit()
-            }
-          }
-        })
-        .catch((error) => {
-          hideLoadingState()
-
-          if (window.Swal) {
-            window.Swal.fire({
-              icon: "error",
-              title: "Connection Error",
-              text: "Unable to connect to the server. Please check your internet connection and try again.",
-              confirmButtonColor: "#ef4444",
-              customClass: {
-                popup: "animated shake",
-              },
-            })
-          } else {
-            alert("Connection error. Please try again.")
-          }
-        })
-    })
-  }
-  function showLoadingState() {
-    if (loginBtn && btnText && btnSpinner) {
-      loginBtn.disabled = true
-      btnText.classList.add("d-none")
-      btnSpinner.classList.remove("d-none")
-      loginBtn.style.cursor = "not-allowed"
-    }
-  }
-  function hideLoadingState() {
-    if (loginBtn && btnText && btnSpinner) {
-      loginBtn.disabled = false
-      btnText.classList.remove("d-none")
-      btnSpinner.classList.add("d-none")
-      loginBtn.style.cursor = "pointer"
-      updateSubmitButton()
-    }
-  }
-  const style = document.createElement("style")
-  style.textContent = `
-        @keyframes modernShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-3px); }
-            75% { transform: translateX(3px); }
-        }
-
-        @keyframes bounceIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.3);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1.05);
-            }
-            70% {
-                transform: scale(0.9);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-
-        .animated {
-            animation-duration: 0.5s;
-            animation-fill-mode: both;
-        }
-
-        .fadeInUp {
-            animation-name: fadeInUp;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translate3d(0, 40px, 0);
-            }
-            to {
-                opacity: 1;
-                transform: translate3d(0, 0, 0);
-            }
-        }
-
-        .invalid-feedback {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-            color: #dc2626;
-            font-weight: 500;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .invalid-feedback::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: #dc2626;
-        }
-
-        .invalid-feedback.show {
-            animation: slideInDown 0.3s ease;
-        }
-
-        .form-control.is-valid {
-            border-color: #10b981;
-            background-image: none;
-        }
-
-        .form-control.is-invalid {
-            border-color: #ef4444;
-            background-image: none;
-        }
-
-        .input-group:focus-within {
-            transform: translateY(-1px);
-            transition: all 0.3s ease;
-        }
-
-        .auth-btn:hover:not(:disabled) {
-            animation: pulse 0.3s ease;
-        }
-
-        .auth-btn:disabled {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .auth-btn:disabled::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-    `
-  document.head.appendChild(style)
-  updateSubmitButton()
-
-  if (emailInput) {
-    emailInput.focus()
-  }
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) {
-      hideLoadingState()
-    }
-  })
-  window.Swal = window.Swal || window.swal || window.swal2
-})
+document.addEventListener("DOMContentLoaded", () => {  const loginForm = document.getElementById("loginForm")  const emailInput = document.getElementById("email")  const passwordInput = document.getElementById("password")  const togglePassword = document.getElementById("togglePassword")  const loginBtn = document.getElementById("loginBtn")  const btnText = loginBtn.querySelector(".btn-text")  const btnSpinner = loginBtn.querySelector(".btn-spinner")  const emailValid = document.getElementById("emailValid")  const emailInvalid = document.getElementById("emailInvalid")  const emailError = document.getElementById("emailError")  const passwordError = document.getElementById("passwordError")  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/  const passwordMinLength = 6  let isEmailValid = false  let isPasswordValid = false  let hasUserInteracted = false  let formSubmitted = false  function validateEmail() {    const email = emailInput.value.trim()    if (!email) {      if (formSubmitted || (hasUserInteracted && email.length > 0)) {        showFieldError(emailInput, emailError, "Email address is required")        updateValidationIcon("email", false)      }      isEmailValid = false      return false    }    if (!emailPattern.test(email)) {      if (formSubmitted || (hasUserInteracted && email.length > 0)) {        showFieldError(emailInput, emailError, "Please enter a valid email address")        updateValidationIcon("email", false)      }      isEmailValid = false      return false    }    hideFieldError(emailInput, emailError)    updateValidationIcon("email", true)    isEmailValid = true    return true  }  function validatePassword() {    const password = passwordInput.value    if (!password) {      if (formSubmitted || (hasUserInteracted && password.length > 0)) {        showFieldError(passwordInput, passwordError, "Password is required")      }      isPasswordValid = false      return false    }    if (password.length < passwordMinLength) {      if (formSubmitted || (hasUserInteracted && password.length > 0)) {        showFieldError(passwordInput, passwordError, `Password must be at least ${passwordMinLength} characters long`)      }      isPasswordValid = false      return false    }    hideFieldError(passwordInput, passwordError)    isPasswordValid = true    return true  }  function showFieldError(input, errorContainer, message) {    input.classList.add("is-invalid")    input.classList.remove("is-valid")    const inputGroup = input.closest('.input-group')    if (inputGroup) {      inputGroup.style.borderColor = '#ef4444'      inputGroup.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.1)'    }    errorContainer.textContent = message    errorContainer.style.display = "block"    errorContainer.classList.add("show")    errorContainer.style.opacity = '0'    errorContainer.style.transform = 'translateY(-10px)'    setTimeout(() => {      errorContainer.style.transition = 'all 0.3s ease'      errorContainer.style.opacity = '1'      errorContainer.style.transform = 'translateY(0)'    }, 10)    input.style.animation = "modernShake 0.4s ease-in-out"    setTimeout(() => {      input.style.animation = ""    }, 400)  }  function hideFieldError(input, errorContainer) {    input.classList.remove("is-invalid")    input.classList.add("is-valid")    const inputGroup = input.closest('.input-group')    if (inputGroup) {      inputGroup.style.borderColor = '#198754'      inputGroup.style.boxShadow = '0 0 0 3px rgba(25, 135, 84, 0.1)'      setTimeout(() => {        inputGroup.style.borderColor = ''        inputGroup.style.boxShadow = ''      }, 2000)    }    errorContainer.style.transition = 'all 0.3s ease'    errorContainer.style.opacity = '0'    errorContainer.style.transform = 'translateY(-10px)'    setTimeout(() => {      errorContainer.textContent = ""      errorContainer.style.display = "none"      errorContainer.classList.remove("show")      errorContainer.style.transition = ''    }, 300)  }  function updateValidationIcon(field, isValid) {    if (field === "email" && emailValid && emailInvalid) {      if (isValid) {        emailValid.classList.remove("d-none")        emailInvalid.classList.add("d-none")        emailValid.style.animation = "bounceIn 0.5s ease"        setTimeout(() => {          emailValid.style.animation = ""        }, 500)      } else {        emailValid.classList.add("d-none")        emailInvalid.classList.remove("d-none")        emailInvalid.style.animation = "bounceIn 0.5s ease"        setTimeout(() => {          emailInvalid.style.animation = ""        }, 500)      }    }  }  function markUserInteraction() {    hasUserInteracted = true  }  emailInput.addEventListener("input", function () {    if (this.value.trim()) {      markUserInteraction()      validateEmail()    } else {      this.classList.remove("is-valid", "is-invalid")      if (emailError) {        emailError.style.display = "none"        emailError.classList.remove("show")      }      if (emailValid && emailInvalid) {        emailValid.classList.add("d-none")        emailInvalid.classList.add("d-none")      }      isEmailValid = false    }    updateSubmitButton()  })  emailInput.addEventListener("blur", () => {    if (this.value.trim()) {      markUserInteraction()      validateEmail()    }  })  passwordInput.addEventListener("input", function () {    if (this.value) {      markUserInteraction()      validatePassword()    } else {      this.classList.remove("is-valid", "is-invalid")      if (passwordError) {        passwordError.style.display = "none"        passwordError.classList.remove("show")      }      isPasswordValid = false    }    updateSubmitButton()  })  passwordInput.addEventListener("blur", () => {    if (this.value) {      markUserInteraction()      validatePassword()    }  })  if (togglePassword) {    togglePassword.addEventListener("click", function () {      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password"      passwordInput.setAttribute("type", type)      const icon = this.querySelector("i")      if (icon) {        if (type === "password") {          icon.classList.remove("bi-eye")          icon.classList.add("bi-eye-slash")        } else {          icon.classList.remove("bi-eye-slash")          icon.classList.add("bi-eye")        }      }    })  }  function updateSubmitButton() {    if (loginBtn) {      if (isEmailValid && isPasswordValid) {        loginBtn.disabled = false        loginBtn.classList.remove("opacity-50")      } else {        loginBtn.disabled = true        loginBtn.classList.add("opacity-50")      }    }  }  if (loginForm) {    loginForm.addEventListener("submit", function (e) {      e.preventDefault()      formSubmitted = true      markUserInteraction()      const emailIsValid = validateEmail()      const passwordIsValid = validatePassword()      if (!emailIsValid || !passwordIsValid) {        if (window.Swal) {          window.Swal.fire({            icon: "error",            title: "Validation Error",            text: "Please fix the errors in the form before submitting.",            confirmButtonColor: "#ef4444",            customClass: {              popup: "animated shake",            },          })        }        return      }      showLoadingState()      const formData = new FormData(this)      fetch("/login", {        method: "POST",        body: formData,        headers: {          "X-Requested-With": "XMLHttpRequest",        },      })        .then((response) => {          if (response.redirected) {            if (window.Swal) {              window.Swal.fire({                icon: "success",                title: "Login Successful!",                text: "Welcome back! Redirecting...",                timer: 1500,                timerProgressBar: true,                showConfirmButton: false,                allowOutsideClick: false,                customClass: {                  popup: "animated fadeInUp",                },              }).then(() => {                window.location.href = response.url              })            } else {              window.location.href = response.url            }          } else {            return response.text()          }        })        .then((html) => {          if (html) {            const parser = new DOMParser()            const doc = parser.parseFromString(html, "text/html")            const errorAlert = doc.querySelector(".alert-danger")            if (errorAlert) {              const errorMessage = errorAlert.textContent.trim()              hideLoadingState()              if (window.Swal) {                window.Swal.fire({                  icon: "error",                  title: "Login Failed",                  text: errorMessage,                  confirmButtonColor: "#ef4444",                  customClass: {                    popup: "animated shake",                  },                })              } else {                alert(errorMessage)              }            } else {              hideLoadingState()              this.submit()            }          }        })        .catch((error) => {          hideLoadingState()          if (window.Swal) {            window.Swal.fire({              icon: "error",              title: "Connection Error",              text: "Unable to connect to the server. Please check your internet connection and try again.",              confirmButtonColor: "#ef4444",              customClass: {                popup: "animated shake",              },            })          } else {            alert("Connection error. Please try again.")          }        })    })  }  function showLoadingState() {    if (loginBtn && btnText && btnSpinner) {      loginBtn.disabled = true      btnText.classList.add("d-none")      btnSpinner.classList.remove("d-none")      loginBtn.style.cursor = "not-allowed"    }  }  function hideLoadingState() {    if (loginBtn && btnText && btnSpinner) {      loginBtn.disabled = false      btnText.classList.remove("d-none")      btnSpinner.classList.add("d-none")      loginBtn.style.cursor = "pointer"      updateSubmitButton()    }  }  const style = document.createElement("style")  style.textContent = `        @keyframes modernShake {            0%, 100% { transform: translateX(0); }            25% { transform: translateX(-3px); }            75% { transform: translateX(3px); }        }        @keyframes bounceIn {            0% {                opacity: 0;                transform: scale(0.3);            }            50% {                opacity: 1;                transform: scale(1.05);            }            70% {                transform: scale(0.9);            }            100% {                opacity: 1;                transform: scale(1);            }        }        @keyframes slideInDown {            from {                opacity: 0;                transform: translateY(-20px);            }            to {                opacity: 1;                transform: translateY(0);            }        }        @keyframes pulse {            0% { transform: scale(1); }            50% { transform: scale(1.02); }            100% { transform: scale(1); }        }        .animated {            animation-duration: 0.5s;            animation-fill-mode: both;        }        .fadeInUp {            animation-name: fadeInUp;        }        @keyframes fadeInUp {            from {                opacity: 0;                transform: translate3d(0, 40px, 0);            }            to {                opacity: 1;                transform: translate3d(0, 0, 0);            }        }        .invalid-feedback {            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);            border: 1px solid #fecaca;            border-radius: 8px;            padding: 0.75rem 1rem;            margin-top: 0.5rem;            font-size: 0.875rem;            color: #dc2626;            font-weight: 500;            position: relative;            overflow: hidden;        }        .invalid-feedback::before {            content: '';            position: absolute;            left: 0;            top: 0;            bottom: 0;            width: 4px;            background: #dc2626;        }        .invalid-feedback.show {            animation: slideInDown 0.3s ease;        }        .form-control.is-valid {            border-color: #10b981;            background-image: none;        }        .form-control.is-invalid {            border-color: #ef4444;            background-image: none;        }        .input-group:focus-within {            transform: translateY(-1px);            transition: all 0.3s ease;        }        .auth-btn:hover:not(:disabled) {            animation: pulse 0.3s ease;        }        .auth-btn:disabled {            position: relative;            overflow: hidden;        }        .auth-btn:disabled::after {            content: '';            position: absolute;            top: 0;            left: -100%;            width: 100%;            height: 100%;            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);            animation: shimmer 1.5s infinite;        }        @keyframes shimmer {            0% { left: -100%; }            100% { left: 100%; }        }    `  document.head.appendChild(style)  updateSubmitButton()  if (emailInput) {    emailInput.focus()  }  window.addEventListener("pageshow", (event) => {    if (event.persisted) {      hideLoadingState()    }  })  window.Swal = window.Swal || window.swal || window.swal2})

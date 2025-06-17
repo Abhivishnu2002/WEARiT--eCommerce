@@ -1,52 +1,1 @@
-document.addEventListener("DOMContentLoaded", () => {
-  handleFlashMessages()
-  initializeInteractiveElements()
-})
-
-function handleFlashMessages() {
-  try {
-    if (typeof window.Swal !== "undefined") {
-      const success_msg = window.success_msg || ""
-      if (success_msg && success_msg.length > 0) {
-        window.Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: success_msg,
-          confirmButtonColor: "#0d6efd",
-        })
-      }
-
-      const error_msg = window.error_msg || ""
-      if (error_msg && error_msg.length > 0) {
-        window.Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error_msg,
-          confirmButtonColor: "#0d6efd",
-        })
-      }
-    }
-  } catch (e) {
-    
-  }
-}
-
-function initializeInteractiveElements() {
-  const statCards = document.querySelectorAll(".stat-card")
-  statCards.forEach((card) => {
-    card.addEventListener("mouseenter", function () {
-      this.style.transform = "translateY(-5px)"
-    })
-
-    card.addEventListener("mouseleave", function () {
-      this.style.transform = "translateY(0)"
-    })
-  })
-
-  const bestSellingItems = document.querySelectorAll(".best-selling-item")
-  bestSellingItems.forEach((item) => {
-    item.addEventListener("click", function () {
-
-    })
-  })
-}
+document.addEventListener("DOMContentLoaded", () => {  handleFlashMessages()  initializeInteractiveElements()})function handleFlashMessages() {  try {    if (typeof window.Swal !== "undefined") {      const success_msg = window.success_msg || ""      if (success_msg && success_msg.length > 0) {        window.Swal.fire({          icon: "success",          title: "Success",          text: success_msg,          confirmButtonColor: "#0d6efd",        })      }      const error_msg = window.error_msg || ""      if (error_msg && error_msg.length > 0) {        window.Swal.fire({          icon: "error",          title: "Error",          text: error_msg,          confirmButtonColor: "#0d6efd",        })      }    }  } catch (e) {  }}function initializeInteractiveElements() {  const statCards = document.querySelectorAll(".stat-card")  statCards.forEach((card) => {    card.addEventListener("mouseenter", function () {      this.style.transform = "translateY(-5px)"    })    card.addEventListener("mouseleave", function () {      this.style.transform = "translateY(0)"    })  })  const bestSellingItems = document.querySelectorAll(".best-selling-item")  bestSellingItems.forEach((item) => {    item.addEventListener("click", function () {    })  })}

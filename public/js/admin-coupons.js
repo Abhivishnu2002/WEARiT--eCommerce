@@ -1,67 +1,1 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const Swal = window.Swal
-  function showSuccessToast(message) {
-    Swal.fire({
-      title: "Success!",
-      text: message,
-      icon: "success",
-      timer: 2000,
-      showConfirmButton: false,
-    })
-  }
-  function showErrorToast(message) {
-    Swal.fire({
-      title: "Error!",
-      text: message,
-      icon: "error",
-    })
-  }
-  const statusToggleSwitches = document.querySelectorAll(".coupon-status-toggle")
-
-  statusToggleSwitches.forEach((toggle) => {
-    toggle.addEventListener("change", function () {
-      const couponId = this.getAttribute("data-id")
-      const couponCode = this.getAttribute("data-code")
-      const isActive = this.checked
-      const statusLabel = this.closest("tr").querySelector(".status-label")
-      const statusBadge = this.closest("tr").querySelector(".status-badge")
-      this.disabled = true
-      fetch(`/admin/coupons/toggle-status/${couponId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "same-origin",
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          this.disabled = false
-          if (data.success) {
-            this.checked = data.isActive
-            if (data.isActive) {
-              statusBadge.textContent = "Active"
-              statusBadge.className = "badge bg-success status-badge"
-            } else {
-              statusBadge.textContent = "Inactive"
-              statusBadge.className = "badge bg-danger status-badge"
-            }
-            showSuccessToast(data.message)
-          } else {
-            this.checked = !isActive
-            showErrorToast(data.message || "Failed to update coupon status")
-          }
-        })
-        .catch((error) => {
-          this.disabled = false
-          this.checked = !isActive
-          showErrorToast("An error occurred while updating coupon status")
-        })
-    })
-  })
-  const filterSelects = document.querySelectorAll(".coupon-filters select")
-  filterSelects.forEach((select) => {
-    select.addEventListener("change", () => {
-      document.getElementById("searchForm").submit()
-    })
-  })
-})
+document.addEventListener("DOMContentLoaded", () => {  const Swal = window.Swal  function showSuccessToast(message) {    Swal.fire({      title: "Success!",      text: message,      icon: "success",      timer: 2000,      showConfirmButton: false,    })  }  function showErrorToast(message) {    Swal.fire({      title: "Error!",      text: message,      icon: "error",    })  }  const statusToggleSwitches = document.querySelectorAll(".coupon-status-toggle")  statusToggleSwitches.forEach((toggle) => {    toggle.addEventListener("change", function () {      const couponId = this.getAttribute("data-id")      const couponCode = this.getAttribute("data-code")      const isActive = this.checked      const statusLabel = this.closest("tr").querySelector(".status-label")      const statusBadge = this.closest("tr").querySelector(".status-badge")      this.disabled = true      fetch(`/admin/coupons/toggle-status/${couponId}`, {        method: "POST",        headers: {          "Content-Type": "application/json",        },        credentials: "same-origin",      })        .then((response) => response.json())        .then((data) => {          this.disabled = false          if (data.success) {            this.checked = data.isActive            if (data.isActive) {              statusBadge.textContent = "Active"              statusBadge.className = "badge bg-success status-badge"            } else {              statusBadge.textContent = "Inactive"              statusBadge.className = "badge bg-danger status-badge"            }            showSuccessToast(data.message)          } else {            this.checked = !isActive            showErrorToast(data.message || "Failed to update coupon status")          }        })        .catch((error) => {          this.disabled = false          this.checked = !isActive          showErrorToast("An error occurred while updating coupon status")        })    })  })  const filterSelects = document.querySelectorAll(".coupon-filters select")  filterSelects.forEach((select) => {    select.addEventListener("change", () => {      document.getElementById("searchForm").submit()    })  })})

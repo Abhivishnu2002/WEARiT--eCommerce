@@ -1,521 +1,1 @@
-class DashboardCharts {
-  constructor() {
-    this.salesTrendChart = null
-    this.paymentMethodChart = null
-    this.currentPeriod = "monthly"
-    this.dateRangePicker = null
-    this.chartColors = {
-      revenue: {
-        border: "#0d6efd",
-        background: "rgba(13, 110, 253, 0.1)",
-      },
-      discount: {
-        border: "#ffc107",
-        background: "rgba(255, 193, 7, 0.1)",
-      },
-      count: {
-        border: "#198754",
-        background: "rgba(25, 135, 84, 0.1)",
-      },
-      paymentMethods: ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1"],
-    }
-    this.$ = window.$
-    this.moment = window.moment
-  }
-
-  initCharts(chartData, paymentMethods) {
-    if (!chartData || !paymentMethods) {
-      return
-    }
-
-    this.initSalesTrendChart(chartData)
-    this.initPaymentMethodChart(paymentMethods)
-    this.initFilterHandlers()
-    this.initDateRangePicker()
-  }
-
-  initFilterHandlers() {
-    const periodInputs = document.querySelectorAll('input[name="dashboardPeriod"]')
-
-    if (periodInputs.length === 0) {
-      return
-    }
-
-    periodInputs.forEach((input) => {
-      input.addEventListener("change", (e) => {
-        if (e.target.checked) {
-          this.handlePeriodChange(e.target.value)
-        }
-      })
-    })
-  }
-
-  initDateRangePicker() {
-    if (typeof this.$ === "undefined" || typeof this.moment === "undefined") {
-      return
-    }
-
-    const dateRangeInput = this.$("#dateRangePicker")
-    const dateRangeContainer = document.getElementById("dateRangePickerContainer")
-    const applyButton = document.getElementById("applyDateRange")
-
-    if (dateRangeInput.length === 0) {
-      return
-    }
-
-    this.dateRangePicker = dateRangeInput.daterangepicker({
-      startDate: this.moment().subtract(29, "days"),
-      endDate: this.moment(),
-      ranges: {
-        Today: [this.moment(), this.moment()],
-        Yesterday: [this.moment().subtract(1, "days"), this.moment().subtract(1, "days")],
-        "Last 7 Days": [this.moment().subtract(6, "days"), this.moment()],
-        "Last 30 Days": [this.moment().subtract(29, "days"), this.moment()],
-        "This Month": [this.moment().startOf("month"), this.moment().endOf("month")],
-        "Last Month": [
-          this.moment().subtract(1, "month").startOf("month"),
-          this.moment().subtract(1, "month").endOf("month"),
-        ],
-      },
-      locale: {
-        format: "YYYY-MM-DD",
-      },
-      autoApply: false,
-      showDropdowns: true,
-      showWeekNumbers: true,
-      timePicker: false,
-      timePickerIncrement: 1,
-      timePicker12Hour: true,
-      opens: "left",
-      drops: "down",
-      buttonClasses: ["btn", "btn-sm"],
-      applyClass: "btn-primary",
-      cancelClass: "btn-secondary",
-    })
-    if (applyButton) {
-      applyButton.addEventListener("click", () => {
-        const dateRange = dateRangeInput.val()
-        if (dateRange) {
-          const [startDate, endDate] = dateRange.split(" - ")
-          this.updateDashboardData("custom", startDate, endDate)
-        }
-      })
-    }
-  }
-
-  handlePeriodChange(period) {
-    const dateRangeContainer = document.getElementById("dateRangePickerContainer")
-
-    if (period === "custom") {
-      if (dateRangeContainer) {
-        dateRangeContainer.classList.remove("d-none")
-      }
-    } else {
-      if (dateRangeContainer) {
-        dateRangeContainer.classList.add("d-none")
-      }
-      this.updateDashboardData(period)
-    }
-  }
-
-  async updateDashboardData(period, startDate = null, endDate = null) {
-    const loader = document.getElementById("dashboardLoader")
-    const updateTime = document.getElementById("updateTime")
-
-    try {
-
-      if (loader) loader.classList.remove("d-none")
-
-      let queryParams = `period=${period}`
-      if (period === "custom" && startDate && endDate) {
-        queryParams += `&startDate=${startDate}&endDate=${endDate}`
-      }
-
-      const response = await fetch(`/admin/dashboard/data?${queryParams}`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      if (result.success && result.data) {
-        this.updateCharts(result.data.chartData, result.data.paymentMethods)
-
-        this.currentPeriod = period
-
-        if (updateTime) {
-          updateTime.textContent = new Date().toLocaleTimeString()
-        }
-      } else {
-        this.showError("Failed to update dashboard data: " + (result.error || "Unknown error"))
-      }
-    } catch (error) {
-      this.showError("Network error while updating dashboard: " + error.message)
-    } finally {
-      if (loader) loader.classList.add("d-none")
-    }
-  }
-
-  updateCharts(chartData, paymentMethods) {
-    if (this.salesTrendChart && chartData) {
-      this.salesTrendChart.data.labels = chartData.labels
-      this.salesTrendChart.data.datasets[0].data = chartData.revenue
-      this.salesTrendChart.data.datasets[1].data = chartData.discount
-      this.salesTrendChart.data.datasets[2].data = chartData.orderCount
-      this.salesTrendChart.update("active")
-    }
-
-    if (this.paymentMethodChart && paymentMethods) {
-      const paymentMethodsArray = Object.keys(paymentMethods)
-      const paymentAmounts = paymentMethodsArray.map((method) => paymentMethods[method].amount)
-      const formattedLabels = paymentMethodsArray.map((method) => method.charAt(0).toUpperCase() + method.slice(1))
-
-      this.paymentMethodChart.data.labels = formattedLabels
-      this.paymentMethodChart.data.datasets[0].data = paymentAmounts
-      this.paymentMethodChart.update("active")
-    }
-  }
-
-  showError(message) {
-    if (typeof window.Swal !== "undefined") {
-      window.Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: message,
-        confirmButtonColor: "#0d6efd",
-      })
-    } else {
-      alert(message)
-    }
-  }
-
-  initSalesTrendChart(chartData) {
-    const salesTrendCtx = document.getElementById("salesTrendChart")
-    if (!salesTrendCtx) {
-      return
-    }
-
-    const labels = chartData.labels || []
-    const revenueData = chartData.revenue || []
-    const discountData = chartData.discount || []
-    const orderCountData = chartData.orderCount || []
-
-    if (labels.length === 0) {
-      this.displayNoDataMessage(salesTrendCtx, "No sales data available")
-      return
-    }
-    if (this.salesTrendChart) {
-      this.salesTrendChart.destroy()
-    }
-
-    try {
-      const Chart = window.Chart
-
-      if (!Chart) {
-        this.displayNoDataMessage(salesTrendCtx, "Chart.js library not loaded")
-        return
-      }
-      const allValues = [...revenueData, ...discountData].filter((val) => !isNaN(val) && val !== null)
-      const maxValue = Math.max(...allValues, 0)
-      const yAxisMax = this.calculateNiceScale(maxValue, 1.2)
-
-      this.salesTrendChart = new Chart(salesTrendCtx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "Revenue",
-              data: revenueData,
-              borderColor: this.chartColors.revenue.border,
-              backgroundColor: this.chartColors.revenue.background,
-              borderWidth: 3,
-              fill: true,
-              tension: 0.4,
-              yAxisID: "y",
-            },
-            {
-              label: "Discounts",
-              data: discountData,
-              borderColor: this.chartColors.discount.border,
-              backgroundColor: this.chartColors.discount.background,
-              borderWidth: 2,
-              fill: true,
-              tension: 0.4,
-              yAxisID: "y",
-            },
-            {
-              label: "Order Count",
-              data: orderCountData,
-              borderColor: this.chartColors.count.border,
-              backgroundColor: this.chartColors.count.background,
-              borderWidth: 2,
-              fill: false,
-              tension: 0.4,
-              yAxisID: "y1",
-              type: "bar",
-              barThickness: 20,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "top",
-              labels: {
-                font: {
-                  family: "'Inter', sans-serif",
-                },
-                usePointStyle: true,
-                padding: 20,
-              },
-            },
-            tooltip: {
-              mode: "index",
-              intersect: false,
-              callbacks: {
-                label: (context) => {
-                  let label = context.dataset.label || ""
-                  if (label) {
-                    label += ": "
-                  }
-                  if (context.parsed.y !== null) {
-                    if (label.includes("Count")) {
-                      label += context.parsed.y.toLocaleString()
-                    } else {
-                      label += new Intl.NumberFormat("en-IN", {
-                        style: "currency",
-                        currency: "INR",
-                      }).format(context.parsed.y)
-                    }
-                  }
-                  return label
-                },
-              },
-            },
-          },
-          scales: {
-            x: {
-              grid: {
-                color: "rgba(0, 0, 0, 0.05)",
-              },
-              ticks: {
-                font: {
-                  family: "'Inter', sans-serif",
-                },
-                maxRotation: 45,
-                minRotation: 0,
-              },
-            },
-            y: {
-              type: "linear",
-              display: true,
-              position: "left",
-              beginAtZero: true,
-              max: yAxisMax,
-              grid: {
-                color: "rgba(0, 0, 0, 0.05)",
-              },
-              ticks: {
-                callback: (value) => "₹" + value.toLocaleString("en-IN"),
-                maxTicksLimit: 8,
-                font: {
-                  family: "'Inter', sans-serif",
-                },
-              },
-            },
-            y1: {
-              type: "linear",
-              display: true,
-              position: "right",
-              beginAtZero: true,
-              grid: {
-                drawOnChartArea: false,
-              },
-              ticks: {
-                callback: (value) => value.toLocaleString(),
-                maxTicksLimit: 6,
-                font: {
-                  family: "'Inter', sans-serif",
-                },
-              },
-            },
-          },
-          interaction: {
-            mode: "index",
-            intersect: false,
-          },
-          elements: {
-            point: {
-              radius: 4,
-              hoverRadius: 6,
-            },
-            line: {
-              borderWidth: 3,
-            },
-          },
-          animation: {
-            duration: 1000,
-            easing: "easeOutQuart",
-          },
-        },
-      })
-    } catch (error) {
-      this.displayNoDataMessage(salesTrendCtx, "Error initializing chart: " + error.message)
-    }
-  }
-
-  initPaymentMethodChart(paymentMethods) {
-    const paymentMethodCtx = document.getElementById("paymentMethodChart")
-    if (!paymentMethodCtx) {
-      return
-    }
-
-    const paymentMethodsArray = Object.keys(paymentMethods || {})
-
-    if (paymentMethodsArray.length === 0) {
-      this.displayNoDataMessage(paymentMethodCtx, "No payment methods data available")
-      return
-    }
-
-    const paymentAmounts = paymentMethodsArray.map((method) => paymentMethods[method].amount)
-    const paymentCounts = paymentMethodsArray.map((method) => paymentMethods[method].count)
-    const backgroundColors = paymentMethodsArray.map(
-      (_, index) => this.chartColors.paymentMethods[index % this.chartColors.paymentMethods.length],
-    )
-    const formattedLabels = paymentMethodsArray.map((method) => {
-      return method.charAt(0).toUpperCase() + method.slice(1)
-    })
-
-    if (this.paymentMethodChart) {
-      this.paymentMethodChart.destroy()
-    }
-
-    try {
-      const Chart = window.Chart
-
-      if (!Chart) {
-        this.displayNoDataMessage(paymentMethodCtx, "Chart.js library not loaded")
-        return
-      }
-
-      this.paymentMethodChart = new Chart(paymentMethodCtx, {
-        type: "doughnut",
-        data: {
-          labels: formattedLabels,
-          datasets: [
-            {
-              data: paymentAmounts,
-              backgroundColor: backgroundColors,
-              borderWidth: 2,
-              borderColor: "#ffffff",
-              hoverOffset: 15,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                padding: 20,
-                boxWidth: 12,
-                font: {
-                  family: "'Inter', sans-serif",
-                },
-                usePointStyle: true,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const label = context.label || ""
-                  const value = context.raw
-                  const count = paymentCounts[context.dataIndex]
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                  const percentage = Math.round((value / total) * 100)
-
-                  return [
-                    `${label}: ${new Intl.NumberFormat("en-IN", {
-                      style: "currency",
-                      currency: "INR",
-                    }).format(value)}`,
-                    `Orders: ${count} (${percentage}%)`,
-                  ]
-                },
-              },
-            },
-          },
-          cutout: "60%",
-          animation: {
-            animateRotate: true,
-            animateScale: true,
-            duration: 1000,
-            easing: "easeOutQuart",
-          },
-        },
-      })
-
-    } catch (error) {
-      this.displayNoDataMessage(paymentMethodCtx, "Error initializing chart: " + error.message)
-    }
-  }
-
-  displayNoDataMessage(canvas, message) {
-    try {
-      const ctx = canvas.getContext("2d")
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.font = "14px Inter, sans-serif"
-      ctx.textAlign = "center"
-      ctx.textBaseline = "middle"
-      ctx.fillStyle = "#6c757d"
-      ctx.fillText(message, canvas.width / 2, canvas.height / 2)
-    } catch (e) {
-    
-  }
-  }
-
-  calculateNiceScale(value, factor = 1) {
-    if (value === 0) return 10
-    value = Math.abs(value) * factor
-    const magnitude = Math.floor(Math.log10(Math.abs(value)))
-    const powerOf10 = Math.pow(10, magnitude)
-    const normalizedValue = value / powerOf10
-    let niceValue
-    if (normalizedValue < 1.5) niceValue = 1
-    else if (normalizedValue < 3) niceValue = 2
-    else if (normalizedValue < 7) niceValue = 5
-    else niceValue = 10
-    return niceValue * powerOf10
-  }
-
-  handleResize() {
-    if (this.salesTrendChart) {
-      this.salesTrendChart.resize()
-    }
-    if (this.paymentMethodChart) {
-      this.paymentMethodChart.resize()
-    }
-  }
-}
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    const dashboardCharts = new DashboardCharts()
-
-    if (typeof window.dashboardChartData !== "undefined" && window.dashboardChartData) {
-      dashboardCharts.initCharts(window.dashboardChartData.chartData, window.dashboardChartData.paymentMethods)
-      if (window.dashboardChartData.currentPeriod) {
-        dashboardCharts.currentPeriod = window.dashboardChartData.currentPeriod
-      }
-
-      window.addEventListener("resize", () => {
-        dashboardCharts.handleResize()
-      })
-    }
-  }, 100)
-})
+class DashboardCharts {  constructor() {    this.salesTrendChart = null    this.paymentMethodChart = null    this.currentPeriod = "monthly"    this.dateRangePicker = null    this.chartColors = {      revenue: {        border: "#0d6efd",        background: "rgba(13, 110, 253, 0.1)",      },      discount: {        border: "#ffc107",        background: "rgba(255, 193, 7, 0.1)",      },      count: {        border: "#198754",        background: "rgba(25, 135, 84, 0.1)",      },      paymentMethods: ["#0d6efd", "#198754", "#dc3545", "#ffc107", "#6f42c1"],    }    this.$ = window.$    this.moment = window.moment  }  initCharts(chartData, paymentMethods) {    if (!chartData || !paymentMethods) {      return    }    this.initSalesTrendChart(chartData)    this.initPaymentMethodChart(paymentMethods)    this.initFilterHandlers()    this.initDateRangePicker()  }  initFilterHandlers() {    const periodInputs = document.querySelectorAll('input[name="dashboardPeriod"]')    if (periodInputs.length === 0) {      return    }    periodInputs.forEach((input) => {      input.addEventListener("change", (e) => {        if (e.target.checked) {          this.handlePeriodChange(e.target.value)        }      })    })  }  initDateRangePicker() {    if (typeof this.$ === "undefined" || typeof this.moment === "undefined") {      return    }    const dateRangeInput = this.$("#dateRangePicker")    const dateRangeContainer = document.getElementById("dateRangePickerContainer")    const applyButton = document.getElementById("applyDateRange")    if (dateRangeInput.length === 0) {      return    }    this.dateRangePicker = dateRangeInput.daterangepicker({      startDate: this.moment().subtract(29, "days"),      endDate: this.moment(),      ranges: {        Today: [this.moment(), this.moment()],        Yesterday: [this.moment().subtract(1, "days"), this.moment().subtract(1, "days")],        "Last 7 Days": [this.moment().subtract(6, "days"), this.moment()],        "Last 30 Days": [this.moment().subtract(29, "days"), this.moment()],        "This Month": [this.moment().startOf("month"), this.moment().endOf("month")],        "Last Month": [          this.moment().subtract(1, "month").startOf("month"),          this.moment().subtract(1, "month").endOf("month"),        ],      },      locale: {        format: "YYYY-MM-DD",      },      autoApply: false,      showDropdowns: true,      showWeekNumbers: true,      timePicker: false,      timePickerIncrement: 1,      timePicker12Hour: true,      opens: "left",      drops: "down",      buttonClasses: ["btn", "btn-sm"],      applyClass: "btn-primary",      cancelClass: "btn-secondary",    })    if (applyButton) {      applyButton.addEventListener("click", () => {        const dateRange = dateRangeInput.val()        if (dateRange) {          const [startDate, endDate] = dateRange.split(" - ")          this.updateDashboardData("custom", startDate, endDate)        }      })    }  }  handlePeriodChange(period) {    const dateRangeContainer = document.getElementById("dateRangePickerContainer")    if (period === "custom") {      if (dateRangeContainer) {        dateRangeContainer.classList.remove("d-none")      }    } else {      if (dateRangeContainer) {        dateRangeContainer.classList.add("d-none")      }      this.updateDashboardData(period)    }  }  async updateDashboardData(period, startDate = null, endDate = null) {    const loader = document.getElementById("dashboardLoader")    const updateTime = document.getElementById("updateTime")    try {      if (loader) loader.classList.remove("d-none")      let queryParams = `period=${period}`      if (period === "custom" && startDate && endDate) {        queryParams += `&startDate=${startDate}&endDate=${endDate}`      }      const response = await fetch(`/admin/dashboard/data?${queryParams}`)      if (!response.ok) {        throw new Error(`HTTP error! status: ${response.status}`)      }      const result = await response.json()      if (result.success && result.data) {        this.updateCharts(result.data.chartData, result.data.paymentMethods)        this.currentPeriod = period        if (updateTime) {          updateTime.textContent = new Date().toLocaleTimeString()        }      } else {        this.showError("Failed to update dashboard data: " + (result.error || "Unknown error"))      }    } catch (error) {      this.showError("Network error while updating dashboard: " + error.message)    } finally {      if (loader) loader.classList.add("d-none")    }  }  updateCharts(chartData, paymentMethods) {    if (this.salesTrendChart && chartData) {      this.salesTrendChart.data.labels = chartData.labels      this.salesTrendChart.data.datasets[0].data = chartData.revenue      this.salesTrendChart.data.datasets[1].data = chartData.discount      this.salesTrendChart.data.datasets[2].data = chartData.orderCount      this.salesTrendChart.update("active")    }    if (this.paymentMethodChart && paymentMethods) {      const paymentMethodsArray = Object.keys(paymentMethods)      const paymentAmounts = paymentMethodsArray.map((method) => paymentMethods[method].amount)      const formattedLabels = paymentMethodsArray.map((method) => method.charAt(0).toUpperCase() + method.slice(1))      this.paymentMethodChart.data.labels = formattedLabels      this.paymentMethodChart.data.datasets[0].data = paymentAmounts      this.paymentMethodChart.update("active")    }  }  showError(message) {    if (typeof window.Swal !== "undefined") {      window.Swal.fire({        icon: "error",        title: "Error",        text: message,        confirmButtonColor: "#0d6efd",      })    } else {      alert(message)    }  }  initSalesTrendChart(chartData) {    const salesTrendCtx = document.getElementById("salesTrendChart")    if (!salesTrendCtx) {      return    }    const labels = chartData.labels || []    const revenueData = chartData.revenue || []    const discountData = chartData.discount || []    const orderCountData = chartData.orderCount || []    if (labels.length === 0) {      this.displayNoDataMessage(salesTrendCtx, "No sales data available")      return    }    if (this.salesTrendChart) {      this.salesTrendChart.destroy()    }    try {      const Chart = window.Chart      if (!Chart) {        this.displayNoDataMessage(salesTrendCtx, "Chart.js library not loaded")        return      }      const allValues = [...revenueData, ...discountData].filter((val) => !isNaN(val) && val !== null)      const maxValue = Math.max(...allValues, 0)      const yAxisMax = this.calculateNiceScale(maxValue, 1.2)      this.salesTrendChart = new Chart(salesTrendCtx, {        type: "line",        data: {          labels: labels,          datasets: [            {              label: "Revenue",              data: revenueData,              borderColor: this.chartColors.revenue.border,              backgroundColor: this.chartColors.revenue.background,              borderWidth: 3,              fill: true,              tension: 0.4,              yAxisID: "y",            },            {              label: "Discounts",              data: discountData,              borderColor: this.chartColors.discount.border,              backgroundColor: this.chartColors.discount.background,              borderWidth: 2,              fill: true,              tension: 0.4,              yAxisID: "y",            },            {              label: "Order Count",              data: orderCountData,              borderColor: this.chartColors.count.border,              backgroundColor: this.chartColors.count.background,              borderWidth: 2,              fill: false,              tension: 0.4,              yAxisID: "y1",              type: "bar",              barThickness: 20,            },          ],        },        options: {          responsive: true,          maintainAspectRatio: false,          plugins: {            legend: {              position: "top",              labels: {                font: {                  family: "'Inter', sans-serif",                },                usePointStyle: true,                padding: 20,              },            },            tooltip: {              mode: "index",              intersect: false,              callbacks: {                label: (context) => {                  let label = context.dataset.label || ""                  if (label) {                    label += ": "                  }                  if (context.parsed.y !== null) {                    if (label.includes("Count")) {                      label += context.parsed.y.toLocaleString()                    } else {                      label += new Intl.NumberFormat("en-IN", {                        style: "currency",                        currency: "INR",                      }).format(context.parsed.y)                    }                  }                  return label                },              },            },          },          scales: {            x: {              grid: {                color: "rgba(0, 0, 0, 0.05)",              },              ticks: {                font: {                  family: "'Inter', sans-serif",                },                maxRotation: 45,                minRotation: 0,              },            },            y: {              type: "linear",              display: true,              position: "left",              beginAtZero: true,              max: yAxisMax,              grid: {                color: "rgba(0, 0, 0, 0.05)",              },              ticks: {                callback: (value) => "₹" + value.toLocaleString("en-IN"),                maxTicksLimit: 8,                font: {                  family: "'Inter', sans-serif",                },              },            },            y1: {              type: "linear",              display: true,              position: "right",              beginAtZero: true,              grid: {                drawOnChartArea: false,              },              ticks: {                callback: (value) => value.toLocaleString(),                maxTicksLimit: 6,                font: {                  family: "'Inter', sans-serif",                },              },            },          },          interaction: {            mode: "index",            intersect: false,          },          elements: {            point: {              radius: 4,              hoverRadius: 6,            },            line: {              borderWidth: 3,            },          },          animation: {            duration: 1000,            easing: "easeOutQuart",          },        },      })    } catch (error) {      this.displayNoDataMessage(salesTrendCtx, "Error initializing chart: " + error.message)    }  }  initPaymentMethodChart(paymentMethods) {    const paymentMethodCtx = document.getElementById("paymentMethodChart")    if (!paymentMethodCtx) {      return    }    const paymentMethodsArray = Object.keys(paymentMethods || {})    if (paymentMethodsArray.length === 0) {      this.displayNoDataMessage(paymentMethodCtx, "No payment methods data available")      return    }    const paymentAmounts = paymentMethodsArray.map((method) => paymentMethods[method].amount)    const paymentCounts = paymentMethodsArray.map((method) => paymentMethods[method].count)    const backgroundColors = paymentMethodsArray.map(      (_, index) => this.chartColors.paymentMethods[index % this.chartColors.paymentMethods.length],    )    const formattedLabels = paymentMethodsArray.map((method) => {      return method.charAt(0).toUpperCase() + method.slice(1)    })    if (this.paymentMethodChart) {      this.paymentMethodChart.destroy()    }    try {      const Chart = window.Chart      if (!Chart) {        this.displayNoDataMessage(paymentMethodCtx, "Chart.js library not loaded")        return      }      this.paymentMethodChart = new Chart(paymentMethodCtx, {        type: "doughnut",        data: {          labels: formattedLabels,          datasets: [            {              data: paymentAmounts,              backgroundColor: backgroundColors,              borderWidth: 2,              borderColor: "#ffffff",              hoverOffset: 15,            },          ],        },        options: {          responsive: true,          maintainAspectRatio: false,          plugins: {            legend: {              position: "bottom",              labels: {                padding: 20,                boxWidth: 12,                font: {                  family: "'Inter', sans-serif",                },                usePointStyle: true,              },            },            tooltip: {              callbacks: {                label: (context) => {                  const label = context.label || ""                  const value = context.raw                  const count = paymentCounts[context.dataIndex]                  const total = context.dataset.data.reduce((a, b) => a + b, 0)                  const percentage = Math.round((value / total) * 100)                  return [                    `${label}: ${new Intl.NumberFormat("en-IN", {                      style: "currency",                      currency: "INR",                    }).format(value)}`,                    `Orders: ${count} (${percentage}%)`,                  ]                },              },            },          },          cutout: "60%",          animation: {            animateRotate: true,            animateScale: true,            duration: 1000,            easing: "easeOutQuart",          },        },      })    } catch (error) {      this.displayNoDataMessage(paymentMethodCtx, "Error initializing chart: " + error.message)    }  }  displayNoDataMessage(canvas, message) {    try {      const ctx = canvas.getContext("2d")      ctx.clearRect(0, 0, canvas.width, canvas.height)      ctx.font = "14px Inter, sans-serif"      ctx.textAlign = "center"      ctx.textBaseline = "middle"      ctx.fillStyle = "#6c757d"      ctx.fillText(message, canvas.width / 2, canvas.height / 2)    } catch (e) {  }  }  calculateNiceScale(value, factor = 1) {    if (value === 0) return 10    value = Math.abs(value) * factor    const magnitude = Math.floor(Math.log10(Math.abs(value)))    const powerOf10 = Math.pow(10, magnitude)    const normalizedValue = value / powerOf10    let niceValue    if (normalizedValue < 1.5) niceValue = 1    else if (normalizedValue < 3) niceValue = 2    else if (normalizedValue < 7) niceValue = 5    else niceValue = 10    return niceValue * powerOf10  }  handleResize() {    if (this.salesTrendChart) {      this.salesTrendChart.resize()    }    if (this.paymentMethodChart) {      this.paymentMethodChart.resize()    }  }}document.addEventListener("DOMContentLoaded", () => {  setTimeout(() => {    const dashboardCharts = new DashboardCharts()    if (typeof window.dashboardChartData !== "undefined" && window.dashboardChartData) {      dashboardCharts.initCharts(window.dashboardChartData.chartData, window.dashboardChartData.paymentMethods)      if (window.dashboardChartData.currentPeriod) {        dashboardCharts.currentPeriod = window.dashboardChartData.currentPeriod      }      window.addEventListener("resize", () => {        dashboardCharts.handleResize()      })    }  }, 100)})

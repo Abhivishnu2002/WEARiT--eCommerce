@@ -330,6 +330,13 @@ const createPaypalPayment = async (req, res) => {
       paypalOrderId: response.result.id,
     })
   } catch (error) {
+    console.error("PayPal payment creation error:", {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.body.orderId,
+      addressId: req.body.addressId
+    })
+
     res.status(500).json({
       success: false,
       message: "Failed to create PayPal payment: " + (error.message || "Unknown error"),
@@ -345,7 +352,10 @@ const executePaypalPayment = async (req, res) => {
     const { orderId } = req.query
     const { token, PayerID } = req.query
 
+    console.error("PayPal execution started:", { orderId, token, PayerID })
+
     if (!orderId || !token || !PayerID) {
+      console.error("Missing PayPal payment parameters:", { orderId, token, PayerID })
       req.flash("error_msg", "Invalid payment information")
       return res.redirect(`/order-failure/${orderId || ""}`)
     }
@@ -357,17 +367,27 @@ const executePaypalPayment = async (req, res) => {
     })
 
     if (!order) {
+      console.error("Order not found:", { orderId, userId: req.user._id })
       req.flash("error_msg", "Order not found or already paid")
       return res.redirect(`/order-failure/${orderId}`)
     }
 
+    // Find transaction by PayPal order ID (token) first, then by order ID
     transaction = await Transaction.findOne({
-      order: orderId,
-      status: "pending",
-      paymentMethod: "paypal",
+      $or: [
+        { "paymentDetails.paypalOrderId": token, paymentMethod: "paypal", status: "pending" },
+        { order: orderId, paymentMethod: "paypal", status: "pending" }
+      ]
+    })
+
+    console.error("Transaction found:", {
+      transactionId: transaction?._id,
+      paypalOrderId: transaction?.paymentDetails?.paypalOrderId,
+      status: transaction?.status
     })
 
     if (!transaction) {
+      console.error("Creating new transaction for PayPal execution")
       transaction = new Transaction({
         user: req.user._id,
         order: orderId,
@@ -381,13 +401,21 @@ const executePaypalPayment = async (req, res) => {
         },
       })
       await transaction.save()
+    } else {
+      // Update transaction with PayPal order ID if not already set
+      if (!transaction.paymentDetails.paypalOrderId) {
+        transaction.paymentDetails.paypalOrderId = token
+        await transaction.save()
+      }
     }
 
     const paypalClient = getPayPalClient()
     const request = new paypal.orders.OrdersCaptureRequest(token)
     request.requestBody({})
 
+    console.error("Executing PayPal capture request for token:", token)
     const response = await paypalClient.execute(request)
+    console.error("PayPal capture response status:", response.result.status)
     if (response.result.status === "COMPLETED") {
       const stockUpdateOperations = []
       for (const orderProduct of order.products) {
@@ -462,6 +490,14 @@ const executePaypalPayment = async (req, res) => {
       return res.redirect(`/order-failure/${orderId}`)
     }
   } catch (error) {
+    console.error("PayPal execution error:", {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.query.orderId,
+      token: req.query.token,
+      PayerID: req.query.PayerID
+    })
+
     if (transaction) {
       transaction.status = "failed"
       transaction.paymentDetails = transaction.paymentDetails || {}
@@ -607,6 +643,13 @@ const createRazorpayOrder = async (req, res) => {
       },
     })
   } catch (error) {
+    console.error("Razorpay order creation error:", {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.body.orderId,
+      addressId: req.body.addressId
+    })
+
     const parsedError = parseRazorpayError(error)
 
     res.status(500).json({
@@ -626,7 +669,20 @@ const verifyRazorpayPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body
 
+    console.error("Razorpay verification started:", {
+      razorpay_order_id,
+      razorpay_payment_id,
+      orderId,
+      hasSignature: !!razorpay_signature
+    })
+
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+      console.error("Missing Razorpay payment parameters:", {
+        razorpay_order_id: !!razorpay_order_id,
+        razorpay_payment_id: !!razorpay_payment_id,
+        razorpay_signature: !!razorpay_signature,
+        orderId: !!orderId
+      })
       return res.status(400).json({
         success: false,
         message: "Missing required payment parameters",
@@ -642,6 +698,11 @@ const verifyRazorpayPayment = async (req, res) => {
       .digest("hex")
 
     if (expectedSignature !== razorpay_signature) {
+      console.error("Razorpay signature verification failed:", {
+        expected: expectedSignature,
+        received: razorpay_signature,
+        body: body
+      })
       return res.status(400).json({
         success: false,
         message: "Payment verification failed. This could be due to a security issue.",
@@ -658,6 +719,7 @@ const verifyRazorpayPayment = async (req, res) => {
     })
 
     if (!order) {
+      console.error("Order not found for Razorpay verification:", { orderId, userId: req.user._id })
       return res.status(404).json({
         success: false,
         message: "Order not found or already paid",
@@ -666,13 +728,22 @@ const verifyRazorpayPayment = async (req, res) => {
       })
     }
 
+    // Find transaction by Razorpay order ID first, then by order ID
     transaction = await Transaction.findOne({
-      order: orderId,
-      status: "pending",
-      paymentMethod: "razorpay",
+      $or: [
+        { "paymentDetails.razorpayOrderId": razorpay_order_id, paymentMethod: "razorpay", status: "pending" },
+        { order: orderId, paymentMethod: "razorpay", status: "pending" }
+      ]
+    })
+
+    console.error("Transaction found for Razorpay:", {
+      transactionId: transaction?._id,
+      razorpayOrderId: transaction?.paymentDetails?.razorpayOrderId,
+      status: transaction?.status
     })
 
     if (!transaction) {
+      console.error("Creating new transaction for Razorpay verification")
       transaction = new Transaction({
         user: req.user._id,
         order: orderId,
@@ -686,10 +757,18 @@ const verifyRazorpayPayment = async (req, res) => {
         },
       })
       await transaction.save()
+    } else {
+      // Update transaction with Razorpay order ID if not already set
+      if (!transaction.paymentDetails.razorpayOrderId) {
+        transaction.paymentDetails.razorpayOrderId = razorpay_order_id
+        await transaction.save()
+      }
     }
 
     const razorpayClient = getRazorpayClient()
+    console.error("Fetching Razorpay payment:", razorpay_payment_id)
     const payment = await razorpayClient.payments.fetch(razorpay_payment_id)
+    console.error("Razorpay payment status:", payment.status)
 
     if (payment.status === "captured") {
       const stockUpdateOperations = []
@@ -787,6 +866,14 @@ const verifyRazorpayPayment = async (req, res) => {
       })
     }
   } catch (error) {
+    console.error("Razorpay verification error:", {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.body.orderId,
+      razorpay_order_id: req.body.razorpay_order_id,
+      razorpay_payment_id: req.body.razorpay_payment_id
+    })
+
     const parsedError = parseRazorpayError(error)
 
     if (transaction) {
@@ -820,7 +907,10 @@ const handleRazorpayFailure = async (req, res) => {
   try {
     const { error, orderId } = req.body
 
+    console.error("Razorpay failure handling:", { error, orderId })
+
     if (!orderId) {
+      console.error("Missing order ID in Razorpay failure")
       return res.status(400).json({
         success: false,
         message: "Order ID is required",
@@ -876,6 +966,12 @@ const handleRazorpayFailure = async (req, res) => {
       errorCode: "ORDER_NOT_FOUND",
     })
   } catch (error) {
+    console.error("Error in handleRazorpayFailure:", {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.body.orderId
+    })
+
     return res.status(500).json({
       success: false,
       message: "Error processing payment failure",
@@ -1250,6 +1346,13 @@ const retryPayment = async (req, res) => {
       })
     }
   } catch (error) {
+    console.error("Retry payment error:", {
+      error: error.message,
+      stack: error.stack,
+      orderId: req.params.id,
+      paymentMethod: req.body.paymentMethod
+    })
+
     const parsedError = parseRazorpayError(error)
 
     res.status(500).json({

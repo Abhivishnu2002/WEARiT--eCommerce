@@ -1,47 +1,1 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const addressCards = document.querySelectorAll(".address-card")
-  addressCards.forEach((card) => {
-    card.addEventListener("click", function () {
-      const radio = this.querySelector('input[type="radio"]')
-      if (radio) {
-        radio.checked = true
-        addressCards.forEach((c) => c.classList.remove("selected"))
-        this.classList.add("selected")
-      }
-    })
-  })
-  const checkoutForm = document.getElementById("checkout-form")
-  const Swal = window.Swal
-  if (checkoutForm) {
-    checkoutForm.addEventListener("submit", async function (e) {
-      e.preventDefault()
-      const continueBtn = this.querySelector('button[type="submit"]')
-      if (continueBtn) {
-        const originalText = continueBtn.textContent
-        continueBtn.disabled = true
-        continueBtn.innerHTML =
-          '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Checking stock...'
-
-        try {
-          const canProceed = await window.stockValidator.validateBeforePayment()
-
-          if (canProceed) {
-            this.submit()
-          } else {
-            continueBtn.disabled = false
-            continueBtn.textContent = originalText
-          }
-        } catch (error) {
-          Swal.fire({
-            title: "Error",
-            text: "Failed to validate stock. Please try again.",
-            icon: "error",
-            confirmButtonText: "OK",
-          })
-          continueBtn.disabled = false
-          continueBtn.textContent = originalText
-        }
-      }
-    })
-  }
-})
+document.addEventListener("DOMContentLoaded", () => {  const addressCards = document.querySelectorAll(".address-card")  addressCards.forEach((card) => {    card.addEventListener("click", function () {      const radio = this.querySelector('input[type="radio"]')      if (radio) {        radio.checked = true        addressCards.forEach((c) => c.classList.remove("selected"))        this.classList.add("selected")      }    })  })  const checkoutForm = document.getElementById("checkout-form")  const Swal = window.Swal  if (checkoutForm) {    checkoutForm.addEventListener("submit", async function (e) {      e.preventDefault()      const continueBtn = this.querySelector('button[type="submit"]')      if (continueBtn) {        const originalText = continueBtn.textContent        continueBtn.disabled = true        continueBtn.innerHTML =          '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Checking stock...'        try {          const canProceed = await window.stockValidator.validateBeforePayment()          if (canProceed) {            this.submit()          } else {            continueBtn.disabled = false            continueBtn.textContent = originalText          }        } catch (error) {          Swal.fire({            title: "Error",            text: "Failed to validate stock. Please try again.",            icon: "error",            confirmButtonText: "OK",          })          continueBtn.disabled = false          continueBtn.textContent = originalText        }      }    })  }})

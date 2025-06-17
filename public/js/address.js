@@ -1,74 +1,1 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const deleteButtons = document.querySelectorAll(".delete-address-btn")
-    const deleteModalElement = document.getElementById("deleteAddressModal")
-    const deleteModal = new bootstrap.Modal(deleteModalElement)
-    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn")
-    let addressIdToDelete = null
-  
-    deleteButtons.forEach((button) => {
-      button.addEventListener("click", function () {
-        addressIdToDelete = this.getAttribute("data-address-id")
-        deleteModal.show()
-      })
-    })
-  
-    confirmDeleteBtn.addEventListener("click", () => {
-      if (addressIdToDelete) {
-        deleteAddress(addressIdToDelete)
-      }
-    })
-  
-    function deleteAddress(addressId) {
-      fetch(`/profile/addresses/delete/${addressId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          deleteModal.hide()
-  
-          if (data.success) {
-            Swal.fire({
-              title: "Success!",
-              text: data.message,
-              icon: "success",
-              confirmButtonText: "OK",
-            }).then(() => {
-              window.location.reload()
-            })
-          } else {
-            Swal.fire({
-              title: "Error!",
-              text: data.message,
-              icon: "error",
-              confirmButtonText: "OK",
-            })
-          }
-        })
-        .catch((error) => {
-          deleteModal.hide()
-  
-          Swal.fire({
-            title: "Error!",
-            text: "Something went wrong. Please try again.",
-            icon: "error",
-            confirmButtonText: "OK",
-          })
-        })
-    }
-    const flashMessages = document.querySelectorAll(".alert-float")
-    if (flashMessages.length > 0) {
-      flashMessages.forEach((message) => {
-        message.classList.add("show")
-        setTimeout(() => {
-          message.classList.remove("show")
-          setTimeout(() => {
-            message.remove()
-          }, 300)
-        }, 5000)
-      })
-    }
-  })
-  
+document.addEventListener("DOMContentLoaded", () => {    const deleteButtons = document.querySelectorAll(".delete-address-btn")    const deleteModalElement = document.getElementById("deleteAddressModal")    const deleteModal = new bootstrap.Modal(deleteModalElement)    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn")    let addressIdToDelete = null    deleteButtons.forEach((button) => {      button.addEventListener("click", function () {        addressIdToDelete = this.getAttribute("data-address-id")        deleteModal.show()      })    })    confirmDeleteBtn.addEventListener("click", () => {      if (addressIdToDelete) {        deleteAddress(addressIdToDelete)      }    })    function deleteAddress(addressId) {      fetch(`/profile/addresses/delete/${addressId}`, {        method: "DELETE",        headers: {          "Content-Type": "application/json",        },      })        .then((response) => response.json())        .then((data) => {          deleteModal.hide()          if (data.success) {            Swal.fire({              title: "Success!",              text: data.message,              icon: "success",              confirmButtonText: "OK",            }).then(() => {              window.location.reload()            })          } else {            Swal.fire({              title: "Error!",              text: data.message,              icon: "error",              confirmButtonText: "OK",            })          }        })        .catch((error) => {          deleteModal.hide()          Swal.fire({            title: "Error!",            text: "Something went wrong. Please try again.",            icon: "error",            confirmButtonText: "OK",          })        })    }    const flashMessages = document.querySelectorAll(".alert-float")    if (flashMessages.length > 0) {      flashMessages.forEach((message) => {        message.classList.add("show")        setTimeout(() => {          message.classList.remove("show")          setTimeout(() => {            message.remove()          }, 300)        }, 5000)      })    }  })  
