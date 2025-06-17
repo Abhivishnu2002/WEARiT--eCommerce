@@ -32,10 +32,12 @@ passport.use(new LocalStrategy(
     }
 ))
 
+const callbackURL = process.env.NODE_ENV === 'production' ? 'https://www.wearitclothing.store/google/callback': 'http://localhost:3000/google/callback';
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/google/callback'
+    callbackURL: callbackURL
 }, async (accessToken, refreshToken, profile, done)=>{
     try {
         let user = await User.findOne({
